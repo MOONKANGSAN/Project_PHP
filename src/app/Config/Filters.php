@@ -3,6 +3,8 @@
 namespace Config;
 
 use CodeIgniter\Config\Filters as BaseFilters;
+use App\Filters\BackofficeAuthFilter;
+use App\Filters\RememberMeFilter;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
@@ -34,6 +36,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'rememberme'     => RememberMeFilter::class,
+        'backofficeauth' => BackofficeAuthFilter::class,
     ];
 
     /**
@@ -75,6 +79,7 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
+            'rememberme', // 상시 로그인 쿠키 자동 세션 복원
         ],
         'after' => [
             // 'honeypot',

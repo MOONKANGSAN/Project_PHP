@@ -72,6 +72,9 @@ class Home extends BaseController
             ],
         ];
 
+        // 아이디 저장 쿠키가 있으면 로그인 모달 ID 필드에 미리 채워준다
+        $data['saved_id'] = $this->request->getCookie('saved_id') ?? '';
+
         return view('home/index', $data);
     }
 }

@@ -24,6 +24,8 @@ class Pager extends BaseConfig
         'default_full'   => 'CodeIgniter\Pager\Views\default_full',
         'default_simple' => 'CodeIgniter\Pager\Views\default_simple',
         'default_head'   => 'CodeIgniter\Pager\Views\default_head',
+        // 백오피스 전용 페이지네이션 템플릿
+        'bo_pager'       => 'App\Views\Pager\bo_pager',
     ];
 
     /**

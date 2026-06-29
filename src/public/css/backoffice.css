@@ -339,7 +339,7 @@ ul { list-style: none; }
 .bo-login-card { max-width: 420px; }
 
 .bo-form { display: flex; flex-direction: column; gap: 0; }
-.bo-form-group { margin-bottom: 16px; }
+.bo-form-group { margin-bottom: 16px; position: relative; }
 .bo-form-label {
     display: block;
     font-size: 13px;
@@ -418,6 +418,478 @@ ul { list-style: none; }
 .bo-alert-error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 .bo-alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 .bo-alert p { margin: 2px 0; }
+
+/* =============================================
+   리스트 페이지
+   ============================================= */
+
+/* 페이지 헤더 버튼 행 */
+.bo-page-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* 검색/필터 툴바 */
+.bo-list-toolbar { margin-bottom: 16px; }
+.bo-search-wrap {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.bo-search-input  { flex: 1; min-width: 200px; max-width: 320px; }
+.bo-filter-select { width: 130px; }
+
+/* 테이블 */
+.bo-table-wrap { overflow-x: auto; }
+.bo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.bo-table th {
+    background: #f8fafc;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--bo-text-muted);
+    border-bottom: 1.5px solid var(--bo-border);
+    white-space: nowrap;
+}
+.bo-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--bo-border);
+    vertical-align: middle;
+    color: var(--bo-text);
+}
+.bo-table tbody tr:hover { background: #f8fafc; }
+.bo-table-empty {
+    text-align: center;
+    color: var(--bo-text-muted);
+    padding: 40px !important;
+}
+.bo-table-link {
+    color: var(--bo-accent);
+    font-weight: 500;
+}
+.bo-table-link:hover { text-decoration: underline; }
+
+/* 상태 뱃지 */
+.bo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-active   { background: #dcfce7; color: #16a34a; }
+.badge-inactive { background: #f1f5f9; color: #64748b; }
+.badge-free     { background: #dbeafe; color: #2563eb; }
+.badge-paid     { background: #fef3c7; color: #d97706; }
+
+/* 액션 버튼 */
+.bo-action-btns { display: flex; gap: 4px; justify-content: center; }
+.bo-btn-action {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: var(--bo-transition);
+    text-decoration: none;
+}
+.bo-btn-action.edit       { background: #eff6ff; color: var(--bo-accent); }
+.bo-btn-action.edit:hover { background: #dbeafe; }
+.bo-btn-action.deactivate       { background: #fef3c7; color: #d97706; }
+.bo-btn-action.deactivate:hover { background: #fde68a; }
+.bo-btn-action.activate         { background: #dcfce7; color: #16a34a; }
+.bo-btn-action.activate:hover   { background: #bbf7d0; }
+
+/* 유틸 */
+.text-center { text-align: center; }
+.text-muted  { color: var(--bo-text-muted); }
+.text-sm     { font-size: 12px; }
+
+/* 페이지네이션 래퍼 */
+.bo-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--bo-border);
+}
+
+/* bo_pager 템플릿 nav */
+.bo-pager-nav {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* 개별 버튼 공통 스타일 */
+.bo-pager-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: var(--bo-radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--bo-text-muted);
+    border: 1px solid var(--bo-border);
+    background: var(--bo-white);
+    text-decoration: none;
+    transition: var(--bo-transition);
+    cursor: pointer;
+    user-select: none;
+}
+a.bo-pager-btn:hover {
+    background: var(--bo-accent);
+    color: #fff;
+    border-color: var(--bo-accent);
+}
+/* 현재 페이지 */
+.bo-pager-current {
+    background: var(--bo-accent);
+    color: #fff;
+    border-color: var(--bo-accent);
+    font-weight: 700;
+    cursor: default;
+}
+/* 비활성(처음·끝 도달) */
+.bo-pager-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* =============================================
+   폼 페이지
+   ============================================= */
+.bo-form-card {
+    background: var(--bo-white);
+    border: 1px solid var(--bo-border);
+    border-radius: var(--bo-radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--bo-shadow-sm);
+}
+.bo-form-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bo-text);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--bo-border);
+}
+
+/* 폼 그리드 — 기본 3열 */
+.bo-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+.bo-col-2    { grid-column: span 2; }
+.bo-col-full { grid-column: 1 / -1; }
+
+.bo-form-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--bo-border);
+    border-radius: var(--bo-radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--bo-text);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    line-height: 1.6;
+}
+.bo-form-textarea:focus {
+    border-color: var(--bo-accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* 폼 하단 버튼 행 */
+.bo-form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px 0 8px;
+}
+
+/* =============================================
+   이미지 업로드 UI
+   ============================================= */
+
+/* 이미지 수 배지 (섹션 타이틀 옆) */
+.bo-img-count-badge {
+    margin-left: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--bo-accent);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    padding: 1px 10px;
+    vertical-align: middle;
+}
+
+/* 이미지 카드 그리드 */
+.bo-img-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* 개별 이미지 카드 */
+.bo-img-card {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: var(--bo-radius-sm);
+    overflow: hidden;
+    border: 2px solid var(--bo-border);
+    background: var(--bo-bg);
+    flex-shrink: 0;
+}
+.bo-img-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+/* 새로 선택한 파일 미리보기 카드 구분 */
+.bo-img-card--new { border-color: #93c5fd; }
+
+/* 순서 번호 배지 */
+.bo-img-order {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+/* 삭제 버튼 (우상단 ×) */
+.bo-img-delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(220,38,38,0.85);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.bo-img-card:hover .bo-img-delete-btn { opacity: 1; }
+
+/* 삭제 예정 오버레이 */
+.bo-img-delete-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(220,38,38,0.6);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+}
+.bo-img-card--deleted { border-color: #ef4444; }
+.bo-img-card--deleted .bo-img-delete-btn { opacity: 1; background: rgba(0,0,0,0.6); }
+
+/* 파일 업로드 드롭 영역 */
+.bo-upload-area {
+    border: 2px dashed var(--bo-border);
+    border-radius: var(--bo-radius);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--bo-text-muted);
+}
+.bo-upload-area:hover,
+.bo-upload-area.drag-over {
+    border-color: var(--bo-accent);
+    background: #f0f7ff;
+    color: var(--bo-accent);
+}
+/* 8개 꽉 찼을 때 */
+.bo-upload-area--full {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.bo-upload-icon {
+    margin: 0 auto 8px;
+    color: inherit;
+}
+.bo-upload-text {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: inherit;
+}
+.bo-upload-hint {
+    font-size: 12px;
+    color: var(--bo-text-muted);
+}
+
+/* =============================================
+   전화번호 3칸 분리 입력
+   ============================================= */
+.bo-phone-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+/* 첫 번째 칸(3자리)은 좁게, 나머지(4자리)는 조금 더 넓게 */
+.bo-phone-part { text-align: center; }
+.bo-phone-wrap #phone_1 { width: 72px;  flex: none; }
+.bo-phone-wrap #phone_2 { width: 90px;  flex: none; }
+.bo-phone-wrap #phone_3 { width: 90px;  flex: none; }
+.bo-phone-sep {
+    font-size: 16px;
+    color: var(--bo-text-muted);
+    flex-shrink: 0;
+}
+
+/* =============================================
+   영업시간 오픈/마감 select
+   ============================================= */
+.bo-opentime-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.bo-opentime-wrap .bo-form-select { flex: 1; }
+.bo-time-sep {
+    font-size: 16px;
+    color: var(--bo-text-muted);
+    flex-shrink: 0;
+}
+
+/* =============================================
+   해시태그 칩 UI
+   ============================================= */
+
+/* 칩 + 텍스트 입력이 함께 있는 통합 영역 */
+.bo-tag-input-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--bo-border);
+    border-radius: var(--bo-radius-sm);
+    background: var(--bo-white);
+    cursor: text;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.bo-tag-input-wrap:focus-within {
+    border-color: var(--bo-accent);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* 개별 태그 칩 */
+.bo-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 10px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.bo-tag-chip-remove {
+    background: none;
+    border: none;
+    color: #93c5fd;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0 0 2px;
+}
+.bo-tag-chip-remove:hover { color: #1d4ed8; }
+
+/* 칩 내부 텍스트 입력 */
+.bo-tag-text-input {
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--bo-text);
+    flex: 1;
+    min-width: 140px;
+    background: transparent;
+    padding: 2px 0;
+}
+
+/* 최대 개수 안내 힌트 */
+.bo-tag-limit-hint {
+    font-size: 12px;
+    color: var(--bo-text-muted);
+    font-weight: 400;
+    margin-left: 6px;
+}
+
+/* 자동완성 드롭다운 */
+.bo-tag-suggestions {
+    display: none;
+    position: absolute;
+    z-index: 200;
+    background: var(--bo-white);
+    border: 1px solid var(--bo-border);
+    border-radius: var(--bo-radius-sm);
+    box-shadow: var(--bo-shadow);
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 200px;
+}
+.bo-tag-suggestion-item {
+    padding: 9px 14px;
+    font-size: 13px;
+    color: var(--bo-text);
+    cursor: pointer;
+}
+.bo-tag-suggestion-item:hover {
+    background: #f0f7ff;
+    color: var(--bo-accent);
+}
 
 /* =============================================
    준비 중 (Placeholder)

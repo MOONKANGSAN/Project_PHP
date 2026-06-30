@@ -7,6 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/backoffice.css">
+    <?php foreach ((array) ($extra_css ?? []) as $css): ?>
+    <link rel="stylesheet" href="<?= esc($css) ?>">
+    <?php endforeach; ?>
 </head>
 <body>
 <div class="bo-wrapper">
@@ -122,16 +125,23 @@
                 <ul class="bo-nav-list">
                     <li>
                         <a href="/backoffice/inquiries"
-                           class="bo-nav-item <?= $current_uri === '/backoffice/inquiries' ? 'active' : '' ?>">
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/inquiries') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">💬</span>
                             <span>고객문의</span>
                         </a>
                     </li>
                     <li>
                         <a href="/backoffice/faqs"
-                           class="bo-nav-item <?= $current_uri === '/backoffice/faqs' ? 'active' : '' ?>">
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/faqs') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">❓</span>
                             <span>FAQs 관리</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/backoffice/trash"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/trash') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">🗑️</span>
+                            <span>휴지통</span>
                         </a>
                     </li>
                 </ul>

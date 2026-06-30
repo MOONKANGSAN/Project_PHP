@@ -71,4 +71,45 @@ class UserInfoModel extends Model
                     ->where('state', 1)
                     ->first();
     }
+
+    /**
+     * 회원 목록 조회 (검색·상태 필터 + 페이지네이션)
+     * 탈퇴회원(state=5)은 기본 제외
+     */
+    public function getList(string $q = '', string $state = ''): array
+    {
+        // 탈퇴회원은 별도 페이지에서 관리하므로 항상 제외
+        $this->where('state !=', 5);
+
+        if ($q !== '') {
+            $this->groupStart()
+                 ->like('id', $q)
+                 ->orLike('email', $q)
+                 ->orLike('phone', $q)
+                 ->groupEnd();
+        }
+        if ($state !== '') {
+            $this->where('state', (int) $state);
+        }
+
+        return $this->orderBy('idx', 'DESC')->paginate(20);
+    }
+
+    /**
+     * 탈퇴회원 목록 조회 (state=5 고정, 검색 + 페이지네이션)
+     */
+    public function getWithdrawnList(string $q = ''): array
+    {
+        $this->where('state', 5);
+
+        if ($q !== '') {
+            $this->groupStart()
+                 ->like('id', $q)
+                 ->orLike('email', $q)
+                 ->orLike('phone', $q)
+                 ->groupEnd();
+        }
+
+        return $this->orderBy('idx', 'DESC')->paginate(20);
+    }
 }

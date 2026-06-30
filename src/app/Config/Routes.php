@@ -23,10 +23,39 @@ $routes->post('backoffice/add-admin', 'Backoffice::doAddAdmin');
 $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($routes) {
     // 대시보드·기타
     $routes->get('dashboard',         'Backoffice::dashboard');
-    $routes->get('members',           'Backoffice::members');
-    $routes->get('withdrawn-members', 'Backoffice::withdrawnMembers');
-    $routes->get('inquiries',         'Backoffice::inquiries');
-    $routes->get('faqs',              'Backoffice::faqs');
+
+    // 회원 관리
+    $routes->get('members',                              'BackofficeMember::list');
+    $routes->post('members/(:num)/state',               'BackofficeMember::toggleState/$1');
+    $routes->post('members/(:num)/login-as',            'BackofficeMember::loginAs/$1');
+    $routes->post('members/(:num)/reset-password',      'BackofficeMember::resetPassword/$1');
+    $routes->post('members/(:num)/withdraw',            'BackofficeMember::withdraw/$1');
+    $routes->post('members/(:num)/restore',             'BackofficeMember::restore/$1');
+
+    // 탈퇴회원 관리
+    $routes->get('withdrawn-members', 'BackofficeMember::withdrawnList');
+    // 고객문의 관리
+    $routes->get('inquiries',                          'BackofficeInquiry::list');
+    $routes->get('inquiries/(:num)',                   'BackofficeInquiry::view/$1');
+    $routes->post('inquiries/(:num)/answer',           'BackofficeInquiry::saveAnswer/$1');
+    $routes->post('inquiries/(:num)/answer/delete',    'BackofficeInquiry::deleteAnswer/$1');
+    $routes->post('inquiries/(:num)/state',            'BackofficeInquiry::toggleState/$1');
+    $routes->post('inquiries/(:num)/delete',           'BackofficeInquiry::delete/$1');
+
+    // FAQ 관리
+    $routes->get('faqs',                    'BackofficeFaq::list');
+    $routes->get('faqs/register',           'BackofficeFaq::register');
+    $routes->post('faqs/register',          'BackofficeFaq::store');
+    $routes->get('faqs/(:num)/edit',        'BackofficeFaq::edit/$1');
+    $routes->post('faqs/(:num)/edit',       'BackofficeFaq::update/$1');
+    $routes->post('faqs/(:num)/state',      'BackofficeFaq::toggleState/$1');
+    $routes->post('faqs/(:num)/delete',     'BackofficeFaq::delete/$1');
+
+    // 휴지통
+    $routes->get('trash',                              'BackofficeTrash::index');
+    $routes->post('trash/inquiry/(:num)/restore',      'BackofficeTrash::restoreInquiry/$1');
+    $routes->post('trash/faq/(:num)/restore',          'BackofficeTrash::restoreFaq/$1');
+
     $routes->get('error-logs',        'Backoffice::errorLogs');
     $routes->get('site-config',       'Backoffice::siteConfig');
 

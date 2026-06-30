@@ -308,8 +308,11 @@
         } catch {
             showMsg('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
         } finally {
-            btnSubmit.disabled    = false;
-            btnSubmit.textContent = '로그인';
+            // 3초 후 버튼 복원 (연속 클릭 방지)
+            setTimeout(function () {
+                btnSubmit.disabled    = false;
+                btnSubmit.textContent = '로그인';
+            }, 3000);
         }
     });
 })();
@@ -469,8 +472,11 @@
         } catch {
             showMsg('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error');
         } finally {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = '가입하기';
+            // 3초 후 버튼 복원 (연속 클릭 방지)
+            setTimeout(function () {
+                btnSubmit.disabled    = false;
+                btnSubmit.textContent = '가입하기';
+            }, 3000);
         }
     });
 })();

@@ -164,26 +164,6 @@ class Backoffice extends BaseController
         return view('backoffice/placeholder', $this->base('주요행사 및 축제관리'));
     }
 
-    public function members(): string
-    {
-        return view('backoffice/placeholder', $this->base('회원 정보 관리'));
-    }
-
-    public function withdrawnMembers(): string
-    {
-        return view('backoffice/placeholder', $this->base('탈퇴회원 관리'));
-    }
-
-    public function inquiries(): string
-    {
-        return view('backoffice/placeholder', $this->base('고객문의'));
-    }
-
-    public function faqs(): string
-    {
-        return view('backoffice/placeholder', $this->base('FAQs 관리'));
-    }
-
     public function errorLogs(): string
     {
         return view('backoffice/placeholder', $this->base('에러 로그'));

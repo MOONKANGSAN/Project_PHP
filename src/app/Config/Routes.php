@@ -56,7 +56,20 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('trash/inquiry/(:num)/restore',      'BackofficeTrash::restoreInquiry/$1');
     $routes->post('trash/faq/(:num)/restore',          'BackofficeTrash::restoreFaq/$1');
 
-    $routes->get('error-logs',        'Backoffice::errorLogs');
+    // 에러 로그 관리
+    $routes->get('error-logs',                         'BackofficeErrorLog::list');
+    $routes->post('error-logs/(:num)/state',           'BackofficeErrorLog::toggleState/$1');
+    $routes->post('error-logs/(:num)/feedback',        'BackofficeErrorLog::saveFeedback/$1');
+
+    // 배너 관리
+    $routes->get('banners',                 'BackofficeBanner::list');
+    $routes->get('banners/register',        'BackofficeBanner::register');
+    $routes->post('banners/register',       'BackofficeBanner::store');
+    $routes->get('banners/(:num)/edit',     'BackofficeBanner::edit/$1');
+    $routes->post('banners/(:num)/edit',    'BackofficeBanner::update/$1');
+    $routes->post('banners/(:num)/state',   'BackofficeBanner::toggleState/$1');
+    $routes->post('banners/(:num)/delete',  'BackofficeBanner::delete/$1');
+
     $routes->get('site-config',       'Backoffice::siteConfig');
 
     // 맛집 관리

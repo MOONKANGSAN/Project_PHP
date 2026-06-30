@@ -164,11 +164,6 @@ class Backoffice extends BaseController
         return view('backoffice/placeholder', $this->base('주요행사 및 축제관리'));
     }
 
-    public function errorLogs(): string
-    {
-        return view('backoffice/placeholder', $this->base('에러 로그'));
-    }
-
     public function siteConfig(): string
     {
         return view('backoffice/placeholder', $this->base('헤더 및 Footer 수정'));

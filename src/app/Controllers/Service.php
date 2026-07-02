@@ -1,0 +1,500 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\RestaurantModel;
+use App\Models\PlaceModel;
+use App\Models\EventModel;
+use App\Models\ThumbnailModel;
+use App\Models\HashtagNumberModel;
+
+/**
+ * 서비스(프론트) 페이지 컨트롤러
+ */
+class Service extends BaseController
+{
+    /**
+     * 맛집 리스트 페이지
+     */
+    public function restaurants(): string
+    {
+        $restaurantModel    = new RestaurantModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+        $db                 = \Config\Database::connect();
+
+        // 필터·검색 파라미터
+        $district = trim($this->request->getGet('district') ?? '');
+        $category = trim($this->request->getGet('category') ?? '');
+        $search   = trim($this->request->getGet('q')        ?? '');
+
+        // 맛집 목록 (state=1, 필터 적용)
+        $query = $restaurantModel->where('state', 1);
+
+        if ($district !== '') {
+            $query->like('address1', $district, 'both');
+        }
+        if ($category !== '') {
+            $query->where('category_num', (int) $category);
+        }
+        if ($search !== '') {
+            // 이름 OR 해시태그 이름으로 검색
+            $taggedIdxs = $db->table('hashtag h')
+                             ->select('hn.restaurant_idx')
+                             ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                             ->like('h.name', $search, 'both')
+                             ->where('hn.state', 1)
+                             ->where('hn.restaurant_idx IS NOT NULL')
+                             ->get()->getResultArray();
+
+            $idxList = array_map('intval', array_column($taggedIdxs, 'restaurant_idx'));
+
+            if (!empty($idxList)) {
+                $query->groupStart()
+                      ->like('name', $search, 'both')
+                      ->orWhereIn('idx', $idxList)
+                      ->groupEnd();
+            } else {
+                $query->like('name', $search, 'both');
+            }
+        }
+
+        // 한 페이지 9건 페이지네이션
+        $restaurants = $query->orderBy('idx', 'DESC')->paginate(9);
+        $pager       = $restaurantModel->pager;
+        $totalCount  = $pager->getTotal();
+
+        // 각 맛집에 대표 썸네일·해시태그·구(district) 추가
+        foreach ($restaurants as &$r) {
+            $thumbs          = $thumbnailModel->getByRestaurant((int) $r['idx']);
+            $r['thumbnail']  = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $r['tags']       = $hashtagNumberModel->getTagsByRestaurant((int) $r['idx']);
+
+            // address1에서 '구/군' 추출 (예: "부산광역시 해운대구 ..." → "해운대구")
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $r['address1'] ?? '', $m);
+            $r['district'] = $m[1] ?? '';
+        }
+        unset($r);
+
+        // 필터 드롭다운용 구 목록 (DB 기준 동적 생성)
+        $allAddresses = $db->table('busan_restaurant')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtList = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (!empty($m[1]) && !in_array($m[1], $districtList, true)) {
+                $districtList[] = $m[1];
+            }
+        }
+        sort($districtList);
+
+        $data = [
+            'restaurants'    => $restaurants,
+            'pager'          => $pager,
+            'totalCount'     => $totalCount,
+            'districtList'   => $districtList,
+            'categories'     => RestaurantModel::CATEGORIES,
+            'priceRanges'    => RestaurantModel::PRICE_RANGES,
+            'activeDistrict' => $district,
+            'activeCategory' => $category,
+            'activeSearch'   => $search,
+            'saved_id'       => $this->request->getCookie('saved_id') ?? '',
+        ];
+
+        return view('service/restaurant/list', $data);
+    }
+
+    /**
+     * 검색어 자동완성 API (AJAX)
+     * GET /restaurants/suggest?q=검색어
+     * 반환: JSON { suggestions: [{type, label, value}, ...] }
+     */
+    public function suggest(): void
+    {
+        // JSON 응답 헤더
+        $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');
+
+        $q = trim($this->request->getGet('q') ?? '');
+
+        // 빈 검색어 또는 1자 미만은 빈 결과 반환
+        if (mb_strlen($q) < 1) {
+            echo json_encode(['suggestions' => []]);
+            return;
+        }
+
+        $db          = \Config\Database::connect();
+        $suggestions = [];
+
+        // 1. 맛집 이름 검색 (최대 5건)
+        $names = $db->table('busan_restaurant')
+                    ->select('name')
+                    ->like('name', $q, 'both')
+                    ->where('state', 1)
+                    ->orderBy('view_cnt', 'DESC')
+                    ->limit(5)
+                    ->get()->getResultArray();
+
+        foreach ($names as $row) {
+            $suggestions[] = [
+                'type'  => 'name',
+                'label' => $row['name'],
+                'value' => $row['name'],
+            ];
+        }
+
+        // 2. 해시태그 검색 (최대 5건, 사용 빈도 내림차순)
+        $tags = $db->table('hashtag')
+                   ->select('name, use_count')
+                   ->like('name', $q, 'both')
+                   ->orderBy('use_count', 'DESC')
+                   ->limit(5)
+                   ->get()->getResultArray();
+
+        foreach ($tags as $row) {
+            $suggestions[] = [
+                'type'  => 'hashtag',
+                'label' => $row['name'],
+                'value' => $row['name'],
+            ];
+        }
+
+        // 3. 지역(구/군) 검색 — 등록된 주소에서 구 이름 추출 후 검색어 포함 여부 확인
+        $allAddresses = $db->table('busan_restaurant')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtSeen = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (empty($m[1])) continue;
+
+            $dist = $m[1];
+            if (in_array($dist, $districtSeen, true)) continue;
+            if (mb_strpos($dist, $q) === false) continue;
+
+            $districtSeen[] = $dist;
+            $suggestions[]  = [
+                'type'  => 'district',
+                'label' => $dist,
+                'value' => $dist,
+            ];
+
+            if (count($districtSeen) >= 3) break;
+        }
+
+        echo json_encode(['suggestions' => $suggestions], JSON_UNESCAPED_UNICODE);
+    }
+
+    // ================================================================
+    // 관광지
+    // ================================================================
+
+    /**
+     * 관광지 리스트 페이지
+     */
+    public function spots(): string
+    {
+        $placeModel         = new PlaceModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+        $db                 = \Config\Database::connect();
+
+        $district = trim($this->request->getGet('district') ?? '');
+        $category = trim($this->request->getGet('category') ?? '');
+        $search   = trim($this->request->getGet('q')        ?? '');
+
+        $query = $placeModel->where('state', 1);
+
+        if ($district !== '') {
+            $query->like('address1', $district, 'both');
+        }
+        if ($category !== '') {
+            $query->where('category_num', (int) $category);
+        }
+        if ($search !== '') {
+            $taggedIdxs = $db->table('hashtag h')
+                             ->select('hn.place_idx')
+                             ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                             ->like('h.name', $search, 'both')
+                             ->where('hn.state', 1)
+                             ->where('hn.place_idx IS NOT NULL')
+                             ->get()->getResultArray();
+
+            $idxList = array_map('intval', array_column($taggedIdxs, 'place_idx'));
+
+            if (!empty($idxList)) {
+                $query->groupStart()
+                      ->like('name', $search, 'both')
+                      ->orWhereIn('idx', $idxList)
+                      ->groupEnd();
+            } else {
+                $query->like('name', $search, 'both');
+            }
+        }
+
+        $spots      = $query->orderBy('idx', 'DESC')->paginate(9);
+        $pager      = $placeModel->pager;
+        $totalCount = $pager->getTotal();
+
+        foreach ($spots as &$s) {
+            $thumbs         = $thumbnailModel->getByPlace((int) $s['idx']);
+            $s['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $s['tags']      = $hashtagNumberModel->getTagsByPlace((int) $s['idx']);
+
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $s['address1'] ?? '', $m);
+            $s['district'] = $m[1] ?? '';
+        }
+        unset($s);
+
+        $allAddresses = $db->table('busan_place')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtList = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (!empty($m[1]) && !in_array($m[1], $districtList, true)) {
+                $districtList[] = $m[1];
+            }
+        }
+        sort($districtList);
+
+        return view('service/spot/list', [
+            'spots'          => $spots,
+            'pager'          => $pager,
+            'totalCount'     => $totalCount,
+            'districtList'   => $districtList,
+            'categories'     => PlaceModel::CATEGORIES,
+            'activeDistrict' => $district,
+            'activeCategory' => $category,
+            'activeSearch'   => $search,
+            'saved_id'       => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    /**
+     * 관광지 검색 자동완성 API
+     * GET /spots/suggest?q=검색어
+     */
+    public function spotsSuggest(): void
+    {
+        $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');
+
+        $q = trim($this->request->getGet('q') ?? '');
+        if (mb_strlen($q) < 1) {
+            echo json_encode(['suggestions' => []]);
+            return;
+        }
+
+        $db          = \Config\Database::connect();
+        $suggestions = [];
+
+        $names = $db->table('busan_place')
+                    ->select('name')
+                    ->like('name', $q, 'both')
+                    ->where('state', 1)
+                    ->orderBy('view_cnt', 'DESC')
+                    ->limit(5)
+                    ->get()->getResultArray();
+
+        foreach ($names as $row) {
+            $suggestions[] = ['type' => 'name', 'label' => $row['name'], 'value' => $row['name']];
+        }
+
+        $tags = $db->table('hashtag')
+                   ->select('name')
+                   ->like('name', $q, 'both')
+                   ->orderBy('use_count', 'DESC')
+                   ->limit(5)
+                   ->get()->getResultArray();
+
+        foreach ($tags as $row) {
+            $suggestions[] = ['type' => 'hashtag', 'label' => $row['name'], 'value' => $row['name']];
+        }
+
+        $allAddresses = $db->table('busan_place')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtSeen = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (empty($m[1]) || in_array($m[1], $districtSeen, true) || mb_strpos($m[1], $q) === false) continue;
+            $districtSeen[] = $m[1];
+            $suggestions[]  = ['type' => 'district', 'label' => $m[1], 'value' => $m[1]];
+            if (count($districtSeen) >= 3) break;
+        }
+
+        echo json_encode(['suggestions' => $suggestions], JSON_UNESCAPED_UNICODE);
+    }
+
+    // ================================================================
+    // 축제·행사
+    // ================================================================
+
+    /**
+     * 축제 리스트 페이지
+     */
+    public function festivals(): string
+    {
+        $eventModel         = new EventModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+        $db                 = \Config\Database::connect();
+
+        $district = trim($this->request->getGet('district') ?? '');
+        $category = trim($this->request->getGet('category') ?? '');
+        $search   = trim($this->request->getGet('q')        ?? '');
+        $isFree   = trim($this->request->getGet('is_free')  ?? '');
+
+        $query = $eventModel->where('state', 1);
+
+        if ($district !== '') {
+            $query->like('address1', $district, 'both');
+        }
+        if ($category !== '') {
+            $query->where('category_num', (int) $category);
+        }
+        if ($isFree !== '') {
+            $query->where('is_free', (int) $isFree);
+        }
+        if ($search !== '') {
+            $taggedIdxs = $db->table('hashtag h')
+                             ->select('hn.event_idx')
+                             ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                             ->like('h.name', $search, 'both')
+                             ->where('hn.state', 1)
+                             ->where('hn.event_idx IS NOT NULL')
+                             ->get()->getResultArray();
+
+            $idxList = array_map('intval', array_column($taggedIdxs, 'event_idx'));
+
+            if (!empty($idxList)) {
+                $query->groupStart()
+                      ->like('name', $search, 'both')
+                      ->orWhereIn('idx', $idxList)
+                      ->groupEnd();
+            } else {
+                $query->like('name', $search, 'both');
+            }
+        }
+
+        $festivals  = $query->orderBy('start_date', 'DESC')->paginate(9);
+        $pager      = $eventModel->pager;
+        $totalCount = $pager->getTotal();
+
+        foreach ($festivals as &$f) {
+            $thumbs         = $thumbnailModel->getByEvent((int) $f['idx']);
+            $f['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $f['tags']      = $hashtagNumberModel->getTagsByEvent((int) $f['idx']);
+
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $f['address1'] ?? '', $m);
+            $f['district'] = $m[1] ?? '';
+
+            // 행사 진행 상태 (진행중/예정/종료)
+            $today = date('Y-m-d');
+            if (!empty($f['start_date']) && !empty($f['end_date'])) {
+                if ($today < $f['start_date']) {
+                    $f['status'] = 'upcoming';
+                } elseif ($today > $f['end_date']) {
+                    $f['status'] = 'ended';
+                } else {
+                    $f['status'] = 'ongoing';
+                }
+            } else {
+                $f['status'] = '';
+            }
+        }
+        unset($f);
+
+        $allAddresses = $db->table('busan_event')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtList = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (!empty($m[1]) && !in_array($m[1], $districtList, true)) {
+                $districtList[] = $m[1];
+            }
+        }
+        sort($districtList);
+
+        return view('service/festival/list', [
+            'festivals'      => $festivals,
+            'pager'          => $pager,
+            'totalCount'     => $totalCount,
+            'districtList'   => $districtList,
+            'categories'     => EventModel::CATEGORIES,
+            'activeDistrict' => $district,
+            'activeCategory' => $category,
+            'activeSearch'   => $search,
+            'activeIsFree'   => $isFree,
+            'saved_id'       => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    /**
+     * 축제 검색 자동완성 API
+     * GET /festivals/suggest?q=검색어
+     */
+    public function festivalsSuggest(): void
+    {
+        $this->response->setHeader('Content-Type', 'application/json; charset=utf-8');
+
+        $q = trim($this->request->getGet('q') ?? '');
+        if (mb_strlen($q) < 1) {
+            echo json_encode(['suggestions' => []]);
+            return;
+        }
+
+        $db          = \Config\Database::connect();
+        $suggestions = [];
+
+        $names = $db->table('busan_event')
+                    ->select('name')
+                    ->like('name', $q, 'both')
+                    ->where('state', 1)
+                    ->orderBy('view_cnt', 'DESC')
+                    ->limit(5)
+                    ->get()->getResultArray();
+
+        foreach ($names as $row) {
+            $suggestions[] = ['type' => 'name', 'label' => $row['name'], 'value' => $row['name']];
+        }
+
+        $tags = $db->table('hashtag')
+                   ->select('name')
+                   ->like('name', $q, 'both')
+                   ->orderBy('use_count', 'DESC')
+                   ->limit(5)
+                   ->get()->getResultArray();
+
+        foreach ($tags as $row) {
+            $suggestions[] = ['type' => 'hashtag', 'label' => $row['name'], 'value' => $row['name']];
+        }
+
+        $allAddresses = $db->table('busan_event')
+                           ->select('address1')
+                           ->where('state', 1)
+                           ->get()->getResultArray();
+
+        $districtSeen = [];
+        foreach ($allAddresses as $row) {
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $row['address1'] ?? '', $m);
+            if (empty($m[1]) || in_array($m[1], $districtSeen, true) || mb_strpos($m[1], $q) === false) continue;
+            $districtSeen[] = $m[1];
+            $suggestions[]  = ['type' => 'district', 'label' => $m[1], 'value' => $m[1]];
+            if (count($districtSeen) >= 3) break;
+        }
+
+        echo json_encode(['suggestions' => $suggestions], JSON_UNESCAPED_UNICODE);
+    }
+}

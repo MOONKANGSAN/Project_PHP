@@ -26,6 +26,8 @@ class Pager extends BaseConfig
         'default_head'   => 'CodeIgniter\Pager\Views\default_head',
         // 백오피스 전용 페이지네이션 템플릿
         'bo_pager'       => 'App\Views\Pager\bo_pager',
+        // 서비스(프론트) 전용 페이지네이션 템플릿
+        'service_pager'  => 'App\Views\Pager\service_pager',
     ];
 
     /**

@@ -176,54 +176,166 @@
 <!-- ===================== 추천 관광지 ===================== -->
 <section class="spots-section">
     <div class="container">
-        <div class="section-header fade-in">
-            <h2>추천 관광지</h2>
-            <p>부산에서 꼭 가봐야 할 대표 명소들</p>
+        <div class="section-header-row fade-in">
+            <div class="section-header">
+                <h2>추천 관광지</h2>
+                <p>부산에서 꼭 가봐야 할 대표 명소들</p>
+            </div>
+            <a href="/spots" class="btn-more">더보기 →</a>
         </div>
-        <div class="card-grid">
-            <?php foreach ($spots as $i => $spot): ?>
-            <div class="spot-card fade-in" style="--card-color: <?= $spot['color'] ?>; --delay: <?= $i * 80 ?>ms">
-                <div class="card-thumb">
-                    <span class="card-emoji"><?= $spot['emoji'] ?></span>
-                    <span class="card-badge"><?= $spot['category'] ?></span>
+
+        <?php if (empty($spots)): ?>
+        <div class="empty-result">
+            <div class="empty-result-icon">🗺️</div>
+            <p>등록된 관광지가 없습니다</p>
+        </div>
+        <?php else: ?>
+        <?php
+        $catEmoji = [1=>'🏖️', 2=>'🌲', 3=>'🏛️', 4=>'🖼️', 5=>'🎡', 6=>'🌃', 7=>'🛍️', 8=>'📍'];
+        $catColor = [1=>'#0984e3', 2=>'#00b894', 3=>'#6c5ce7', 4=>'#e17055', 5=>'#fd79a8', 6=>'#fdcb6e', 7=>'#a29bfe', 8=>'#b2bec3'];
+        ?>
+        <div class="restaurant-grid">
+            <?php foreach ($spots as $i => $s): ?>
+            <?php
+            $catNum  = (int)($s['category_num'] ?? 8);
+            $starVal = (float)($s['star_point']  ?? 0);
+            $color   = $catColor[$catNum] ?? '#b2bec3';
+            $emoji   = $catEmoji[$catNum] ?? '📍';
+            ?>
+            <div class="r-card fade-in" style="--delay: <?= $i * 80 ?>ms">
+                <div class="r-card-thumb">
+                    <?php if (!empty($s['thumbnail'])): ?>
+                        <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>">
+                    <?php else: ?>
+                        <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
+                            <span><?= $emoji ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <span class="r-card-category" style="background: <?= $color ?>;">
+                        <?= esc($placeCategories[$catNum] ?? '기타') ?>
+                    </span>
+                    <?php if (!empty($s['parking'])): ?>
+                    <span class="r-card-parking">🅿️ 주차가능</span>
+                    <?php endif; ?>
                 </div>
-                <div class="card-body">
-                    <span class="card-district">📍 <?= $spot['district'] ?></span>
-                    <h3 class="card-title"><?= $spot['name'] ?></h3>
-                    <p class="card-desc"><?= $spot['desc'] ?></p>
-                    <a href="#" class="card-link">자세히 보기 →</a>
+                <div class="r-card-body">
+                    <h3 class="r-card-name"><?= esc($s['name']) ?></h3>
+                    <div class="r-card-meta">
+                        <?php if (!empty($s['district'])): ?>
+                        <span class="r-card-district">📍 <?= esc($s['district']) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($s['open_time'])): ?>
+                        <span class="r-card-hours">🕐 <?= esc($s['open_time']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($starVal > 0): ?>
+                    <div class="r-card-stars">
+                        <?php
+                        $full  = (int) floor($starVal);
+                        $half  = ($starVal - $full) >= 0.5 ? 1 : 0;
+                        $empty = 5 - $full - $half;
+                        ?>
+                        <span class="stars-text">
+                            <?= str_repeat('★', $full) ?><?= $half ? '⭒' : '' ?><?= str_repeat('☆', $empty) ?>
+                        </span>
+                        <span class="stars-score"><?= number_format($starVal, 1) ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($s['admission_fee'])): ?>
+                    <span class="price-badge">🎫 <?= esc($s['admission_fee']) ?></span>
+                    <?php else: ?>
+                    <span class="price-badge free-badge">🎫 무료</span>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </section>
 
 <!-- ===================== 인기 맛집 ===================== -->
 <section class="food-section">
     <div class="container">
-        <div class="section-header fade-in">
-            <h2>부산 대표 먹거리</h2>
-            <p>부산에서 꼭 먹어봐야 할 향토 음식들</p>
+        <div class="section-header-row fade-in">
+            <div class="section-header">
+                <h2>부산 대표 먹거리</h2>
+                <p>부산에서 꼭 먹어봐야 할 향토 음식들</p>
+            </div>
+            <a href="/restaurants" class="btn-more">더보기 →</a>
         </div>
-        <div class="card-grid">
+
+        <?php if (empty($restaurants)): ?>
+        <div class="empty-result">
+            <div class="empty-result-icon">🍽️</div>
+            <p>등록된 맛집이 없습니다</p>
+        </div>
+        <?php else: ?>
+        <?php
+        $rCatEmoji = [1=>'🍲', 2=>'🍣', 3=>'🥢', 4=>'🍝', 5=>'🥞', 6=>'☕', 7=>'🍽️', 8=>'🍴'];
+        $rCatColor = [1=>'#e55039', 2=>'#6c5ce7', 3=>'#e17055', 4=>'#00b894', 5=>'#fdcb6e', 6=>'#a29bfe', 7=>'#fab1a0', 8=>'#b2bec3'];
+        ?>
+        <div class="restaurant-grid">
             <?php foreach ($restaurants as $i => $r): ?>
-            <div class="food-card fade-in" style="--card-color: <?= $r['color'] ?>; --delay: <?= $i * 80 ?>ms">
-                <div class="food-top" style="background: <?= $r['color'] ?>22;">
-                    <span class="food-emoji"><?= $r['emoji'] ?></span>
+            <?php
+            $catNum   = (int)($r['category_num'] ?? 8);
+            $starVal  = (float)($r['star_point']  ?? 0);
+            $priceNum = (int)($r['price_range']   ?? 1);
+            $color    = $rCatColor[$catNum] ?? '#b2bec3';
+            $emoji    = $rCatEmoji[$catNum] ?? '🍴';
+            ?>
+            <div class="r-card fade-in" style="--delay: <?= $i * 80 ?>ms">
+                <div class="r-card-thumb">
+                    <?php if (!empty($r['thumbnail'])): ?>
+                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
+                    <?php else: ?>
+                        <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
+                            <span><?= $emoji ?></span>
+                        </div>
+                    <?php endif; ?>
+                    <span class="r-card-category" style="background: <?= $color ?>;">
+                        <?= esc($restaurantCategories[$catNum] ?? '기타') ?>
+                    </span>
+                    <?php if (!empty($r['parking'])): ?>
+                    <span class="r-card-parking">🅿️ 주차가능</span>
+                    <?php endif; ?>
                 </div>
-                <div class="food-body">
-                    <h3 class="food-name"><?= $r['name'] ?></h3>
-                    <span class="food-area">📍 <?= $r['area'] ?></span>
-                    <p class="food-desc"><?= $r['desc'] ?></p>
-                    <div class="food-bottom">
-                        <span class="food-price" style="background: <?= $r['color'] ?>"><?= $r['price'] ?></span>
-                        <a href="#" class="food-link">더보기 →</a>
+                <div class="r-card-body">
+                    <h3 class="r-card-name"><?= esc($r['name']) ?></h3>
+                    <div class="r-card-meta">
+                        <?php if (!empty($r['district'])): ?>
+                        <span class="r-card-district">📍 <?= esc($r['district']) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($r['open_time'])): ?>
+                        <span class="r-card-hours">🕐 <?= esc($r['open_time']) ?></span>
+                        <?php endif; ?>
                     </div>
+                    <?php if ($starVal > 0): ?>
+                    <div class="r-card-stars">
+                        <?php
+                        $full  = (int) floor($starVal);
+                        $half  = ($starVal - $full) >= 0.5 ? 1 : 0;
+                        $empty = 5 - $full - $half;
+                        ?>
+                        <span class="stars-text">
+                            <?= str_repeat('★', $full) ?><?= $half ? '⭒' : '' ?><?= str_repeat('☆', $empty) ?>
+                        </span>
+                        <span class="stars-score"><?= number_format($starVal, 1) ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <span class="price-badge"><?= esc($restaurantPrices[$priceNum] ?? '') ?></span>
+                    <?php if (!empty($r['tags'])): ?>
+                    <div class="r-card-tags">
+                        <?php foreach ($r['tags'] as $tag): ?>
+                        <span class="r-tag">#<?= esc($tag['name']) ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </section>
 

@@ -369,6 +369,43 @@ ul { list-style: none; }
 }
 
 /* =============================================
+   섹션 헤더 + 더보기 버튼 행 레이아웃
+   ============================================= */
+.section-header-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 52px;
+}
+.section-header-row .section-header {
+    margin-bottom: 0;
+    text-align: left;
+}
+.section-header-row .section-header h2::after {
+    left: 0;
+    transform: none;
+}
+.btn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 9px 22px;
+    border: 1.5px solid var(--primary-light);
+    color: var(--primary-light);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-bottom: 6px;
+    transition: var(--transition);
+}
+.btn-more:hover {
+    background: var(--primary-light);
+    color: #fff;
+}
+
+/* =============================================
    관광지 카드
    ============================================= */
 .spots-section { padding: 90px 0; background: var(--white); }
@@ -560,6 +597,8 @@ ul { list-style: none; }
     .main-banner { height: 520px; }
     .footer-inner { grid-template-columns: 1fr; }
     .banner-title { font-size: 30px; }
+    .section-header-row { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .btn-more { margin-bottom: 0; }
 }
 
 /* =============================================

@@ -3,31 +3,60 @@
 namespace App\Controllers;
 
 use App\Models\MainBannerModel;
+use App\Models\PlaceModel;
+use App\Models\RestaurantModel;
+use App\Models\ThumbnailModel;
+use App\Models\HashtagNumberModel;
 
 class Home extends BaseController
 {
     public function index(): string
     {
         // DB에서 활성 배너 목록 조회 (state=1, sort_order ASC)
-        $bannerModel = new MainBannerModel();
+        $bannerModel        = new MainBannerModel();
+        $placeModel         = new PlaceModel();
+        $restaurantModel    = new RestaurantModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+
+        // DB에서 활성 관광지 최신 6개 조회
+        $spotsRaw = $placeModel->where('state', 1)
+                               ->orderBy('idx', 'DESC')
+                               ->limit(6)
+                               ->findAll();
+
+        // 각 관광지에 대표 썸네일·구(district) 추가
+        foreach ($spotsRaw as &$s) {
+            $thumbs         = $thumbnailModel->getByPlace((int) $s['idx']);
+            $s['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $s['address1'] ?? '', $m);
+            $s['district'] = $m[1] ?? '';
+        }
+        unset($s);
+
+        // DB에서 활성 맛집 최신 6개 조회
+        $restaurantsRaw = $restaurantModel->where('state', 1)
+                                          ->orderBy('idx', 'DESC')
+                                          ->limit(6)
+                                          ->findAll();
+
+        // 각 맛집에 대표 썸네일·해시태그·구(district) 추가
+        foreach ($restaurantsRaw as &$r) {
+            $thumbs         = $thumbnailModel->getByRestaurant((int) $r['idx']);
+            $r['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $r['tags']      = $hashtagNumberModel->getTagsByRestaurant((int) $r['idx']);
+            preg_match('/부산광역시\s+(\S+(?:구|군))/', $r['address1'] ?? '', $m);
+            $r['district'] = $m[1] ?? '';
+        }
+        unset($r);
+
         $data = [
-            'banners' => $bannerModel->getActiveBanners(),
-            'spots' => [
-                ['name' => '해운대해수욕장', 'district' => '해운대구', 'category' => '해변', 'desc' => '부산을 대표하는 명품 해수욕장으로 여름이면 수백만 명이 찾는 핫플레이스', 'emoji' => '🏖️', 'color' => '#74b9ff'],
-                ['name' => '광안리해수욕장', 'district' => '수영구',  'category' => '해변', 'desc' => '광안대교를 배경으로 펼쳐지는 낭만적인 해변, 야경 명소', 'emoji' => '🌉', 'color' => '#a29bfe'],
-                ['name' => '감천문화마을',   'district' => '사하구',  'category' => '문화', 'desc' => '부산의 마추픽추! 알록달록 벽화와 골목길이 가득한 예술 마을', 'emoji' => '🎨', 'color' => '#fd79a8'],
-                ['name' => '자갈치시장',     'district' => '중구',    'category' => '시장', 'desc' => '싱싱한 해산물과 활기찬 상인들이 가득한 부산 최대 수산시장', 'emoji' => '🐟', 'color' => '#fdcb6e'],
-                ['name' => '태종대',         'district' => '영도구',  'category' => '자연', 'desc' => '천혜의 기암절벽과 탁 트인 남해 전망을 자랑하는 절경 명소', 'emoji' => '⛰️', 'color' => '#55efc4'],
-                ['name' => '용두산공원',     'district' => '중구',    'category' => '공원', 'desc' => '부산타워에서 내려다보는 시내 전경이 아름다운 도심 공원', 'emoji' => '🗼', 'color' => '#81ecec'],
-            ],
-            'restaurants' => [
-                ['name' => '돼지국밥', 'area' => '서면 / 남포동',  'price' => '₩9,000~',  'desc' => '부산의 소울푸드! 구수하고 진한 돼지국밥 한 그릇', 'emoji' => '🍲', 'color' => '#e17055'],
-                ['name' => '씨앗호떡', 'area' => '남포동',         'price' => '₩1,500~',  'desc' => '견과류 씨앗이 가득 들어간 부산의 국민 간식', 'emoji' => '🥞', 'color' => '#fdcb6e'],
-                ['name' => '밀면',     'area' => '부산 전역',      'price' => '₩8,000~',  'desc' => '쫄깃한 밀면 면발과 시원한 육수의 조화', 'emoji' => '🍜', 'color' => '#74b9ff'],
-                ['name' => '어묵(오뎅)', 'area' => '자갈치 / 남포동', 'price' => '₩500~', 'desc' => '부산식 어묵으로 겨울 길거리 필수 간식', 'emoji' => '🍢', 'color' => '#a29bfe'],
-                ['name' => '낙곱새',   'area' => '부산 전역',      'price' => '₩15,000~', 'desc' => '낙지+곱창+새우를 함께 즐기는 매콤한 부산식 볶음', 'emoji' => '🦑', 'color' => '#fd79a8'],
-                ['name' => '복국',     'area' => '부산 전역',      'price' => '₩12,000~', 'desc' => '시원하고 깔끔한 복어탕, 해장으로도 최고', 'emoji' => '🐡', 'color' => '#55efc4'],
-            ],
+            'banners'            => $bannerModel->getActiveBanners(),
+            'spots'              => $spotsRaw,
+            'placeCategories'    => PlaceModel::CATEGORIES,
+            'restaurants'        => $restaurantsRaw,
+            'restaurantCategories' => RestaurantModel::CATEGORIES,
+            'restaurantPrices'   => RestaurantModel::PRICE_RANGES,
             'courses' => [
                 [
                     'title'    => '해안 드라이브 코스',

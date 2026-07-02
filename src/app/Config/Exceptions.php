@@ -101,6 +101,56 @@ class Exceptions extends BaseConfig
      */
     public function handler(int $statusCode, Throwable $exception): ExceptionHandlerInterface
     {
+        // ignoreCodes(기본 404)는 DB 저장 제외
+        if (!in_array($statusCode, $this->ignoreCodes, true)) {
+            $this->saveToDatabase($statusCode, $exception);
+        }
+
         return new ExceptionHandler($this);
+    }
+
+    /**
+     * 에러를 error_log 테이블에 저장
+     * try-catch로 감싸 저장 실패 시 무한 루프 방지
+     */
+    private function saveToDatabase(int $statusCode, Throwable $exception): void
+    {
+        try {
+            $request = service('request');
+
+            \Config\Database::connect()->table('error_log')->insert([
+                'state'      => 0,
+                'error_type' => $this->resolveErrorType($statusCode, $exception),
+                'error_code' => (string) $statusCode,
+                'message'    => mb_substr($exception->getMessage(), 0, 500),
+                'file'       => mb_substr($exception->getFile(), 0, 500),
+                'line'       => $exception->getLine(),
+                'url'        => mb_substr((string) current_url(), 0, 500),
+                'method'     => strtoupper((string) $request->getMethod()),
+                'ip'         => $request->getIPAddress(),
+                'reg_date'   => date('Y-m-d H:i:s'),
+            ]);
+        } catch (Throwable $e) {
+            // DB 저장 자체가 실패하면 파일 로그에만 기록
+            log_message('critical', '[ErrorLog DB 저장 실패] ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 예외 유형 → error_type 코드 변환
+     * 1=PHP Exception, 2=DB Error, 3=HTTP 4xx, 4=HTTP 5xx, 5=기타
+     */
+    private function resolveErrorType(int $statusCode, Throwable $exception): int
+    {
+        if ($exception instanceof \CodeIgniter\Database\Exceptions\DatabaseException) {
+            return 2;
+        }
+        if ($statusCode >= 500) {
+            return 4;
+        }
+        if ($statusCode >= 400) {
+            return 3;
+        }
+        return 1;
     }
 }

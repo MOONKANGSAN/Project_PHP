@@ -20,9 +20,9 @@
             </a>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="#">관광지</a></li>
-                    <li><a href="#">맛집</a></li>
-                    <li><a href="#">축제</a></li>
+                    <li><a href="/spots">관광지</a></li>
+                    <li><a href="/restaurants">맛집</a></li>
+                    <li><a href="/festivals">축제</a></li>
                     <li><a href="#">여행코스</a></li>
                 </ul>
             </nav>
@@ -267,9 +267,9 @@
             <div class="footer-nav">
                 <h4>바로가기</h4>
                 <ul>
-                    <li><a href="#">관광지</a></li>
-                    <li><a href="#">맛집</a></li>
-                    <li><a href="#">축제·행사</a></li>
+                    <li><a href="/spots">관광지</a></li>
+                    <li><a href="/restaurants">맛집</a></li>
+                    <li><a href="/festivals">축제·행사</a></li>
                     <li><a href="#">여행코스</a></li>
                 </ul>
             </div>

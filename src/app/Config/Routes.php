@@ -6,6 +6,14 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('/users', 'Users::list');
 
+// 서비스 페이지
+$routes->get('/restaurants',         'Service::restaurants');
+$routes->get('/restaurants/suggest', 'Service::suggest');
+$routes->get('/spots',               'Service::spots');
+$routes->get('/spots/suggest',       'Service::spotsSuggest');
+$routes->get('/festivals',           'Service::festivals');
+$routes->get('/festivals/suggest',   'Service::festivalsSuggest');
+
 // 메인 인증
 $routes->post('/auth/register', 'Auth::register');
 $routes->post('/auth/login',    'Auth::login');

@@ -168,13 +168,50 @@ $v = fn(string $f, mixed $d = '') => old($f) ?? ($item[$f] ?? $d);
             </label>
         </div>
 
-        <!-- 이미지 설명 (alt_text) -->
-        <div style="margin-bottom:20px;">
-            <label class="bo-form-label">이미지 설명 (alt 텍스트)</label>
-            <input type="text" name="alt_text"
-                   value="<?= esc($v('alt_text')) ?>"
-                   class="bo-form-input" style="width:100%"
-                   placeholder="이미지 내용을 간략히 설명해주세요. (스크린리더 및 SEO에 사용)">
+        <!-- 이미지 설명 (alt_text) + 노출 지역구 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+            <div>
+                <label class="bo-form-label">이미지 설명 (alt 텍스트)</label>
+                <input type="text" name="alt_text"
+                       value="<?= esc($v('alt_text')) ?>"
+                       class="bo-form-input" style="width:100%"
+                       placeholder="이미지 내용을 간략히 설명해주세요. (스크린리더 및 SEO에 사용)">
+            </div>
+            <div>
+                <label class="bo-form-label">
+                    노출 지역구
+                    <span style="color:#9ca3af;font-weight:400;font-size:12px;margin-left:4px">(배너에 📍 위치로 표시)</span>
+                </label>
+                <?php
+                $busanDistricts = [
+                    '' => '선택 안 함',
+                    '중구'    => '중구',
+                    '서구'    => '서구',
+                    '동구'    => '동구',
+                    '영도구'  => '영도구',
+                    '부산진구'=> '부산진구',
+                    '동래구'  => '동래구',
+                    '남구'    => '남구',
+                    '북구'    => '북구',
+                    '해운대구'=> '해운대구',
+                    '사하구'  => '사하구',
+                    '금정구'  => '금정구',
+                    '강서구'  => '강서구',
+                    '연제구'  => '연제구',
+                    '수영구'  => '수영구',
+                    '사상구'  => '사상구',
+                    '기장군'  => '기장군',
+                ];
+                $selectedLoc = $v('location', '');
+                ?>
+                <select name="location" class="bo-form-select" style="width:100%">
+                    <?php foreach ($busanDistricts as $val => $label): ?>
+                    <option value="<?= esc($val) ?>" <?= $selectedLoc === $val ? 'selected' : '' ?>>
+                        <?= esc($label) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </div>
 
         <!-- 배너 제목 -->

@@ -127,8 +127,24 @@ $imageSlots     = 8 - count($existingImages);
 
             <div class="bo-form-group bo-col-2">
                 <label class="bo-form-label">도로명 주소</label>
-                <input type="text" name="address1" class="bo-form-input"
-                       value="<?= esc($oldVal('address1')) ?>" placeholder="예) 부산광역시 해운대구 해운대해변로 264">
+                <div style="display:flex;gap:8px;">
+                    <input type="text" name="address1" id="address1" class="bo-form-input"
+                           value="<?= esc($oldVal('address1')) ?>"
+                           placeholder="예) 부산광역시 해운대구 해운대해변로 264"
+                           style="flex:1;">
+                    <button type="button" id="btnGeoSearch"
+                            onclick="openDaumPostcode()"
+                            style="flex-shrink:0;padding:0 16px;height:40px;border:none;border-radius:6px;
+                                   background:#03c75a;color:#fff;font-size:13px;font-weight:600;
+                                   cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                                   transition:background .15s;"
+                            onmouseover="this.style.background='#02a44c'"
+                            onmouseout="this.style.background='#03c75a'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        주소 검색
+                    </button>
+                </div>
+                <p id="geoMsg" style="display:none;margin:6px 0 0;font-size:12px;"></p>
             </div>
 
             <div class="bo-form-group">
@@ -138,9 +154,42 @@ $imageSlots     = 8 - count($existingImages);
             </div>
 
             <div class="bo-form-group">
-                <label class="bo-form-label">시/도</label>
-                <input type="text" name="sido" class="bo-form-input"
+                <label class="bo-form-label">시/도 <span style="color:#9ca3af;font-weight:400;font-size:12px;">(검색 시 자동 입력)</span></label>
+                <input type="text" name="sido" id="sido" class="bo-form-input"
                        value="<?= esc($oldVal('sido')) ?>" placeholder="예) 부산광역시">
+            </div>
+
+            <div class="bo-form-group bo-col-full">
+                <label class="bo-form-label">
+                    지도
+                    <span style="color:#9ca3af;font-weight:400;font-size:12px;">
+                        — 마커를 드래그하여 정확한 위치를 조정할 수 있습니다
+                    </span>
+                </label>
+                <div id="naverMap"
+                     style="width:100%;height:360px;border-radius:8px;border:1px solid #e5e7eb;
+                            background:#f1f5f9;overflow:hidden;">
+                </div>
+            </div>
+
+            <div class="bo-form-group">
+                <label class="bo-form-label">위도 <span style="color:#9ca3af;font-weight:400;font-size:12px;">(자동)</span></label>
+                <input type="text" id="latDisplay" class="bo-form-input"
+                       value="<?= esc($oldVal('latitude')) ?>"
+                       placeholder="검색 후 자동 입력" readonly
+                       style="background:#f9fafb;color:#6b7280;">
+                <input type="hidden" name="latitude" id="latitude"
+                       value="<?= esc($oldVal('latitude')) ?>">
+            </div>
+
+            <div class="bo-form-group">
+                <label class="bo-form-label">경도 <span style="color:#9ca3af;font-weight:400;font-size:12px;">(자동)</span></label>
+                <input type="text" id="lngDisplay" class="bo-form-input"
+                       value="<?= esc($oldVal('longitude')) ?>"
+                       placeholder="검색 후 자동 입력" readonly
+                       style="background:#f9fafb;color:#6b7280;">
+                <input type="hidden" name="longitude" id="longitude"
+                       value="<?= esc($oldVal('longitude')) ?>">
             </div>
 
         </div>
@@ -441,6 +490,96 @@ $imageSlots     = 8 - count($existingImages);
         if (val) { addTag(val); tagInput.value = ''; renderChips(); }
     });
 })();
+</script>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=<?= esc($naver_client_id) ?>"></script>
+<script>
+(function () {
+    var DEFAULT_LAT = 35.1631, DEFAULT_LNG = 129.1631;
+    var initLat = parseFloat(document.getElementById('latitude').value)  || DEFAULT_LAT;
+    var initLng = parseFloat(document.getElementById('longitude').value) || DEFAULT_LNG;
+
+    var map = new naver.maps.Map('naverMap', {
+        center: new naver.maps.LatLng(initLat, initLng), zoom: 15,
+    });
+    var marker = new naver.maps.Marker({
+        position: new naver.maps.LatLng(initLat, initLng), map: map,
+        draggable: true, visible: !!(document.getElementById('latitude').value),
+    });
+
+    naver.maps.Event.addListener(marker, 'dragend', function (e) {
+        setCoords(e.coord.lat().toFixed(7), e.coord.lng().toFixed(7));
+    });
+    naver.maps.Event.addListener(map, 'click', function (e) {
+        marker.setPosition(e.coord); marker.setVisible(true);
+        setCoords(e.coord.lat().toFixed(7), e.coord.lng().toFixed(7));
+    });
+
+    function setCoords(lat, lng) {
+        document.getElementById('latitude').value   = lat;
+        document.getElementById('longitude').value  = lng;
+        document.getElementById('latDisplay').value = lat;
+        document.getElementById('lngDisplay').value = lng;
+    }
+
+    window.openDaumPostcode = function () {
+        new daum.Postcode({
+            oncomplete: function (data) {
+                var addr = data.roadAddress || data.jibunAddress;
+                document.getElementById('address1').value = addr;
+                document.getElementById('sido').value     = data.sido || '';
+                searchCoordsWithFallback(data);
+            },
+        }).open();
+    };
+
+    function searchCoordsWithFallback(d) {
+        var queries = [
+            { q: d.roadAddress,                                                   zoom: 17 },
+            { q: d.jibunAddress,                                                  zoom: 16 },
+            { q: [d.sido, d.sigungu, d.roadname || d.bname].filter(Boolean).join(' '), zoom: 15 },
+            { q: [d.sido, d.sigungu].filter(Boolean).join(' '),                   zoom: 14 },
+        ].filter(function (item) { return item.q && item.q.trim(); });
+        tryNextQuery(queries, 0);
+    }
+
+    function tryNextQuery(queries, idx) {
+        if (idx >= queries.length) {
+            showMsg('위치를 찾지 못했습니다. 지도를 직접 클릭해 위치를 지정해주세요.', '#c2410c');
+            return;
+        }
+        fetch('/backoffice/geo/search?q=' + encodeURIComponent(queries[idx].q))
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res.addresses || !res.addresses.length) {
+                    tryNextQuery(queries, idx + 1);
+                    return;
+                }
+                var a = res.addresses[0], lat = parseFloat(a.y), lng = parseFloat(a.x);
+                var coord = new naver.maps.LatLng(lat, lng);
+                map.setCenter(coord); map.setZoom(queries[idx].zoom);
+                marker.setPosition(coord); marker.setVisible(true);
+                setCoords(lat.toFixed(7), lng.toFixed(7));
+                showMsg(
+                    idx === 0
+                        ? '📍 위치가 지도에 표시되었습니다. 마커를 드래그하여 미세 조정할 수 있습니다.'
+                        : '📍 정확한 위치를 찾지 못해 근처 지역으로 표시했습니다. 마커를 드래그해 조정해주세요.',
+                    idx === 0 ? '#16a34a' : '#d97706'
+                );
+            })
+            .catch(function () { tryNextQuery(queries, idx + 1); });
+    }
+
+    document.getElementById('address1').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); openDaumPostcode(); }
+    });
+
+    function showMsg(text, color) {
+        var el = document.getElementById('geoMsg');
+        el.textContent = text; el.style.color = color; el.style.display = 'block';
+    }
+}());
 </script>
 
 <?= view('backoffice/partials/footer') ?>

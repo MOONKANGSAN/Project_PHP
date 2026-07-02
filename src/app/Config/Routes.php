@@ -98,4 +98,7 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
 
     // 해시태그 API (자동완성)
     $routes->get('hashtags/search', 'BackofficeHashtag::search');
+
+    // 네이버 Geocoding 프록시 (주소 → 위도/경도)
+    $routes->get('geo/search', 'GeoController::search');
 });

@@ -19,7 +19,7 @@ class EventModel extends Model
         'thumb_idx',
         'reg_date', 'edit_date',
         'view_cnt', 'like_cnt',
-        'sido', 'latitude', 'reg_id',
+        'sido', 'latitude', 'longitude', 'reg_id',
         'price_range', 'start_date', 'end_date',
         'category_num', 'host', 'is_free',
     ];

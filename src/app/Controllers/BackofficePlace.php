@@ -40,8 +40,9 @@ class BackofficePlace extends BaseController
                 'id'    => session()->get('backoffice.id'),
                 'level' => session()->get('backoffice.level'),
             ],
-            'current_uri' => '/' . uri_string(),
-            'categories'  => PlaceModel::CATEGORIES,
+            'current_uri'     => '/' . uri_string(),
+            'categories'      => PlaceModel::CATEGORIES,
+            'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
     }
 
@@ -164,6 +165,8 @@ class BackofficePlace extends BaseController
             'address1'      => $this->request->getPost('address1'),
             'address2'      => $this->request->getPost('address2'),
             'sido'          => $this->request->getPost('sido'),
+            'latitude'      => $this->request->getPost('latitude')  ?: null,
+            'longitude'     => $this->request->getPost('longitude') ?: null,
             'open_time'     => $openTime,
             'admission_fee' => $this->request->getPost('admission_fee'),
             'parking'       => $this->request->getPost('parking') ?: 0,
@@ -238,6 +241,8 @@ class BackofficePlace extends BaseController
             'address1'      => $this->request->getPost('address1'),
             'address2'      => $this->request->getPost('address2'),
             'sido'          => $this->request->getPost('sido'),
+            'latitude'      => $this->request->getPost('latitude')  ?: null,
+            'longitude'     => $this->request->getPost('longitude') ?: null,
             'open_time'     => $openTime,
             'admission_fee' => $this->request->getPost('admission_fee'),
             'parking'       => $this->request->getPost('parking') ?: 0,

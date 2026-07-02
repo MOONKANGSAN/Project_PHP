@@ -45,7 +45,7 @@
                     <th style="width:60px;text-align:center">순서</th>
                     <th style="width:80px;text-align:center">상태</th>
                     <th style="width:110px;text-align:center">등록일</th>
-                    <th style="width:100px;text-align:center">관리</th>
+                    <th style="width:150px;text-align:center">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -126,7 +126,7 @@
 
                     <!-- 관리 버튼 -->
                     <td class="text-center">
-                        <div class="bo-action-btns" style="flex-wrap:nowrap;">
+                        <div class="bo-action-btns" style="flex-wrap:nowrap;justify-content:center;">
                             <a href="/backoffice/banners/<?= $row['idx'] ?>/edit"
                                class="bo-btn-action edit">수정</a>
                             <form method="post" action="/backoffice/banners/<?= $row['idx'] ?>/state"

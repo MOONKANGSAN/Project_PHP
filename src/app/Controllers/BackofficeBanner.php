@@ -96,10 +96,11 @@ class BackofficeBanner extends BaseController
         $this->model->insert([
             'state'      => $this->request->getPost('state'),
             'image_url'  => $imageUrl,
-            'alt_text'   => $this->request->getPost('alt_text') ?: null,
-            'title'      => $this->request->getPost('title')    ?: null,
-            'subtitle'   => $this->request->getPost('subtitle') ?: null,
-            'link_url'   => $this->request->getPost('link_url') ?: null,
+            'alt_text'   => $this->request->getPost('alt_text')  ?: null,
+            'location'   => $this->request->getPost('location')  ?: null,
+            'title'      => $this->request->getPost('title')     ?: null,
+            'subtitle'   => $this->request->getPost('subtitle')  ?: null,
+            'link_url'   => $this->request->getPost('link_url')  ?: null,
             'sort_order' => (int) ($this->request->getPost('sort_order') ?: 100),
             'reg_id'     => session()->get('backoffice.id'),
             'reg_date'   => date('Y-m-d H:i:s'),
@@ -160,10 +161,11 @@ class BackofficeBanner extends BaseController
 
         $updateData = [
             'state'      => $this->request->getPost('state'),
-            'alt_text'   => $this->request->getPost('alt_text') ?: null,
-            'title'      => $this->request->getPost('title')    ?: null,
-            'subtitle'   => $this->request->getPost('subtitle') ?: null,
-            'link_url'   => $this->request->getPost('link_url') ?: null,
+            'alt_text'   => $this->request->getPost('alt_text')  ?: null,
+            'location'   => $this->request->getPost('location')  ?: null,
+            'title'      => $this->request->getPost('title')     ?: null,
+            'subtitle'   => $this->request->getPost('subtitle')  ?: null,
+            'link_url'   => $this->request->getPost('link_url')  ?: null,
             'sort_order' => (int) ($this->request->getPost('sort_order') ?: 100),
             'edit_date'  => date('Y-m-d H:i:s'),
         ];

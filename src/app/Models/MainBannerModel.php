@@ -17,6 +17,7 @@ class MainBannerModel extends Model
         'state',
         'image_url',
         'alt_text',
+        'location',
         'title',
         'subtitle',
         'link_url',

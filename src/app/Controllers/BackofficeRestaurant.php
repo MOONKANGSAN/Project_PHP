@@ -43,9 +43,10 @@ class BackofficeRestaurant extends BaseController
                 'id'    => session()->get('backoffice.id'),
                 'level' => session()->get('backoffice.level'),
             ],
-            'current_uri'  => '/' . uri_string(),
-            'categories'   => RestaurantModel::CATEGORIES,
-            'price_ranges' => RestaurantModel::PRICE_RANGES,
+            'current_uri'     => '/' . uri_string(),
+            'categories'      => RestaurantModel::CATEGORIES,
+            'price_ranges'    => RestaurantModel::PRICE_RANGES,
+            'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
     }
 
@@ -183,6 +184,8 @@ class BackofficeRestaurant extends BaseController
             'category_num' => $this->request->getPost('category_num'),
             'price_range'  => $this->request->getPost('price_range') ?: 1,
             'sido'         => $this->request->getPost('sido'),
+            'latitude'     => $this->request->getPost('latitude')  ?: null,
+            'longitude'    => $this->request->getPost('longitude') ?: null,
             'open_time'    => $openTime,
             'parking'      => $this->request->getPost('parking') ?: 0,
             'reg_id'       => session()->get('backoffice.id'),
@@ -265,6 +268,8 @@ class BackofficeRestaurant extends BaseController
             'category_num' => $this->request->getPost('category_num'),
             'price_range'  => $this->request->getPost('price_range') ?: 1,
             'sido'         => $this->request->getPost('sido'),
+            'latitude'     => $this->request->getPost('latitude')  ?: null,
+            'longitude'    => $this->request->getPost('longitude') ?: null,
             'open_time'    => $openTime,
             'parking'      => $this->request->getPost('parking') ?: 0,
             'edit_date'    => date('Y-m-d H:i:s'),

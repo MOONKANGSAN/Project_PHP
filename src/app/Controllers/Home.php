@@ -2,32 +2,16 @@
 
 namespace App\Controllers;
 
+use App\Models\MainBannerModel;
+
 class Home extends BaseController
 {
     public function index(): string
     {
-        // 부산 관광 하드코딩 데이터 (DB 연결 전 임시)
+        // DB에서 활성 배너 목록 조회 (state=1, sort_order ASC)
+        $bannerModel = new MainBannerModel();
         $data = [
-            'banners' => [
-                [
-                    'title'    => '부산의 푸른 바다',
-                    'subtitle' => '해운대에서 시작하는 완벽한 여름 휴가',
-                    'location' => '해운대구',
-                    'bg'       => 'banner-haeundae',
-                ],
-                [
-                    'title'    => '알록달록 감천문화마을',
-                    'subtitle' => '골목마다 피어난 예술과 이야기',
-                    'location' => '사하구',
-                    'bg'       => 'banner-gamcheon',
-                ],
-                [
-                    'title'    => '광안대교의 밤',
-                    'subtitle' => '빛나는 부산의 야경을 만나다',
-                    'location' => '수영구',
-                    'bg'       => 'banner-gwangan',
-                ],
-            ],
+            'banners' => $bannerModel->getActiveBanners(),
             'spots' => [
                 ['name' => '해운대해수욕장', 'district' => '해운대구', 'category' => '해변', 'desc' => '부산을 대표하는 명품 해수욕장으로 여름이면 수백만 명이 찾는 핫플레이스', 'emoji' => '🏖️', 'color' => '#74b9ff'],
                 ['name' => '광안리해수욕장', 'district' => '수영구',  'category' => '해변', 'desc' => '광안대교를 배경으로 펼쳐지는 낭만적인 해변, 야경 명소', 'emoji' => '🌉', 'color' => '#a29bfe'],

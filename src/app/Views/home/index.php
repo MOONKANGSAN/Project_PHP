@@ -42,18 +42,44 @@
 <!-- ===================== 메인 배너 슬라이더 ===================== -->
 <section class="main-banner">
     <div class="banner-slider">
-        <?php foreach ($banners as $i => $banner): ?>
-        <div class="banner-slide <?= $banner['bg'] ?> <?= $i === 0 ? 'active' : '' ?>">
+        <?php if (empty($banners)): ?>
+        <!-- 등록된 활성 배너가 없을 때 기본 슬라이드 -->
+        <div class="banner-slide banner-default active">
             <div class="banner-overlay"></div>
             <div class="banner-content">
-                <span class="banner-location">📍 <?= $banner['location'] ?></span>
-                <h1 class="banner-title"><?= $banner['title'] ?></h1>
-                <p class="banner-subtitle"><?= $banner['subtitle'] ?></p>
-                <a href="#" class="btn-banner">지금 탐험하기 →</a>
+                <span class="banner-location">📍 부산광역시</span>
+                <h1 class="banner-title">부산에 오신 걸 환영합니다</h1>
+                <p class="banner-subtitle">설레는 부산 여행을 부산온나와 함께하세요</p>
+            </div>
+        </div>
+        <?php else: ?>
+        <?php foreach ($banners as $i => $banner): ?>
+        <div class="banner-slide <?= $i === 0 ? 'active' : '' ?>">
+            <!-- 실제 등록 이미지 -->
+            <img class="banner-bg-img"
+                 src="<?= esc($banner['image_url']) ?>"
+                 alt="<?= esc($banner['alt_text'] ?? '') ?>">
+            <div class="banner-overlay"></div>
+            <div class="banner-content">
+                <?php if (!empty($banner['location'])): ?>
+                <span class="banner-location">📍 <?= esc($banner['location']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($banner['title'])): ?>
+                <h1 class="banner-title"><?= esc($banner['title']) ?></h1>
+                <?php endif; ?>
+                <?php if (!empty($banner['subtitle'])): ?>
+                <p class="banner-subtitle"><?= esc($banner['subtitle']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($banner['link_url'])): ?>
+                <a href="<?= esc($banner['link_url']) ?>" class="btn-banner">지금 탐험하기 →</a>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
+        <?php endif; ?>
     </div>
+
+    <?php if (!empty($banners) && count($banners) > 1): ?>
     <div class="banner-controls">
         <button class="banner-arrow prev" id="bannerPrev">&#8249;</button>
         <div class="banner-dots">
@@ -63,6 +89,8 @@
         </div>
         <button class="banner-arrow next" id="bannerNext">&#8250;</button>
     </div>
+    <?php endif; ?>
+
     <!-- 하단 웨이브 -->
     <div class="banner-wave">
         <svg viewBox="0 0 1440 60" preserveAspectRatio="none">

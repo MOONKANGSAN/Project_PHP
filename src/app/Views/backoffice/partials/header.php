@@ -151,8 +151,15 @@
                 <p class="bo-nav-group-title">사이트관리</p>
                 <ul class="bo-nav-list">
                     <li>
+                        <a href="/backoffice/banners"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/banners') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">🖼️</span>
+                            <span>배너 관리</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/backoffice/error-logs"
-                           class="bo-nav-item <?= $current_uri === '/backoffice/error-logs' ? 'active' : '' ?>">
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/error-logs') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">⚠️</span>
                             <span>에러 로그</span>
                         </a>

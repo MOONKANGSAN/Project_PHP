@@ -20,7 +20,7 @@ class RestaurantModel extends Model
         'thumb_idx',
         'reg_date', 'edit_date',
         'view_cnt', 'like_cnt',
-        'sido', 'latitude', 'reg_id',
+        'sido', 'latitude', 'longitude', 'reg_id',
         'open_time', 'parking',
     ];
 

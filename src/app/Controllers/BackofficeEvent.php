@@ -40,8 +40,9 @@ class BackofficeEvent extends BaseController
                 'id'    => session()->get('backoffice.id'),
                 'level' => session()->get('backoffice.level'),
             ],
-            'current_uri' => '/' . uri_string(),
-            'categories'  => EventModel::CATEGORIES,
+            'current_uri'     => '/' . uri_string(),
+            'categories'      => EventModel::CATEGORIES,
+            'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
     }
 
@@ -163,6 +164,8 @@ class BackofficeEvent extends BaseController
             'address2'     => $this->request->getPost('address2'),
             'detail_url'   => $this->request->getPost('detail_url'),
             'sido'         => $this->request->getPost('sido'),
+            'latitude'     => $this->request->getPost('latitude')  ?: null,
+            'longitude'    => $this->request->getPost('longitude') ?: null,
             'price_range'  => $this->request->getPost('price_range') ?: 1,
             'start_date'   => $this->request->getPost('start_date'),
             'end_date'     => $this->request->getPost('end_date'),
@@ -238,6 +241,8 @@ class BackofficeEvent extends BaseController
             'address2'     => $this->request->getPost('address2'),
             'detail_url'   => $this->request->getPost('detail_url'),
             'sido'         => $this->request->getPost('sido'),
+            'latitude'     => $this->request->getPost('latitude')  ?: null,
+            'longitude'    => $this->request->getPost('longitude') ?: null,
             'price_range'  => $this->request->getPost('price_range') ?: 1,
             'start_date'   => $this->request->getPost('start_date'),
             'end_date'     => $this->request->getPost('end_date'),

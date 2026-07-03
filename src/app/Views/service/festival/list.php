@@ -143,7 +143,7 @@
             $emoji   = $catEmoji[$catNum] ?? '🎪';
             $status  = $f['status'] ?? '';
             ?>
-            <div class="r-card">
+            <a class="r-card" href="/festivals/<?= (int)$f['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($f['thumbnail'])): ?>
                         <img src="<?= esc($f['thumbnail']) ?>" alt="<?= esc($f['name']) ?>">
@@ -211,7 +211,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 
@@ -225,7 +225,7 @@
             $emoji   = $catEmoji[$catNum] ?? '🎪';
             $status  = $f['status'] ?? '';
             ?>
-            <div class="r-list-item">
+            <a class="r-list-item" href="/festivals/<?= (int)$f['idx'] ?>" style="text-decoration:none; color:inherit;">
                 <div class="r-list-cat" style="background: <?= $color ?>22;">
                     <span style="font-size:22px;"><?= $emoji ?></span>
                 </div>
@@ -282,7 +282,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 

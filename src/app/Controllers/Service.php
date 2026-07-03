@@ -108,6 +108,41 @@ class Service extends BaseController
     }
 
     /**
+     * 맛집 상세 뷰 페이지
+     * GET /restaurants/{idx}
+     */
+    public function restaurantView(int $idx): string
+    {
+        $restaurantModel    = new RestaurantModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+
+        // state=1(활성) 맛집만 조회
+        $restaurant = $restaurantModel->where('state', 1)->find($idx);
+
+        if (!$restaurant) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // 썸네일 전체 + 해시태그
+        $thumbnails = $thumbnailModel->getByRestaurant($idx);
+        $tags       = $hashtagNumberModel->getTagsByRestaurant($idx);
+
+        // 조회수 +1
+        $restaurantModel->update($idx, ['view_cnt' => ((int) ($restaurant['view_cnt'] ?? 0)) + 1]);
+
+        return view('service/restaurant/view', [
+            'restaurant'       => $restaurant,
+            'thumbnails'       => $thumbnails,
+            'tags'             => $tags,
+            'categories'       => RestaurantModel::CATEGORIES,
+            'priceRanges'      => RestaurantModel::PRICE_RANGES,
+            'saved_id'         => $this->request->getCookie('saved_id') ?? '',
+            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+        ]);
+    }
+
+    /**
      * 검색어 자동완성 API (AJAX)
      * GET /restaurants/suggest?q=검색어
      * 반환: JSON { suggestions: [{type, label, value}, ...] }
@@ -192,6 +227,38 @@ class Service extends BaseController
     // ================================================================
     // 관광지
     // ================================================================
+
+    /**
+     * 관광지 상세 뷰 페이지
+     * GET /spots/{idx}
+     */
+    public function spotView(int $idx): string
+    {
+        $placeModel         = new PlaceModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+
+        $spot = $placeModel->where('state', 1)->find($idx);
+
+        if (!$spot) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $thumbnails = $thumbnailModel->getByPlace($idx);
+        $tags       = $hashtagNumberModel->getTagsByPlace($idx);
+
+        // 조회수 +1
+        $placeModel->update($idx, ['view_cnt' => ((int)($spot['view_cnt'] ?? 0)) + 1]);
+
+        return view('service/spot/view', [
+            'spot'             => $spot,
+            'thumbnails'       => $thumbnails,
+            'tags'             => $tags,
+            'categories'       => PlaceModel::CATEGORIES,
+            'saved_id'         => $this->request->getCookie('saved_id') ?? '',
+            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+        ]);
+    }
 
     /**
      * 관광지 리스트 페이지
@@ -337,6 +404,48 @@ class Service extends BaseController
     // ================================================================
     // 축제·행사
     // ================================================================
+
+    /**
+     * 축제·행사 상세 뷰 페이지
+     * GET /festivals/{idx}
+     */
+    public function festivalView(int $idx): string
+    {
+        $eventModel         = new EventModel();
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+
+        $festival = $eventModel->where('state', 1)->find($idx);
+
+        if (!$festival) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $thumbnails = $thumbnailModel->getByEvent($idx);
+        $tags       = $hashtagNumberModel->getTagsByEvent($idx);
+
+        // 진행 상태 계산
+        $today = date('Y-m-d');
+        if (!empty($festival['start_date']) && !empty($festival['end_date'])) {
+            if ($today < $festival['start_date'])      $festival['status'] = 'upcoming';
+            elseif ($today > $festival['end_date'])    $festival['status'] = 'ended';
+            else                                       $festival['status'] = 'ongoing';
+        } else {
+            $festival['status'] = '';
+        }
+
+        // 조회수 +1
+        $eventModel->update($idx, ['view_cnt' => ((int)($festival['view_cnt'] ?? 0)) + 1]);
+
+        return view('service/festival/view', [
+            'festival'         => $festival,
+            'thumbnails'       => $thumbnails,
+            'tags'             => $tags,
+            'categories'       => EventModel::CATEGORIES,
+            'saved_id'         => $this->request->getCookie('saved_id') ?? '',
+            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+        ]);
+    }
 
     /**
      * 축제 리스트 페이지

@@ -8,10 +8,13 @@ $routes->get('/users', 'Users::list');
 
 // 서비스 페이지
 $routes->get('/restaurants',         'Service::restaurants');
+$routes->get('/restaurants/(:num)',  'Service::restaurantView/$1');
 $routes->get('/restaurants/suggest', 'Service::suggest');
 $routes->get('/spots',               'Service::spots');
+$routes->get('/spots/(:num)',        'Service::spotView/$1');
 $routes->get('/spots/suggest',       'Service::spotsSuggest');
 $routes->get('/festivals',           'Service::festivals');
+$routes->get('/festivals/(:num)',    'Service::festivalView/$1');
 $routes->get('/festivals/suggest',   'Service::festivalsSuggest');
 
 // 메인 인증

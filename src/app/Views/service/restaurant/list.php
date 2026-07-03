@@ -143,7 +143,7 @@
             $color    = $catColor[$catNum] ?? '#b2bec3';
             $emoji    = $catEmoji[$catNum] ?? '🍴';
             ?>
-            <div class="r-card">
+            <a class="r-card" href="/restaurants/<?= (int)$r['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <!-- 썸네일 (카드 뷰에서만 출력) -->
                 <div class="r-card-thumb">
                     <?php if (!empty($r['thumbnail'])): ?>
@@ -202,7 +202,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 
@@ -216,7 +216,7 @@
             $color    = $catColor[$catNum] ?? '#b2bec3';
             $emoji    = $catEmoji[$catNum] ?? '🍴';
             ?>
-            <div class="r-list-item">
+            <a class="r-list-item" href="/restaurants/<?= (int)$r['idx'] ?>" style="text-decoration:none; color:inherit;">
                 <!-- 카테고리 색상 블록 (리스트 뷰에서 사진 대신) -->
                 <div class="r-list-cat" style="background: <?= $color ?>22;">
                     <span style="font-size:22px;"><?= $emoji ?></span>
@@ -270,7 +270,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 

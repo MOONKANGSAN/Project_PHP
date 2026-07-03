@@ -158,7 +158,7 @@
             $color   = $catColor[$catNum] ?? '#b2bec3';
             $emoji   = $catEmoji[$catNum] ?? '📍';
             ?>
-            <div class="r-card fade-in" style="--delay: <?= $i * 80 ?>ms">
+            <a class="r-card fade-in" href="/spots/<?= (int)$s['idx'] ?>" style="--delay: <?= $i * 80 ?>ms; text-decoration:none; color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($s['thumbnail'])): ?>
                         <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>">
@@ -203,7 +203,7 @@
                     <span class="price-badge free-badge">🎫 무료</span>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>
@@ -240,7 +240,7 @@
             $color    = $rCatColor[$catNum] ?? '#b2bec3';
             $emoji    = $rCatEmoji[$catNum] ?? '🍴';
             ?>
-            <div class="r-card fade-in" style="--delay: <?= $i * 80 ?>ms">
+            <a class="r-card fade-in" href="/restaurants/<?= (int)$r['idx'] ?>" style="--delay: <?= $i * 80 ?>ms; text-decoration:none; color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($r['thumbnail'])): ?>
                         <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
@@ -288,7 +288,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
         <?php endif; ?>

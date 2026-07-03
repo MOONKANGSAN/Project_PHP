@@ -132,7 +132,7 @@
             $color   = $catColor[$catNum] ?? '#b2bec3';
             $emoji   = $catEmoji[$catNum] ?? '📍';
             ?>
-            <div class="r-card">
+            <a class="r-card" href="/spots/<?= (int)$s['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($s['thumbnail'])): ?>
                         <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>">
@@ -190,7 +190,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 
@@ -203,7 +203,7 @@
             $color   = $catColor[$catNum] ?? '#b2bec3';
             $emoji   = $catEmoji[$catNum] ?? '📍';
             ?>
-            <div class="r-list-item">
+            <a class="r-list-item" href="/spots/<?= (int)$s['idx'] ?>" style="text-decoration:none; color:inherit;">
                 <div class="r-list-cat" style="background: <?= $color ?>22;">
                     <span style="font-size:22px;"><?= $emoji ?></span>
                 </div>
@@ -255,7 +255,7 @@
                     </div>
                     <?php endif; ?>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
 

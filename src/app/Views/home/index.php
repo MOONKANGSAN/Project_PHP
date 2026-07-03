@@ -107,56 +107,12 @@
             <p>관심있는 지역을 선택하면 해당 지역의 주요 명소를 확인할 수 있습니다</p>
         </div>
         <div class="map-container fade-in">
-            <!-- 인터랙티브 SVG 지도 -->
+            <!-- 실제 부산 행정구역 SVG 지도 -->
             <div class="busan-map-wrap">
-                <svg viewBox="0 0 700 580" xmlns="http://www.w3.org/2000/svg" class="map-svg" id="busanMap">
-                    <defs>
-                        <linearGradient id="seaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#b3d9f5;stop-opacity:1"/>
-                            <stop offset="100%" style="stop-color:#7ec8e3;stop-opacity:1"/>
-                        </linearGradient>
-                        <filter id="landShadow">
-                            <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.15"/>
-                        </filter>
-                    </defs>
-
-                    <!-- 바다 배경 -->
-                    <rect width="700" height="580" fill="url(#seaGrad)" rx="14"/>
-
-                    <!-- 파도 느낌 선 -->
-                    <path d="M0,520 Q175,500 350,520 Q525,540 700,520" fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.4"/>
-                    <path d="M0,545 Q175,525 350,545 Q525,565 700,545" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.3"/>
-
-                    <!-- 부산 육지 윤곽 (단순화) -->
-                    <path d="
-                        M 68,82
-                        L 658,60
-                        L 678,165
-                        L 648,262
-                        L 682,368
-                        L 608,438
-                        L 505,498
-                        L 382,522
-                        L 260,502
-                        L 158,460
-                        L 78,382
-                        L 52,255
-                        L 62,132
-                        Z
-                    " fill="#dce9c8" stroke="#9eb87a" stroke-width="2" filter="url(#landShadow)"/>
-
-                    <!-- 낙동강 (서쪽 경계) -->
-                    <path d="M 62,132 Q 48,195 52,255 Q 58,318 78,382" fill="none" stroke="#74b9ff" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
-
-                    <!-- 영도구 (섬) -->
-                    <ellipse cx="305" cy="513" rx="76" ry="30" fill="#dce9c8" stroke="#9eb87a" stroke-width="2"/>
-
-                    <!-- 지역 마커는 JS로 동적 생성 -->
-                </svg>
+                <?php echo file_get_contents(FCPATH . 'busan_map.svg') ?>
                 <div class="map-legend">
                     <span class="legend-sea">■ 바다</span>
                     <span class="legend-land">■ 육지</span>
-                    <span class="legend-river">■ 낙동강</span>
                 </div>
             </div>
 

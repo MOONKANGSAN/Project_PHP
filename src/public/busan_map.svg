@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      viewBox="0 0 1254 1254"
-     style="width:100%;max-width:800px;height:auto;display:block"
+     class="map-svg" id="busanMap"
      aria-label="부산 행정구역 지도">
 <defs>
   <style>
@@ -135,23 +135,5 @@
   <text class="dist-label" x="624" y="796">동구</text>
 </g>
 
-<script>
-(function(){
-  var districts = document.querySelectorAll('.district');
-  districts.forEach(function(el){
-    el.addEventListener('click', function(){
-      districts.forEach(function(d){ d.classList.remove('active'); });
-      el.classList.add('active');
-      var name = el.getAttribute('data-name');
-      var id   = el.getAttribute('id');
-      var evt = new CustomEvent('districtClick', { detail:{ id:id, name:name }, bubbles:true });
-      el.dispatchEvent(evt);
-    });
-    el.addEventListener('keydown', function(e){
-      if(e.key==='Enter'||e.key===' '){ el.click(); }
-    });
-  });
-})();
-</script>
 
 </svg>

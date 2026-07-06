@@ -145,9 +145,13 @@ $imageSlots     = 8 - count($existingImages);
             </div>
 
             <div class="bo-form-group">
-                <label class="bo-form-label">시/도 <span style="color:#9ca3af;font-weight:400;font-size:12px;">(검색 시 자동 입력)</span></label>
-                <input type="text" name="sido" id="sido" class="bo-form-input"
-                       value="<?= esc($oldVal('sido')) ?>" placeholder="예) 부산광역시">
+                <label class="bo-form-label">지역(구) <span style="color:#9ca3af;font-weight:400;font-size:12px;">(검색 시 자동 선택)</span></label>
+                <select name="sido" id="sido" class="bo-form-select">
+                    <option value="">-- 지역구 선택 --</option>
+                    <?php foreach (['강서구','금정구','기장군','남구','동구','동래구','부산진구','북구','사상구','사하구','서구','수영구','연제구','영도구','중구','해운대구'] as $gu): ?>
+                        <option value="<?= esc($gu) ?>" <?= $oldVal('sido') === $gu ? 'selected' : '' ?>><?= esc($gu) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <!-- 네이버 지도 -->
@@ -305,6 +309,31 @@ $imageSlots     = 8 - count($existingImages);
                 <div class="bo-tag-suggestions" id="tagSuggestions"></div>
                 <div id="tagHiddenInputs"></div>
             </div>
+
+        </div>
+    </div>
+
+    <!-- 편의시설 -->
+    <div class="bo-form-card">
+        <h3 class="bo-form-section-title">편의시설</h3>
+        <div class="bo-form-grid">
+
+            <?php foreach (\App\Models\FacilityModel::FIELDS as $field => $meta): ?>
+            <div class="bo-form-group">
+                <label class="bo-form-label"><?= esc($meta['label']) ?></label>
+                <?php
+                    // old() 우선 → 수정 모드의 기존 저장값 → 기본값 0
+                    $facilityVal = (int) old($field, $facility[$field] ?? 0);
+                ?>
+                <select name="<?= esc($field) ?>" class="bo-form-select">
+                    <?php foreach ($meta['options'] as $optVal => $optLabel): ?>
+                    <option value="<?= $optVal ?>" <?= $facilityVal === $optVal ? 'selected' : '' ?>>
+                        <?= esc($optLabel) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endforeach; ?>
 
         </div>
     </div>
@@ -603,12 +632,24 @@ $imageSlots     = 8 - count($existingImages);
     }
 
     // 카카오 주소 검색 팝업 → 선택 시 폴백 전략으로 좌표 변환
+    // sigungu(예: "해운대구")를 select 옵션과 매칭하여 자동 선택
+    function autoSelectDistrict(sigungu) {
+        var sel = document.getElementById('sido');
+        for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value && sigungu.indexOf(sel.options[i].value) !== -1) {
+                sel.selectedIndex = i;
+                return;
+            }
+        }
+        sel.selectedIndex = 0;
+    }
+
     window.openDaumPostcode = function () {
         new daum.Postcode({
             oncomplete: function (data) {
                 var addr = data.roadAddress || data.jibunAddress;
                 document.getElementById('address1').value = addr;
-                document.getElementById('sido').value     = data.sido || '';
+                autoSelectDistrict(data.sigungu || '');
                 searchCoordsWithFallback(data);
             },
         }).open();

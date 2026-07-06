@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\EventModel;
+use App\Models\FacilityModel;
 use App\Models\HashtagModel;
 use App\Models\HashtagNumberModel;
 use App\Models\ThumbnailModel;
@@ -13,6 +14,7 @@ use App\Models\ThumbnailModel;
 class BackofficeEvent extends BaseController
 {
     private EventModel         $model;
+    private FacilityModel      $facilityModel;
     private HashtagModel       $hashtagModel;
     private HashtagNumberModel $hashtagNumberModel;
     private ThumbnailModel     $thumbnailModel;
@@ -26,6 +28,7 @@ class BackofficeEvent extends BaseController
     {
         parent::initController($request, $response, $logger);
         $this->model              = new EventModel();
+        $this->facilityModel      = new FacilityModel();
         $this->hashtagModel       = new HashtagModel();
         $this->hashtagNumberModel = new HashtagNumberModel();
         $this->thumbnailModel     = new ThumbnailModel();
@@ -44,6 +47,18 @@ class BackofficeEvent extends BaseController
             'categories'      => EventModel::CATEGORIES,
             'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
+    }
+
+    /**
+     * POST 데이터에서 편의시설 필드만 추출
+     */
+    private function extractFacilityData(): array
+    {
+        $data = [];
+        foreach (array_keys(FacilityModel::FIELDS) as $field) {
+            $data[$field] = (int) $this->request->getPost($field);
+        }
+        return $data;
     }
 
     /**
@@ -137,6 +152,7 @@ class BackofficeEvent extends BaseController
             'mode'              => 'register',
             'existing_hashtags' => [],
             'existing_images'   => [],
+            'facility'          => [],
         ]));
     }
 
@@ -179,6 +195,9 @@ class BackofficeEvent extends BaseController
 
         $eventIdx = (int) $this->model->getInsertID();
 
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForEvent($eventIdx, $this->extractFacilityData());
+
         // 해시태그 저장 (최대 5개)
         $tagNames = $this->request->getPost('hashtag_names') ?? [];
         $this->saveHashtags($eventIdx, (array) $tagNames);
@@ -208,6 +227,7 @@ class BackofficeEvent extends BaseController
             'mode'              => 'edit',
             'existing_hashtags' => $this->hashtagNumberModel->getTagsByEvent($idx),
             'existing_images'   => $this->thumbnailModel->getByEvent($idx),
+            'facility'          => $this->facilityModel->getByEvent($idx) ?? [],
         ]));
     }
 
@@ -251,6 +271,9 @@ class BackofficeEvent extends BaseController
             'is_free'      => $this->request->getPost('is_free') ?: 0,
             'edit_date'    => date('Y-m-d H:i:s'),
         ]);
+
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForEvent($idx, $this->extractFacilityData());
 
         // 해시태그 — 기존 삭제 후 재저장
         $removedTagIds = $this->hashtagNumberModel->deleteByEvent($idx);

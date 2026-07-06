@@ -97,6 +97,13 @@
                             <span>주요행사 및 축제관리</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="/backoffice/region-explore"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/region-explore') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">📍</span>
+                            <span>지역별 탐색</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 

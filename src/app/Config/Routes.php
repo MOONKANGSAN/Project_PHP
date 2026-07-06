@@ -17,6 +17,10 @@ $routes->get('/festivals',           'Service::festivals');
 $routes->get('/festivals/(:num)',    'Service::festivalView/$1');
 $routes->get('/festivals/suggest',   'Service::festivalsSuggest');
 
+// 지역별 탐색 공개 API (메인 페이지용, 로그인 불필요)
+$routes->get('/api/region-explore',                'BackofficeRegionExplore::apiRegions');
+$routes->get('/api/region-explore/(:num)/top5',    'BackofficeRegionExplore::apiTop5/$1');
+
 // 메인 인증
 $routes->post('/auth/register', 'Auth::register');
 $routes->post('/auth/login',    'Auth::login');
@@ -112,4 +116,11 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
 
     // 네이버 Geocoding 프록시 (주소 → 위도/경도)
     $routes->get('geo/search', 'GeoController::search');
+
+    // 지역별 탐색 관리
+    $routes->get('region-explore',                              'BackofficeRegionExplore::index');
+    $routes->get('region-explore/(:num)/top5',                  'BackofficeRegionExplore::getTop5/$1');
+    $routes->post('region-explore/(:num)/top5/save',            'BackofficeRegionExplore::saveTop5/$1');
+    $routes->post('region-explore/(:num)/state',                'BackofficeRegionExplore::toggleState/$1');
+    $routes->get('region-explore/search',                       'BackofficeRegionExplore::search');
 });

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\PlaceModel;
+use App\Models\FacilityModel;
 use App\Models\HashtagModel;
 use App\Models\HashtagNumberModel;
 use App\Models\ThumbnailModel;
@@ -13,6 +14,7 @@ use App\Models\ThumbnailModel;
 class BackofficePlace extends BaseController
 {
     private PlaceModel         $model;
+    private FacilityModel      $facilityModel;
     private HashtagModel       $hashtagModel;
     private HashtagNumberModel $hashtagNumberModel;
     private ThumbnailModel     $thumbnailModel;
@@ -26,6 +28,7 @@ class BackofficePlace extends BaseController
     {
         parent::initController($request, $response, $logger);
         $this->model              = new PlaceModel();
+        $this->facilityModel      = new FacilityModel();
         $this->hashtagModel       = new HashtagModel();
         $this->hashtagNumberModel = new HashtagNumberModel();
         $this->thumbnailModel     = new ThumbnailModel();
@@ -44,6 +47,18 @@ class BackofficePlace extends BaseController
             'categories'      => PlaceModel::CATEGORIES,
             'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
+    }
+
+    /**
+     * POST 데이터에서 편의시설 필드만 추출
+     */
+    private function extractFacilityData(): array
+    {
+        $data = [];
+        foreach (array_keys(FacilityModel::FIELDS) as $field) {
+            $data[$field] = (int) $this->request->getPost($field);
+        }
+        return $data;
     }
 
     /**
@@ -137,6 +152,7 @@ class BackofficePlace extends BaseController
             'mode'              => 'register',
             'existing_hashtags' => [],
             'existing_images'   => [],
+            'facility'          => [],
         ]));
     }
 
@@ -178,6 +194,9 @@ class BackofficePlace extends BaseController
 
         $placeIdx = (int) $this->model->getInsertID();
 
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForPlace($placeIdx, $this->extractFacilityData());
+
         // 해시태그 저장 (최대 5개)
         $tagNames = $this->request->getPost('hashtag_names') ?? [];
         $this->saveHashtags($placeIdx, (array) $tagNames);
@@ -207,6 +226,7 @@ class BackofficePlace extends BaseController
             'mode'              => 'edit',
             'existing_hashtags' => $this->hashtagNumberModel->getTagsByPlace($idx),
             'existing_images'   => $this->thumbnailModel->getByPlace($idx),
+            'facility'          => $this->facilityModel->getByPlace($idx) ?? [],
         ]));
     }
 
@@ -249,6 +269,9 @@ class BackofficePlace extends BaseController
             'category_num'  => $this->request->getPost('category_num') ?: 0,
             'edit_date'     => date('Y-m-d H:i:s'),
         ]);
+
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForPlace($idx, $this->extractFacilityData());
 
         // 해시태그 — 기존 삭제 후 재저장
         $removedTagIds = $this->hashtagNumberModel->deleteByPlace($idx);

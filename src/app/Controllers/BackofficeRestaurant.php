@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\RestaurantModel;
+use App\Models\FacilityModel;
 use App\Models\HashtagModel;
 use App\Models\HashtagNumberModel;
 use App\Models\ThumbnailModel;
@@ -13,6 +14,7 @@ use App\Models\ThumbnailModel;
 class BackofficeRestaurant extends BaseController
 {
     private RestaurantModel    $model;
+    private FacilityModel      $facilityModel;
     private HashtagModel       $hashtagModel;
     private HashtagNumberModel $hashtagNumberModel;
     private ThumbnailModel     $thumbnailModel;
@@ -28,6 +30,7 @@ class BackofficeRestaurant extends BaseController
     {
         parent::initController($request, $response, $logger);
         $this->model              = new RestaurantModel();
+        $this->facilityModel      = new FacilityModel();
         $this->hashtagModel       = new HashtagModel();
         $this->hashtagNumberModel = new HashtagNumberModel();
         $this->thumbnailModel     = new ThumbnailModel();
@@ -48,6 +51,18 @@ class BackofficeRestaurant extends BaseController
             'price_ranges'    => RestaurantModel::PRICE_RANGES,
             'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
         ], $extra);
+    }
+
+    /**
+     * POST 데이터에서 편의시설 필드만 추출
+     */
+    private function extractFacilityData(): array
+    {
+        $data = [];
+        foreach (array_keys(FacilityModel::FIELDS) as $field) {
+            $data[$field] = (int) $this->request->getPost($field);
+        }
+        return $data;
     }
 
     /**
@@ -146,6 +161,7 @@ class BackofficeRestaurant extends BaseController
             'mode'              => 'register',
             'existing_hashtags' => [],
             'existing_images'   => [],
+            'facility'          => [],
         ]));
     }
 
@@ -195,6 +211,9 @@ class BackofficeRestaurant extends BaseController
 
         $restaurantIdx = (int) $this->model->getInsertID();
 
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForRestaurant($restaurantIdx, $this->extractFacilityData());
+
         // 해시태그 저장 (최대 5개)
         $tagNames = $this->request->getPost('hashtag_names') ?? [];
         $this->saveHashtags($restaurantIdx, (array) $tagNames);
@@ -225,6 +244,7 @@ class BackofficeRestaurant extends BaseController
             'mode'              => 'edit',
             'existing_hashtags' => $this->hashtagNumberModel->getTagsByRestaurant($idx),
             'existing_images'   => $this->thumbnailModel->getByRestaurant($idx),
+            'facility'          => $this->facilityModel->getByRestaurant($idx) ?? [],
         ]));
     }
 
@@ -274,6 +294,9 @@ class BackofficeRestaurant extends BaseController
             'parking'      => $this->request->getPost('parking') ?: 0,
             'edit_date'    => date('Y-m-d H:i:s'),
         ]);
+
+        // 편의시설 저장 (busan_facility)
+        $this->facilityModel->saveForRestaurant($idx, $this->extractFacilityData());
 
         // 해시태그 — 기존 삭제 후 재저장
         $removedTagIds = $this->hashtagNumberModel->deleteByRestaurant($idx);

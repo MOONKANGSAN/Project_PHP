@@ -7,6 +7,8 @@ use App\Models\PlaceModel;
 use App\Models\RestaurantModel;
 use App\Models\ThumbnailModel;
 use App\Models\HashtagNumberModel;
+use App\Models\BusanMapsModel;
+use App\Models\BusanMapsTop5Model;
 
 class Home extends BaseController
 {
@@ -50,8 +52,16 @@ class Home extends BaseController
         }
         unset($r);
 
+        // 지역별 탐색: 활성 구·군 목록 + 각 지역 TOP5 (state=1만)
+        $mapsModel    = new BusanMapsModel();
+        $top5Model    = new BusanMapsTop5Model();
+        $activeRegions = $mapsModel->getActiveList();
+        $top5Grouped   = $top5Model->getActiveGroupedByRegion();
+
         $data = [
             'banners'            => $bannerModel->getActiveBanners(),
+            'regionList'         => $activeRegions,
+            'regionTop5'         => $top5Grouped,
             'spots'              => $spotsRaw,
             'placeCategories'    => PlaceModel::CATEGORIES,
             'restaurants'        => $restaurantsRaw,

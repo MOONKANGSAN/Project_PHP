@@ -7,6 +7,7 @@ use App\Models\PlaceModel;
 use App\Models\EventModel;
 use App\Models\ThumbnailModel;
 use App\Models\HashtagNumberModel;
+use App\Models\BusanMapsModel;
 
 /**
  * 서비스(프론트) 페이지 컨트롤러
@@ -546,6 +547,197 @@ class Service extends BaseController
             'activeCategory' => $category,
             'activeSearch'   => $search,
             'activeIsFree'   => $isFree,
+            'saved_id'       => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    // ================================================================
+    // 지역별 핫플레이스
+    // ================================================================
+
+    /**
+     * 지역별 핫플레이스 리스트 페이지
+     * GET /hotplace          — 전체 지역
+     * GET /hotplace/{idx}    — 특정 지역(busan_maps.idx)
+     * ?tab=spot|restaurant|festival
+     */
+    public function hotplace(int $idx = 0): string
+    {
+        $tab      = trim($this->request->getGet('tab')      ?? 'spot');
+        $category = trim($this->request->getGet('category') ?? '');
+        $search   = trim($this->request->getGet('q')        ?? '');
+
+        // 허용된 탭 값만 사용
+        if (!in_array($tab, ['spot', 'restaurant', 'festival'], true)) {
+            $tab = 'spot';
+        }
+
+        $thumbnailModel     = new ThumbnailModel();
+        $hashtagNumberModel = new HashtagNumberModel();
+        $db                 = \Config\Database::connect();
+
+        // 지역별 탐색 활성 지역 목록 (상단 지역 탭용)
+        $mapsModel  = new BusanMapsModel();
+        $regionList = $mapsModel->getActiveList();
+
+        // idx로 현재 선택된 지역명 조회 (address1 필터에 사용)
+        $district = '';
+        if ($idx > 0) {
+            $region = $mapsModel->find($idx);
+            if ($region) {
+                $district = $region['name'];
+            }
+        }
+
+        $items      = [];
+        $pager      = null;
+        $totalCount = 0;
+        $categories = [];
+
+        if ($tab === 'spot') {
+            // ---- 관광지 ----
+            $placeModel = new PlaceModel();
+            $query      = $placeModel->where('state', 1);
+
+            if ($district !== '') {
+                $query->like('address1', $district, 'both');
+            }
+            if ($category !== '') {
+                $query->where('category_num', (int) $category);
+            }
+            if ($search !== '') {
+                $taggedIdxs = $db->table('hashtag h')
+                                 ->select('hn.place_idx')
+                                 ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                                 ->like('h.name', $search, 'both')
+                                 ->where('hn.state', 1)
+                                 ->where('hn.place_idx IS NOT NULL')
+                                 ->get()->getResultArray();
+                $idxList = array_map('intval', array_column($taggedIdxs, 'place_idx'));
+                if (!empty($idxList)) {
+                    $query->groupStart()->like('name', $search, 'both')->orWhereIn('idx', $idxList)->groupEnd();
+                } else {
+                    $query->like('name', $search, 'both');
+                }
+            }
+
+            $items      = $query->orderBy('idx', 'DESC')->paginate(9);
+            $pager      = $placeModel->pager;
+            $totalCount = $pager->getTotal();
+            $categories = PlaceModel::CATEGORIES;
+
+            foreach ($items as &$s) {
+                $thumbs         = $thumbnailModel->getByPlace((int) $s['idx']);
+                $s['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+                $s['tags']      = $hashtagNumberModel->getTagsByPlace((int) $s['idx']);
+                preg_match('/부산광역시\s+(\S+(?:구|군))/', $s['address1'] ?? '', $m);
+                $s['district'] = $m[1] ?? '';
+            }
+            unset($s);
+
+        } elseif ($tab === 'restaurant') {
+            // ---- 맛집 ----
+            $restaurantModel = new RestaurantModel();
+            $query           = $restaurantModel->where('state', 1);
+
+            if ($district !== '') {
+                $query->like('address1', $district, 'both');
+            }
+            if ($category !== '') {
+                $query->where('category_num', (int) $category);
+            }
+            if ($search !== '') {
+                $taggedIdxs = $db->table('hashtag h')
+                                 ->select('hn.restaurant_idx')
+                                 ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                                 ->like('h.name', $search, 'both')
+                                 ->where('hn.state', 1)
+                                 ->where('hn.restaurant_idx IS NOT NULL')
+                                 ->get()->getResultArray();
+                $idxList = array_map('intval', array_column($taggedIdxs, 'restaurant_idx'));
+                if (!empty($idxList)) {
+                    $query->groupStart()->like('name', $search, 'both')->orWhereIn('idx', $idxList)->groupEnd();
+                } else {
+                    $query->like('name', $search, 'both');
+                }
+            }
+
+            $items      = $query->orderBy('idx', 'DESC')->paginate(9);
+            $pager      = $restaurantModel->pager;
+            $totalCount = $pager->getTotal();
+            $categories = RestaurantModel::CATEGORIES;
+
+            foreach ($items as &$r) {
+                $thumbs         = $thumbnailModel->getByRestaurant((int) $r['idx']);
+                $r['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+                $r['tags']      = $hashtagNumberModel->getTagsByRestaurant((int) $r['idx']);
+                preg_match('/부산광역시\s+(\S+(?:구|군))/', $r['address1'] ?? '', $m);
+                $r['district'] = $m[1] ?? '';
+            }
+            unset($r);
+
+        } else {
+            // ---- 축제 ----
+            $eventModel = new EventModel();
+            $query      = $eventModel->where('state', 1);
+
+            if ($district !== '') {
+                $query->like('address1', $district, 'both');
+            }
+            if ($category !== '') {
+                $query->where('category_num', (int) $category);
+            }
+            if ($search !== '') {
+                $taggedIdxs = $db->table('hashtag h')
+                                 ->select('hn.event_idx')
+                                 ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                                 ->like('h.name', $search, 'both')
+                                 ->where('hn.state', 1)
+                                 ->where('hn.event_idx IS NOT NULL')
+                                 ->get()->getResultArray();
+                $idxList = array_map('intval', array_column($taggedIdxs, 'event_idx'));
+                if (!empty($idxList)) {
+                    $query->groupStart()->like('name', $search, 'both')->orWhereIn('idx', $idxList)->groupEnd();
+                } else {
+                    $query->like('name', $search, 'both');
+                }
+            }
+
+            $items      = $query->orderBy('start_date', 'DESC')->paginate(9);
+            $pager      = $eventModel->pager;
+            $totalCount = $pager->getTotal();
+            $categories = EventModel::CATEGORIES;
+
+            $today = date('Y-m-d');
+            foreach ($items as &$f) {
+                $thumbs         = $thumbnailModel->getByEvent((int) $f['idx']);
+                $f['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+                $f['tags']      = $hashtagNumberModel->getTagsByEvent((int) $f['idx']);
+                preg_match('/부산광역시\s+(\S+(?:구|군))/', $f['address1'] ?? '', $m);
+                $f['district'] = $m[1] ?? '';
+                if (!empty($f['start_date']) && !empty($f['end_date'])) {
+                    if ($today < $f['start_date'])   $f['status'] = 'upcoming';
+                    elseif ($today > $f['end_date']) $f['status'] = 'ended';
+                    else                             $f['status'] = 'ongoing';
+                } else {
+                    $f['status'] = '';
+                }
+            }
+            unset($f);
+        }
+
+        return view('service/hotplace/list', [
+            'regionList'     => $regionList,
+            'activeIdx'      => $idx,
+            'activeDistrict' => $district,
+            'activeTab'      => $tab,
+            'activeCategory' => $category,
+            'activeSearch'   => $search,
+            'items'          => $items,
+            'pager'          => $pager,
+            'totalCount'     => $totalCount,
+            'categories'     => $categories,
+            'priceRanges'    => RestaurantModel::PRICE_RANGES,
             'saved_id'       => $this->request->getCookie('saved_id') ?? '',
         ]);
     }

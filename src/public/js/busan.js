@@ -212,8 +212,8 @@
             </ul>`;
         }
 
-        // 더 알아보기 URL: /hotplace/{지역명}
-        const hotplaceUrl = `/hotplace/${encodeURIComponent(d.name)}`;
+        // 더 알아보기 URL: /hotplace/{busan_maps.idx}
+        const hotplaceUrl = regionIdx ? `/hotplace/${regionIdx}` : '#';
 
         infoContent.innerHTML = `
             <span class="panel-tag" style="background:${d.color}">지역 안내</span>

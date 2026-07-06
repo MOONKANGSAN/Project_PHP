@@ -21,9 +21,9 @@ $routes->get('/festivals/suggest',   'Service::festivalsSuggest');
 $routes->get('/api/region-explore',                'BackofficeRegionExplore::apiRegions');
 $routes->get('/api/region-explore/(:num)/top5',    'BackofficeRegionExplore::apiTop5/$1');
 
-// 지역별 핫플레이스 (임시 — 추후 구현 예정)
-$routes->get('/hotplace',          'Home::hotplace');
-$routes->get('/hotplace/(:any)',   'Home::hotplace/$1');
+// 지역별 핫플레이스
+$routes->get('/hotplace',          'Service::hotplace');
+$routes->get('/hotplace/(:num)',   'Service::hotplace/$1');
 
 // 메인 인증
 $routes->post('/auth/register', 'Auth::register');

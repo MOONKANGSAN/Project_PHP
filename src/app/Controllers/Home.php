@@ -100,4 +100,18 @@ class Home extends BaseController
 
         return view('home/index', $data);
     }
+
+    /**
+     * GET /hotplace
+     * GET /hotplace/{지역명}
+     * 지역별 핫플레이스 리스트 — 추후 구현 예정, 현재는 임시 페이지
+     */
+    public function hotplace(string $district = ''): string
+    {
+        $district = urldecode($district);
+        return view('home/hotplace_temp', [
+            'district' => $district,
+            'saved_id' => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
 }

@@ -495,6 +495,20 @@
     </div>
 </div>
 
+<!-- 지역별 탐색 DB 데이터 주입 -->
+<script>
+// busan_maps 지역 목록: { idx → { idx, name, sort_order } }
+window.regionList = <?= json_encode(
+    array_column($regionList ?? [], null, 'idx'),
+    JSON_UNESCAPED_UNICODE
+) ?>;
+
+// 지역별 TOP5: { main_idx → [ { title, link_url, content_type, content_idx, sort_order }, ... ] }
+window.regionTop5 = <?= json_encode(
+    $regionTop5 ?? [],
+    JSON_UNESCAPED_UNICODE
+) ?>;
+</script>
 <script src="/js/busan.js"></script>
 </body>
 </html>

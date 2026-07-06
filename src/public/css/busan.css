@@ -351,6 +351,33 @@ ul { list-style: none; }
     border-radius: 50%;
     flex-shrink: 0;
 }
+.panel-spot-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity .15s;
+}
+.panel-spot-link:hover { opacity: .7; }
+.spot-name {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+.spot-type-emoji { font-size: 13px; flex-shrink: 0; }
+.spot-type-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
 .btn-panel {
     display: inline-block;
     margin-top: 18px;

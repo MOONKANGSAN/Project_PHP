@@ -127,4 +127,14 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('region-explore/(:num)/top5/save',            'BackofficeRegionExplore::saveTop5/$1');
     $routes->post('region-explore/(:num)/state',                'BackofficeRegionExplore::toggleState/$1');
     $routes->get('region-explore/search',                       'BackofficeRegionExplore::search');
+
+    // 여행코스 관리
+    $routes->get('travel-courses',                          'BackofficeTravelCourse::list');
+    $routes->get('travel-courses/register',                 'BackofficeTravelCourse::register');
+    $routes->post('travel-courses/register',                'BackofficeTravelCourse::store');
+    $routes->get('travel-courses/content-search',           'BackofficeTravelCourse::contentSearch');
+    $routes->get('travel-courses/(:num)/edit',              'BackofficeTravelCourse::edit/$1');
+    $routes->post('travel-courses/(:num)/edit',             'BackofficeTravelCourse::update/$1');
+    $routes->post('travel-courses/(:num)/state',            'BackofficeTravelCourse::toggleState/$1');
+    $routes->post('travel-courses/(:num)/delete',           'BackofficeTravelCourse::delete/$1');
 });

@@ -104,6 +104,13 @@
                             <span>지역별 탐색</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="/backoffice/travel-courses"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/travel-courses') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">🗓️</span>
+                            <span>여행코스 관리</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 

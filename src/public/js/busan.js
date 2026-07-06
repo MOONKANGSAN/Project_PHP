@@ -161,22 +161,66 @@
         svg.appendChild(g);
     });
 
+    // 지역명 → busan_maps.idx 역방향 맵
+    const nameToIdx = {};
+    if (window.regionList) {
+        Object.values(window.regionList).forEach(r => {
+            nameToIdx[r.name] = r.idx;
+        });
+    }
+
+    // content_type → 뱃지 레이블
+    const typeLabel = { restaurant: '맛집', place: '관광지', event: '행사' };
+    const typeEmoji = { restaurant: '🍽️', place: '🗺️', event: '🎉' };
+
     function renderPanel(d) {
         infoDefault.style.display = 'none';
         infoContent.style.display = 'block';
-        infoContent.innerHTML = `
-            <span class="panel-tag" style="background:${d.color}">지역 안내</span>
-            <h3 class="panel-district-name">${d.name}</h3>
-            <p class="panel-sub">주요 명소 및 관광지</p>
-            <ul class="panel-spots">
-                ${d.spots.map(s => `
+
+        // DB 데이터 조회
+        const regionIdx = nameToIdx[d.name];
+        const top5      = (window.regionTop5 && regionIdx && window.regionTop5[regionIdx]) || [];
+
+        // TOP5 목록 HTML 생성
+        let listHtml;
+        if (top5.length > 0) {
+            listHtml = `<ul class="panel-spots">
+                ${top5.map(item => {
+                    const emoji = typeEmoji[item.content_type] || '📍';
+                    const label = typeLabel[item.content_type] || '';
+                    const url   = item.link_url || '#';
+                    return `
+                    <li class="panel-spot-item">
+                        <span class="spot-dot" style="background:${d.color}"></span>
+                        <a href="${url}" class="panel-spot-link" style="color:inherit;text-decoration:none;">
+                            <span class="spot-type-emoji">${emoji}</span>
+                            <span class="spot-name">${item.title}</span>
+                            ${label ? `<span class="spot-type-badge" style="background:${d.color}22;color:${d.color}">${label}</span>` : ''}
+                        </a>
+                    </li>`;
+                }).join('')}
+            </ul>`;
+        } else {
+            // DB 데이터 없을 때 하드코딩 spots 폴백
+            listHtml = `<ul class="panel-spots">
+                ${(d.spots || []).map(s => `
                     <li class="panel-spot-item">
                         <span class="spot-dot" style="background:${d.color}"></span>
                         <span>${s}</span>
                     </li>
                 `).join('')}
-            </ul>
-            <a href="#" class="btn-panel" style="background:${d.color}">더 알아보기 →</a>
+            </ul>`;
+        }
+
+        // 더 알아보기 URL: /hotplace/{지역명}
+        const hotplaceUrl = `/hotplace/${encodeURIComponent(d.name)}`;
+
+        infoContent.innerHTML = `
+            <span class="panel-tag" style="background:${d.color}">지역 안내</span>
+            <h3 class="panel-district-name">${d.name}</h3>
+            <p class="panel-sub">${d.name} 지역별 탐색 TOP5</p>
+            ${listHtml}
+            <a href="${hotplaceUrl}" class="btn-panel" style="background:${d.color}">더 알아보기 →</a>
         `;
     }
 })();

@@ -138,6 +138,13 @@
                 <p class="bo-nav-group-title">고객서비스</p>
                 <ul class="bo-nav-list">
                     <li>
+                        <a href="/backoffice/notices"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/notices') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">📢</span>
+                            <span>공지사항 관리</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/backoffice/inquiries"
                            class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/inquiries') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">💬</span>

@@ -371,9 +371,9 @@
             <div class="footer-nav">
                 <h4>이용안내</h4>
                 <ul>
-                    <li><a href="#">공지사항</a></li>
-                    <li><a href="#">이용약관</a></li>
-                    <li><a href="#">개인정보처리방침</a></li>
+                    <li><a href="/customer?tab=notice">공지사항</a></li>
+                    <li><a href="/customer?tab=faq">FAQs</a></li>
+                    <li><a href="/customer?tab=inquiry">고객문의</a></li>
                 </ul>
             </div>
             <div class="footer-contact">

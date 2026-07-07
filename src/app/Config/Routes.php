@@ -29,6 +29,14 @@ $routes->get('/hotplace/(:num)',   'Service::hotplace/$1');
 $routes->get('/travel-courses',        'Service::travelCourses');
 $routes->get('/travel-courses/(:num)', 'Service::travelCourseView/$1');
 
+// 고객센터
+$routes->get('/customer',                      'Customer::index');
+$routes->get('/customer/ajax/notice',          'Customer::ajaxNotice');
+$routes->post('/customer/notice/(:num)/view',  'Customer::noticeView/$1');
+$routes->get('/customer/ajax/faq',             'Customer::ajaxFaq');
+$routes->get('/customer/ajax/inquiry',         'Customer::ajaxInquiry');
+$routes->post('/customer/inquiry/store',       'Customer::inquiryStore');
+
 // 메인 인증
 $routes->post('/auth/register', 'Auth::register');
 $routes->post('/auth/login',    'Auth::login');
@@ -64,6 +72,16 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('inquiries/(:num)/answer/delete',    'BackofficeInquiry::deleteAnswer/$1');
     $routes->post('inquiries/(:num)/state',            'BackofficeInquiry::toggleState/$1');
     $routes->post('inquiries/(:num)/delete',           'BackofficeInquiry::delete/$1');
+
+    // 공지사항 관리
+    $routes->get('notices',                    'BackofficeNotice::list');
+    $routes->get('notices/register',           'BackofficeNotice::register');
+    $routes->post('notices/register',          'BackofficeNotice::store');
+    $routes->get('notices/(:num)/edit',        'BackofficeNotice::edit/$1');
+    $routes->post('notices/(:num)/edit',       'BackofficeNotice::update/$1');
+    $routes->post('notices/(:num)/state',      'BackofficeNotice::toggleState/$1');
+    $routes->post('notices/(:num)/pin',        'BackofficeNotice::togglePin/$1');
+    $routes->post('notices/(:num)/delete',     'BackofficeNotice::delete/$1');
 
     // FAQ 관리
     $routes->get('faqs',                    'BackofficeFaq::list');

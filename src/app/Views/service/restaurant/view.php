@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -24,9 +24,9 @@
             border-radius: 0 0 10px 10px;
         }
 
-        /* 페이지 영역 — 헤더 높이만큼 위 여백 */
+        /* 페이지 영역 — 패널이 헤더 바로 아래부터 시작하도록 여백 제거 */
         .rv-page {
-            padding-top: 68px;
+            padding-top: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -239,7 +239,7 @@
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants" class="active">맛집</a></li>
                     <li><a href="/festivals">축제</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </nav>
             <div class="header-auth">

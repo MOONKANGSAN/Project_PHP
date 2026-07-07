@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </nav>
             <div class="header-auth">
@@ -568,7 +568,7 @@ $formAction = '/hotplace' . $idxPath;
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제·행사</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </div>
             <div class="footer-nav">

@@ -42,7 +42,7 @@
                     <th style="width:100px">지역</th>
                     <th style="width:70px">항목수</th>
                     <th style="width:140px">등록일</th>
-                    <th style="width:150px">관리</th>
+                    <th style="width:200px">관리</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,7 +76,7 @@
                         ?>
                     </td>
                     <td class="text-center text-muted text-sm"><?= substr($row['reg_date'], 0, 10) ?></td>
-                    <td class="text-center">
+                    <td class="text-center" style="white-space:nowrap;">
                         <div class="bo-action-btns">
                             <a href="/backoffice/travel-courses/<?= $row['idx'] ?>/edit" class="bo-btn-action edit">수정</a>
                             <form method="post" action="/backoffice/travel-courses/<?= $row['idx'] ?>/state" style="display:inline">

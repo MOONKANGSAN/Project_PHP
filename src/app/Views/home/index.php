@@ -23,7 +23,7 @@
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </nav>
             <div class="header-auth">
@@ -298,29 +298,56 @@
 <!-- ===================== 추천 여행 코스 ===================== -->
 <section class="courses-section">
     <div class="container">
-        <div class="section-header fade-in">
-            <h2>추천 여행 코스</h2>
-            <p>테마별로 즐기는 부산 여행</p>
+        <div class="section-header-row fade-in">
+            <div class="section-header">
+                <h2>추천 여행 코스</h2>
+                <p>전문가가 큐레이션한 부산 맞춤 코스</p>
+            </div>
+            <a href="/travel-courses" class="btn-more">더보기 →</a>
         </div>
+
+        <?php if (empty($courses)): ?>
+        <div class="empty-result">
+            <div class="empty-result-icon">🗓️</div>
+            <p>등록된 여행코스가 없습니다</p>
+        </div>
+        <?php else: ?>
         <div class="courses-grid">
-            <?php foreach ($courses as $i => $course): ?>
-            <div class="course-card fade-in" style="--course-color: <?= $course['color'] ?>; --delay: <?= $i * 120 ?>ms">
+            <?php foreach ($courses as $i => $c): ?>
+            <?php
+            // 항목 이름 최대 4개만 route에 표시
+            $routeItems = array_slice($c['items'] ?? [], 0, 4);
+            $itemCount  = count($c['items'] ?? []);
+            ?>
+            <div class="course-card fade-in" style="--course-color: <?= $c['color'] ?>; --delay: <?= $i * 120 ?>ms">
                 <div class="course-top">
-                    <span class="course-theme"><?= $course['theme'] ?></span>
-                    <span class="course-duration"><?= $course['duration'] ?></span>
+                    <?php if (!empty($c['sido'])): ?>
+                    <span class="course-theme">📍 <?= esc($c['sido']) ?></span>
+                    <?php endif; ?>
+                    <span class="course-duration"><?= $itemCount ?>개 장소</span>
                 </div>
-                <h3 class="course-title"><?= $course['title'] ?></h3>
-                <p class="course-desc"><?= $course['desc'] ?></p>
+                <h3 class="course-title"><?= esc($c['title']) ?></h3>
+                <?php if (!empty($c['description'])): ?>
+                <p class="course-desc"><?= esc(mb_substr($c['description'], 0, 60)) ?><?= mb_strlen($c['description']) > 60 ? '…' : '' ?></p>
+                <?php endif; ?>
+                <?php if (!empty($routeItems)): ?>
                 <div class="course-route">
-                    <?php foreach ($course['spots'] as $j => $spot): ?>
+                    <?php foreach ($routeItems as $j => $item): ?>
                     <?php if ($j > 0): ?><span class="route-arrow">→</span><?php endif; ?>
-                    <span class="route-stop"><?= $spot ?></span>
+                    <span class="route-stop"><?= esc($item['name']) ?></span>
                     <?php endforeach; ?>
+                    <?php if ($itemCount > 4): ?>
+                    <span class="route-arrow">→</span>
+                    <span class="route-stop" style="color: <?= $c['color'] ?>; font-weight:600;">+<?= $itemCount - 4 ?>곳</span>
+                    <?php endif; ?>
                 </div>
-                <a href="#" class="btn-course" style="background: <?= $course['color'] ?>">코스 보기</a>
+                <?php endif; ?>
+                <a href="/travel-courses/<?= (int)$c['idx'] ?>" class="btn-course"
+                   style="background: <?= $c['color'] ?>">코스 보기</a>
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -338,7 +365,7 @@
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제·행사</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </div>
             <div class="footer-nav">

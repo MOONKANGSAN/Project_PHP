@@ -509,6 +509,8 @@ ul { list-style: none; }
 .bo-btn-action.deactivate:hover { background: #fde68a; }
 .bo-btn-action.activate         { background: #dcfce7; color: #16a34a; }
 .bo-btn-action.activate:hover   { background: #bbf7d0; }
+.bo-btn-action.delete           { background: #fee2e2; color: #dc2626; }
+.bo-btn-action.delete:hover     { background: #fecaca; }
 
 /* 유틸 */
 .text-center { text-align: center; }

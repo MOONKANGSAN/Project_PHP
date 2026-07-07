@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -24,7 +24,7 @@
         }
 
         .rv-page {
-            padding-top: 68px;
+            padding-top: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -224,7 +224,7 @@
                     <li><a href="/spots">관광지</a></li>
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals" class="active">축제</a></li>
-                    <li><a href="#">여행코스</a></li>
+                    <li><a href="/travel-courses">여행코스</a></li>
                 </ul>
             </nav>
             <div class="header-auth">

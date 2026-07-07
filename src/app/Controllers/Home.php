@@ -9,6 +9,8 @@ use App\Models\ThumbnailModel;
 use App\Models\HashtagNumberModel;
 use App\Models\BusanMapsModel;
 use App\Models\BusanMapsTop5Model;
+use App\Models\TravelCourseModel;
+use App\Models\TravelCourseItemModel;
 
 class Home extends BaseController
 {
@@ -58,41 +60,34 @@ class Home extends BaseController
         $activeRegions = $mapsModel->getActiveList();
         $top5Grouped   = $top5Model->getActiveGroupedByRegion();
 
+        // 여행코스: 활성 코스 최신 3개 + 각 항목 조회
+        $courseModel = new TravelCourseModel();
+        $itemModel   = new TravelCourseItemModel();
+
+        $coursesRaw = $courseModel->where('state', 1)
+                                  ->orderBy('idx', 'DESC')
+                                  ->limit(3)
+                                  ->findAll();
+
+        // 카드 색상 (순서 고정)
+        $courseColors = ['#2563eb', '#8854d0', '#e67e22'];
+
+        foreach ($coursesRaw as $ci => &$c) {
+            $c['items'] = $itemModel->getByCourse((int) $c['idx']);
+            $c['color'] = $courseColors[$ci % count($courseColors)];
+        }
+        unset($c);
+
         $data = [
-            'banners'            => $bannerModel->getActiveBanners(),
-            'regionList'         => $activeRegions,
-            'regionTop5'         => $top5Grouped,
-            'spots'              => $spotsRaw,
-            'placeCategories'    => PlaceModel::CATEGORIES,
-            'restaurants'        => $restaurantsRaw,
+            'banners'              => $bannerModel->getActiveBanners(),
+            'regionList'           => $activeRegions,
+            'regionTop5'           => $top5Grouped,
+            'spots'                => $spotsRaw,
+            'placeCategories'      => PlaceModel::CATEGORIES,
+            'restaurants'          => $restaurantsRaw,
             'restaurantCategories' => RestaurantModel::CATEGORIES,
-            'restaurantPrices'   => RestaurantModel::PRICE_RANGES,
-            'courses' => [
-                [
-                    'title'    => '해안 드라이브 코스',
-                    'theme'    => '🌊 바다',
-                    'duration' => '1일 코스',
-                    'spots'    => ['해운대해수욕장', '광안리해수욕장', '이기대공원', '태종대'],
-                    'desc'     => '부산의 아름다운 해안선을 따라 달리는 드라이브 코스',
-                    'color'    => '#2e86de',
-                ],
-                [
-                    'title'    => '역사·문화 탐방 코스',
-                    'theme'    => '🏛️ 문화',
-                    'duration' => '반일 코스',
-                    'spots'    => ['용두산공원', '보수동 책방골목', '감천문화마을', '자갈치시장'],
-                    'desc'     => '부산의 역사와 예술이 살아 숨쉬는 문화 탐방 코스',
-                    'color'    => '#8854d0',
-                ],
-                [
-                    'title'    => '미식 탐방 코스',
-                    'theme'    => '🍽️ 맛집',
-                    'duration' => '1일 코스',
-                    'spots'    => ['돼지국밥(서면)', '씨앗호떡(남포동)', '어묵(자갈치)', '서면 낙곱새'],
-                    'desc'     => '부산의 대표 향토 음식을 한 번에 맛보는 미식 기행',
-                    'color'    => '#e67e22',
-                ],
-            ],
+            'restaurantPrices'     => RestaurantModel::PRICE_RANGES,
+            'courses'              => $coursesRaw,
         ];
 
         // 아이디 저장 쿠키가 있으면 로그인 모달 ID 필드에 미리 채워준다

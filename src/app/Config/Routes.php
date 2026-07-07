@@ -25,6 +25,10 @@ $routes->get('/api/region-explore/(:num)/top5',    'BackofficeRegionExplore::api
 $routes->get('/hotplace',          'Service::hotplace');
 $routes->get('/hotplace/(:num)',   'Service::hotplace/$1');
 
+// 여행코스
+$routes->get('/travel-courses',        'Service::travelCourses');
+$routes->get('/travel-courses/(:num)', 'Service::travelCourseView/$1');
+
 // 메인 인증
 $routes->post('/auth/register', 'Auth::register');
 $routes->post('/auth/login',    'Auth::login');

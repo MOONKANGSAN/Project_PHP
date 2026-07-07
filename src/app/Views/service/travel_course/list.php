@@ -1,12 +1,128 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>맛집 - 부산온나</title>
+    <title>여행코스 - 부산온나</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">
+    <style>
+        /* 여행코스 카드 전용 스타일 */
+        .course-card {
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
+            transition: transform .2s, box-shadow .2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 28px rgba(0,0,0,.13);
+        }
+        .course-card-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .course-card-thumb img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform .3s;
+        }
+        .course-card:hover .course-card-thumb img {
+            transform: scale(1.04);
+        }
+        .course-card-thumb-default {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea22, #764ba222);
+        }
+        .course-card-sido {
+            position: absolute;
+            top: 12px; left: 12px;
+            background: rgba(37,99,235,.85);
+            color: #fff;
+            font-size: 12px; font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .course-card-count {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: rgba(0,0,0,.55);
+            color: #fff;
+            font-size: 12px; font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .course-card-body {
+            padding: 18px 20px 20px;
+            display: flex; flex-direction: column; gap: 8px;
+            flex: 1;
+        }
+        .course-card-title {
+            font-size: 16px; font-weight: 700;
+            color: #1e293b;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .course-card-desc {
+            font-size: 13px; color: #64748b;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .course-card-footer {
+            display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap;
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .course-step-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 12px; font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        /* 필터 지역 칩 */
+        .sido-chips {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .sido-chip {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 13px; font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            background: #f1f5f9;
+            color: #475569;
+            transition: background .15s, color .15s;
+        }
+        .sido-chip:hover, .sido-chip.active {
+            background: #2563eb;
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,9 +137,9 @@
             <nav class="main-nav">
                 <ul>
                     <li><a href="/spots">관광지</a></li>
-                    <li><a href="/restaurants" class="active">맛집</a></li>
+                    <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제</a></li>
-                    <li><a href="/travel-courses">여행코스</a></li>
+                    <li><a href="/travel-courses" class="active">여행코스</a></li>
                 </ul>
             </nav>
             <div class="header-auth">
@@ -40,241 +156,102 @@
 </header>
 
 <!-- ===================== 히어로 ===================== -->
-<section class="page-hero">
+<section class="page-hero page-hero--course" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);">
     <div class="container">
-        <h1>🍽️ 부산 맛집</h1>
-        <p>부산 곳곳의 숨겨진 맛집부터 대표 맛집까지 한 번에 탐색하세요</p>
+        <h1>🗓️ 부산 여행코스</h1>
+        <p>전문가가 큐레이션한 부산 맞춤 코스로 완벽한 여행을 계획하세요</p>
     </div>
 </section>
 
-<!-- ===================== 필터 바 ===================== -->
+<!-- ===================== 필터 ===================== -->
 <div class="filter-section">
     <div class="container">
-        <form class="filter-bar" method="get" action="/restaurants" id="filterForm">
-            <!-- 검색 -->
+        <form class="filter-bar" method="get" action="/travel-courses" id="filterForm">
             <div class="filter-search">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" name="q"
-                       placeholder="맛집 이름, 해시태그, 지역 검색"
+                <input type="text" name="q"
+                       placeholder="코스명으로 검색"
                        value="<?= esc($activeSearch) ?>"
                        autocomplete="off">
-                <!-- AJAX 자동완성 드롭다운 -->
-                <div class="suggest-dropdown" id="suggestDropdown"></div>
             </div>
-
-            <!-- 구 필터 -->
-            <select name="district" class="filter-select" onchange="this.form.submit()">
-                <option value="">📍 전체 지역</option>
-                <?php foreach ($districtList as $d): ?>
-                    <option value="<?= esc($d) ?>" <?= $activeDistrict === $d ? 'selected' : '' ?>>
-                        <?= esc($d) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
-            <!-- 카테고리 필터 -->
-            <select name="category" class="filter-select" onchange="this.form.submit()">
-                <option value="">🍴 전체 카테고리</option>
-                <?php foreach ($categories as $num => $label): ?>
-                    <option value="<?= $num ?>" <?= $activeCategory == $num ? 'selected' : '' ?>>
-                        <?= esc($label) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-
             <button type="submit" class="filter-submit-btn">검색</button>
-
-            <?php if ($activeSearch || $activeDistrict || $activeCategory): ?>
-            <a href="/restaurants" class="filter-reset-btn">초기화</a>
+            <?php if ($activeSearch || $activeSido): ?>
+            <a href="/travel-courses" class="filter-reset-btn">초기화</a>
             <?php endif; ?>
         </form>
+
+        <?php if (!empty($sidoList)): ?>
+        <div class="sido-chips">
+            <a href="/travel-courses<?= $activeSearch ? '?q='.urlencode($activeSearch) : '' ?>"
+               class="sido-chip <?= $activeSido === '' ? 'active' : '' ?>">전체</a>
+            <?php foreach ($sidoList as $s): ?>
+            <a href="/travel-courses?sido=<?= urlencode($s) ?><?= $activeSearch ? '&q='.urlencode($activeSearch) : '' ?>"
+               class="sido-chip <?= $activeSido === $s ? 'active' : '' ?>">
+                <?= esc($s) ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
-<!-- ===================== 결과 + 뷰 전환 ===================== -->
+<!-- ===================== 목록 ===================== -->
 <section class="restaurant-section">
     <div class="container">
         <div class="view-controls">
             <p class="result-count">
-                총 <strong><?= $totalCount ?></strong>개의 맛집
-                <?php if ($totalCount > 0): ?>
-                <?php
-                $perPage  = 9;
-                $currPage = (int)(service('request')->getGet('page') ?? 1);
-                $from     = ($currPage - 1) * $perPage + 1;
-                $to       = min($currPage * $perPage, $totalCount);
+                총 <strong><?= $totalCount ?></strong>개의 여행코스
+                <?php if ($totalCount > 0):
+                    $perPage  = 9;
+                    $currPage = (int)(service('request')->getGet('page') ?? 1);
+                    $from     = ($currPage - 1) * $perPage + 1;
+                    $to       = min($currPage * $perPage, $totalCount);
                 ?>
                 <span class="result-range">(<?= $from ?>–<?= $to ?>번째)</span>
                 <?php endif; ?>
             </p>
-            <div class="view-toggle">
-                <button class="view-btn active" id="btnCardView" title="카드 보기">
-                    ⊞
-                </button>
-                <button class="view-btn" id="btnListView" title="리스트 보기">
-                    ☰
-                </button>
-            </div>
         </div>
 
-        <?php if (empty($restaurants)): ?>
-        <!-- 빈 결과 -->
+        <?php if (empty($courses)): ?>
         <div class="empty-result">
-            <div class="empty-result-icon">🍽️</div>
-            <h3>검색 결과가 없습니다</h3>
-            <p>다른 검색어나 필터를 사용해보세요</p>
+            <div class="empty-result-icon">🗓️</div>
+            <h3>등록된 여행코스가 없습니다</h3>
+            <p>다른 검색어나 지역을 선택해보세요</p>
         </div>
-
         <?php else: ?>
 
-        <?php
-        /* 카테고리별 이모지 & 색상 매핑 */
-        $catEmoji = [1=>'🍲', 2=>'🍣', 3=>'🥢', 4=>'🍝', 5=>'🥞', 6=>'☕', 7=>'🍽️', 8=>'🍴'];
-        $catColor = [1=>'#e55039', 2=>'#6c5ce7', 3=>'#e17055', 4=>'#00b894', 5=>'#fdcb6e', 6=>'#a29bfe', 7=>'#fab1a0', 8=>'#b2bec3'];
-        ?>
-
-        <!-- ---- 카드 뷰 ---- -->
-        <div class="restaurant-grid" id="cardView">
-            <?php foreach ($restaurants as $r): ?>
-            <?php
-            $catNum   = (int)($r['category_num'] ?? 8);
-            $starVal  = (float)($r['star_point']  ?? 0);
-            $priceNum = (int)($r['price_range']   ?? 1);
-            $color    = $catColor[$catNum] ?? '#b2bec3';
-            $emoji    = $catEmoji[$catNum] ?? '🍴';
-            ?>
-            <a class="r-card" href="/restaurants/<?= (int)$r['idx'] ?>" style="text-decoration:none;color:inherit;">
-                <!-- 썸네일 (카드 뷰에서만 출력) -->
-                <div class="r-card-thumb">
-                    <?php if (!empty($r['thumbnail'])): ?>
-                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
+        <div class="restaurant-grid">
+            <?php foreach ($courses as $c): ?>
+            <a class="course-card" href="/travel-courses/<?= (int)$c['idx'] ?>">
+                <div class="course-card-thumb">
+                    <?php if (!empty($c['thumb_url'])): ?>
+                        <img src="<?= esc($c['thumb_url']) ?>" alt="<?= esc($c['title']) ?>">
                     <?php else: ?>
-                        <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
-                            <span><?= $emoji ?></span>
-                        </div>
+                        <div class="course-card-thumb-default">🗓️</div>
                     <?php endif; ?>
-                    <span class="r-card-category" style="background: <?= $color ?>;">
-                        <?= esc($categories[$catNum] ?? '기타') ?>
-                    </span>
-                    <?php if (!empty($r['parking'])): ?>
-                    <span class="r-card-parking">🅿️ 주차가능</span>
+                    <?php if (!empty($c['sido'])): ?>
+                    <span class="course-card-sido">📍 <?= esc($c['sido']) ?></span>
                     <?php endif; ?>
+                    <span class="course-card-count">📋 <?= (int)$c['item_count'] ?>곳</span>
                 </div>
-
-                <div class="r-card-body">
-                    <h3 class="r-card-name"><?= esc($r['name']) ?></h3>
-
-                    <div class="r-card-meta">
-                        <?php if (!empty($r['district'])): ?>
-                        <span class="r-card-district">📍 <?= esc($r['district']) ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($r['open_time'])): ?>
-                        <span class="r-card-hours">🕐 <?= esc($r['open_time']) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- 별점 -->
-                    <?php if ($starVal > 0): ?>
-                    <div class="r-card-stars">
-                        <?php
-                        $full  = (int) floor($starVal);
-                        $half  = ($starVal - $full) >= 0.5 ? 1 : 0;
-                        $empty = 5 - $full - $half;
-                        ?>
-                        <span class="stars-text">
-                            <?= str_repeat('★', $full) ?>
-                            <?= $half ? '⭒' : '' ?>
-                            <?= str_repeat('☆', $empty) ?>
+                <div class="course-card-body">
+                    <h3 class="course-card-title"><?= esc($c['title']) ?></h3>
+                    <?php if (!empty($c['description'])): ?>
+                    <p class="course-card-desc"><?= esc($c['description']) ?></p>
+                    <?php endif; ?>
+                    <div class="course-card-footer">
+                        <span class="course-step-badge">
+                            🚩 <?= (int)$c['item_count'] ?>개 장소
                         </span>
-                        <span class="stars-score"><?= number_format($starVal, 1) ?></span>
+                        <span style="font-size:12px;color:#94a3b8;margin-left:auto;">
+                            <?= substr($c['reg_date'], 0, 10) ?>
+                        </span>
                     </div>
-                    <?php endif; ?>
-
-                    <!-- 가격대 -->
-                    <span class="price-badge"><?= esc($priceRanges[$priceNum] ?? '') ?></span>
-
-                    <!-- 해시태그 -->
-                    <?php if (!empty($r['tags'])): ?>
-                    <div class="r-card-tags">
-                        <?php foreach ($r['tags'] as $tag): ?>
-                        <span class="r-tag">#<?= esc($tag['name']) ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </a>
             <?php endforeach; ?>
         </div>
 
-        <!-- ---- 리스트 뷰 ---- -->
-        <div class="restaurant-list-view" id="listView" style="display:none;">
-            <?php foreach ($restaurants as $r): ?>
-            <?php
-            $catNum   = (int)($r['category_num'] ?? 8);
-            $starVal  = (float)($r['star_point']  ?? 0);
-            $priceNum = (int)($r['price_range']   ?? 1);
-            $color    = $catColor[$catNum] ?? '#b2bec3';
-            $emoji    = $catEmoji[$catNum] ?? '🍴';
-            ?>
-            <a class="r-list-item" href="/restaurants/<?= (int)$r['idx'] ?>" style="text-decoration:none; color:inherit;">
-                <!-- 카테고리 색상 블록 (리스트 뷰에서 사진 대신) -->
-                <div class="r-list-cat" style="background: <?= $color ?>22;">
-                    <span style="font-size:22px;"><?= $emoji ?></span>
-                </div>
-
-                <div class="r-list-body">
-                    <div class="r-list-header">
-                        <span class="r-list-name"><?= esc($r['name']) ?></span>
-                        <span class="r-list-category-badge" style="background: <?= $color ?>;">
-                            <?= esc($categories[$catNum] ?? '기타') ?>
-                        </span>
-                        <?php if ($starVal > 0): ?>
-                        <span class="stars-text" style="font-size:13px; color:#f39c12;">
-                            <?php
-                            $full  = (int) floor($starVal);
-                            $half  = ($starVal - $full) >= 0.5 ? 1 : 0;
-                            $empty = 5 - $full - $half;
-                            echo str_repeat('★', $full) . ($half ? '⭒' : '') . str_repeat('☆', $empty);
-                            ?>
-                        </span>
-                        <span style="font-size:13px; font-weight:700;"><?= number_format($starVal, 1) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="r-list-info">
-                        <?php if (!empty($r['district'])): ?>
-                        <span>📍 <?= esc($r['district']) ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($r['open_time'])): ?>
-                        <span>🕐 <?= esc($r['open_time']) ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($r['phone'])): ?>
-                        <span>📞 <?= esc($r['phone']) ?></span>
-                        <?php endif; ?>
-                        <?php if (!empty($r['parking'])): ?>
-                        <span>🅿️ 주차가능</span>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- 가격대 -->
-                    <div class="r-list-footer">
-                        <span class="price-badge"><?= esc($priceRanges[$priceNum] ?? '') ?></span>
-                    </div>
-
-                    <!-- 해시태그 (가격대 아래 별도 행) -->
-                    <?php if (!empty($r['tags'])): ?>
-                    <div class="r-list-tags">
-                        <?php foreach ($r['tags'] as $tag): ?>
-                        <span class="r-tag">#<?= esc($tag['name']) ?></span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </a>
-            <?php endforeach; ?>
-        </div>
-
-        <!-- ===================== 페이지네이션 ===================== -->
         <?php if ($pager->getPageCount() > 1): ?>
         <div class="pager-wrap">
             <?= $pager->links('default', 'service_pager') ?>
@@ -345,8 +322,7 @@
             </div>
             <div class="login-options">
                 <label class="checkbox-label">
-                    <input type="checkbox" name="save_id" id="chkSaveId" value="1"
-                           <?= $saved_id ? 'checked' : '' ?>>
+                    <input type="checkbox" name="save_id" id="chkSaveId" value="1" <?= $saved_id ? 'checked' : '' ?>>
                     <span class="checkbox-text">아이디 저장</span>
                 </label>
                 <label class="checkbox-label">
@@ -394,8 +370,7 @@
             <div class="form-group" id="fg-email">
                 <label class="form-label" for="emailLocal">이메일 <span class="required">*</span></label>
                 <div class="email-wrap">
-                    <input type="text" id="emailLocal" class="form-input email-local" placeholder="이메일 아이디"
-                           autocomplete="email">
+                    <input type="text" id="emailLocal" class="form-input email-local" placeholder="이메일 아이디" autocomplete="email">
                     <span class="at-sign">@</span>
                     <select id="emailDomainSelect" class="form-select email-domain-select">
                         <option value="naver.com">naver.com</option>
@@ -424,10 +399,6 @@
 </div>
 
 <script src="/js/busan.js"></script>
-<script>
-/* 자동완성 suggest URL */
-const SUGGEST_URL = '/restaurants/suggest';
-</script>
 <script src="/js/service-common.js"></script>
 </body>
 </html>

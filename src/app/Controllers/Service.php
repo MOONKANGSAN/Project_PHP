@@ -8,6 +8,8 @@ use App\Models\EventModel;
 use App\Models\ThumbnailModel;
 use App\Models\HashtagNumberModel;
 use App\Models\BusanMapsModel;
+use App\Models\TravelCourseModel;
+use App\Models\TravelCourseItemModel;
 
 /**
  * 서비스(프론트) 페이지 컨트롤러
@@ -739,6 +741,99 @@ class Service extends BaseController
             'categories'     => $categories,
             'priceRanges'    => RestaurantModel::PRICE_RANGES,
             'saved_id'       => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    // ================================================================
+    // 여행코스
+    // ================================================================
+
+    /**
+     * 여행코스 목록 페이지
+     * GET /travel-courses
+     */
+    public function travelCourses(): string
+    {
+        $courseModel = new TravelCourseModel();
+        $db          = \Config\Database::connect();
+
+        $sido   = trim($this->request->getGet('sido') ?? '');
+        $search = trim($this->request->getGet('q')    ?? '');
+
+        $query = $courseModel->where('state', 1);
+
+        if ($sido !== '') {
+            $query->where('sido', $sido);
+        }
+        if ($search !== '') {
+            $query->like('title', $search, 'both');
+        }
+
+        $courses    = $query->orderBy('idx', 'DESC')->paginate(9);
+        $pager      = $courseModel->pager;
+        $totalCount = $pager->getTotal();
+
+        // 항목 수를 한 번의 쿼리로 가져와 N+1 방지
+        $idxList    = array_column($courses, 'idx');
+        $itemCounts = [];
+        if (!empty($idxList)) {
+            $rows = $db->table('travel_course_item')
+                       ->select('course_idx, COUNT(*) as cnt')
+                       ->whereIn('course_idx', $idxList)
+                       ->groupBy('course_idx')
+                       ->get()->getResultArray();
+            foreach ($rows as $row) {
+                $itemCounts[(int) $row['course_idx']] = (int) $row['cnt'];
+            }
+        }
+        foreach ($courses as &$c) {
+            $c['item_count'] = $itemCounts[(int) $c['idx']] ?? 0;
+        }
+        unset($c);
+
+        // 지역 필터 드롭다운용 sido 목록
+        $sidoRows = $db->table('travel_course')
+                       ->select('sido')
+                       ->where('state', 1)
+                       ->where('sido IS NOT NULL')
+                       ->where('sido !=', '')
+                       ->distinct()
+                       ->orderBy('sido', 'ASC')
+                       ->get()->getResultArray();
+
+        return view('service/travel_course/list', [
+            'courses'      => $courses,
+            'pager'        => $pager,
+            'totalCount'   => $totalCount,
+            'sidoList'     => array_column($sidoRows, 'sido'),
+            'activeSido'   => $sido,
+            'activeSearch' => $search,
+            'saved_id'     => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    /**
+     * 여행코스 상세 페이지
+     * GET /travel-courses/{idx}
+     */
+    public function travelCourseView(int $idx): string
+    {
+        $courseModel = new TravelCourseModel();
+        $itemModel   = new TravelCourseItemModel();
+
+        $course = $courseModel->where('state', 1)->find($idx);
+
+        if (!$course) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        $items = $itemModel->getByCourse($idx);
+
+        return view('service/travel_course/view', [
+            'course'           => $course,
+            'items'            => $items,
+            'saved_id'         => $this->request->getCookie('saved_id') ?? '',
+            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
         ]);
     }
 

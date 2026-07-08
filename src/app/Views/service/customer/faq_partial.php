@@ -34,7 +34,8 @@
         </button>
         <div class="faq-answer">
             <span class="faq-a-badge">A</span>
-            <div class="faq-a-text"><?= nl2br(esc($faq['content'])) ?></div>
+            <!-- content는 관리자가 Toast UI Editor로 생성한 신뢰된 HTML이므로 raw 출력 -->
+            <div class="faq-a-text"><?= $faq['content'] ?></div>
         </div>
     </div>
     <?php endforeach; ?>

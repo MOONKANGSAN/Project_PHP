@@ -185,6 +185,7 @@ class BackofficeRestaurant extends BaseController
             $this->request->getPost('phone_2'),
             $this->request->getPost('phone_3'),
         ]));
+        
         $openStart = $this->request->getPost('open_start');
         $openEnd   = $this->request->getPost('open_end');
         $openTime  = ($openStart && $openEnd) ? "{$openStart}~{$openEnd}" : null;

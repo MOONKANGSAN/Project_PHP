@@ -363,7 +363,7 @@
     const emailFull     = document.getElementById('emailFull');
     const formMsg       = document.getElementById('formMsg');
     const btnSubmit     = document.getElementById('btnSubmitSignup');
-    if (!overlay) return;
+    if (!overlay || !btnOpen) return;
 
     /* 모달 열기 */
     function openModal() {

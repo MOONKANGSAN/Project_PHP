@@ -519,10 +519,12 @@ $imageSlots     = 8 - count($existingImages);
         tags.push(name);
         renderChips();
     }
+    
     function removeTag(name) {
         tags = tags.filter(t => t !== name);
         renderChips();
     }
+
     function renderChips() {
         chipWrap.innerHTML     = '';
         hiddenInputs.innerHTML = '';
@@ -584,6 +586,7 @@ $imageSlots     = 8 - count($existingImages);
                 });
         }, 250);
     });
+
     tagInput.addEventListener('blur', function () {
         setTimeout(hideSuggestions, 150);
     });

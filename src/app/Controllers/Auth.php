@@ -100,7 +100,6 @@ class Auth extends BaseController
 
         // 세션 고정 공격 방지: 로그인 시 세션 ID 재발급
         session()->regenerate();
-
         session()->set([
             'user.idx'   => $user['idx'],
             'user.id'    => $user['id'],
@@ -136,7 +135,7 @@ class Auth extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => '로그인 되었습니다.',
+            'message' => '로그인 되었습니다!',
             'user_id' => $user['id'],
         ]);
     }

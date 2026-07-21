@@ -262,7 +262,8 @@
             <?php else: ?>
             <?php foreach ($thumbnails as $i => $thumb): ?>
             <div class="rv-slide <?= $i === 0 ? 'active' : '' ?>">
-                <img src="<?= esc($thumb['img_url']) ?>" alt="<?= esc($festival['name']) ?> 이미지 <?= $i + 1 ?>">
+                <img src="<?= esc($thumb['img_url']) ?>" alt="<?= esc($festival['name']) ?> 이미지 <?= $i + 1 ?>"
+                     onerror="this.onerror=null; this.src='/img/no-image.svg';">
             </div>
             <?php endforeach; ?>
             <?php endif; ?>

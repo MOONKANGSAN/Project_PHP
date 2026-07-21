@@ -225,7 +225,8 @@
             <a class="course-card" href="/travel-courses/<?= (int)$c['idx'] ?>">
                 <div class="course-card-thumb">
                     <?php if (!empty($c['thumb_url'])): ?>
-                        <img src="<?= esc($c['thumb_url']) ?>" alt="<?= esc($c['title']) ?>">
+                        <img src="<?= esc($c['thumb_url']) ?>" alt="<?= esc($c['title']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="course-card-thumb-default">🗓️</div>
                     <?php endif; ?>

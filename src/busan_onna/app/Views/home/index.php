@@ -58,7 +58,8 @@
             <!-- 실제 등록 이미지 -->
             <img class="banner-bg-img"
                  src="<?= esc($banner['image_url']) ?>"
-                 alt="<?= esc($banner['alt_text'] ?? '') ?>">
+                 alt="<?= esc($banner['alt_text'] ?? '') ?>"
+                 onerror="this.onerror=null; this.src='/img/no-image.svg';">
             <div class="banner-overlay"></div>
             <div class="banner-content">
                 <?php if (!empty($banner['location'])): ?>
@@ -161,7 +162,8 @@
             <a class="r-card fade-in" href="/spots/<?= (int)$s['idx'] ?>" style="--delay: <?= $i * 80 ?>ms; text-decoration:none; color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($s['thumbnail'])): ?>
-                        <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>">
+                        <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>
@@ -243,7 +245,8 @@
             <a class="r-card fade-in" href="/restaurants/<?= (int)$r['idx'] ?>" style="--delay: <?= $i * 80 ?>ms; text-decoration:none; color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($r['thumbnail'])): ?>
-                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
+                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>

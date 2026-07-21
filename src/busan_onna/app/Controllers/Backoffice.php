@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\BackofficeUserModel;
 use App\Models\UserInfoModel;
+use CodeIgniter\HTTP\RedirectResponse;
 
 /**
  * 백오피스 컨트롤러
@@ -52,7 +53,7 @@ class Backoffice extends BaseController
     // ----------------------------------------------------------------
 
     /** GET /backoffice/login */
-    public function login(): string
+    public function login(): string|RedirectResponse
     {
         if ($this->isLoggedIn()) {
             return redirect()->to('/backoffice/dashboard');

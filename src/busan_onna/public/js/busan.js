@@ -2,6 +2,13 @@
    부산온나 메인 스크립트
    ============================================= */
 
+/* ---- 전역 이미지 오류 핸들러 (서버 부재/500 에러 시 대체 이미지 표시) ---- */
+document.addEventListener('error', function (e) {
+    if (e.target.tagName === 'IMG' && e.target.src !== location.origin + '/img/no-image.svg') {
+        e.target.src = '/img/no-image.svg';
+    }
+}, true);
+
 /* ---- 배너 슬라이더 ---- */
 (function initSlider() {
     const slides  = document.querySelectorAll('.banner-slide');
@@ -532,4 +539,26 @@
     }, { threshold: 0.12 });
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+})();
+
+/* ---- 휴대폰 번호 자동 하이픈 (010-XXXX-XXXX) ---- */
+(function initPhoneFormat() {
+    const input = document.getElementById('signupPhone');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+        // 숫자만 추출 후 최대 11자리 제한
+        const digits = this.value.replace(/\D/g, '').slice(0, 11);
+
+        let formatted;
+        if (digits.length <= 3) {
+            formatted = digits;
+        } else if (digits.length <= 7) {
+            formatted = digits.slice(0, 3) + '-' + digits.slice(3);
+        } else {
+            formatted = digits.slice(0, 3) + '-' + digits.slice(3, 7) + '-' + digits.slice(7);
+        }
+
+        this.value = formatted;
+    });
 })();

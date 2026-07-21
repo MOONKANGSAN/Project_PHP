@@ -186,7 +186,8 @@ $formAction = '/hotplace' . $idxPath;
             <a class="r-card" href="/spots/<?= (int)$s['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($s['thumbnail'])): ?>
-                        <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>">
+                        <img src="<?= esc($s['thumbnail']) ?>" alt="<?= esc($s['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>
@@ -312,7 +313,8 @@ $formAction = '/hotplace' . $idxPath;
             <a class="r-card" href="/restaurants/<?= (int)$r['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($r['thumbnail'])): ?>
-                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
+                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>
@@ -433,7 +435,8 @@ $formAction = '/hotplace' . $idxPath;
             <a class="r-card" href="/festivals/<?= (int)$f['idx'] ?>" style="text-decoration:none;color:inherit;">
                 <div class="r-card-thumb">
                     <?php if (!empty($f['thumbnail'])): ?>
-                        <img src="<?= esc($f['thumbnail']) ?>" alt="<?= esc($f['name']) ?>">
+                        <img src="<?= esc($f['thumbnail']) ?>" alt="<?= esc($f['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>

@@ -248,7 +248,8 @@
         <!-- 대표 이미지 -->
         <?php if (!empty($course['thumb_url'])): ?>
             <img src="<?= esc($course['thumb_url']) ?>" alt="<?= esc($course['title']) ?>"
-                 class="course-hero-img">
+                 class="course-hero-img"
+                 onerror="this.onerror=null; this.src='/img/no-image.svg';">
         <?php else: ?>
             <div class="course-hero-placeholder">🗓️</div>
         <?php endif; ?>

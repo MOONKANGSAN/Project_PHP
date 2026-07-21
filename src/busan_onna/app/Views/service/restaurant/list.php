@@ -147,7 +147,8 @@
                 <!-- 썸네일 (카드 뷰에서만 출력) -->
                 <div class="r-card-thumb">
                     <?php if (!empty($r['thumbnail'])): ?>
-                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>">
+                        <img src="<?= esc($r['thumbnail']) ?>" alt="<?= esc($r['name']) ?>"
+                             onerror="this.onerror=null; this.src='/img/no-image.svg';">
                     <?php else: ?>
                         <div class="r-card-thumb-default" style="background: <?= $color ?>22;">
                             <span><?= $emoji ?></span>

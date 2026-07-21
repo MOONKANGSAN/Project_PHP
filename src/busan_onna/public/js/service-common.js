@@ -4,6 +4,16 @@
    각 페이지에서 const SUGGEST_URL = '...' 을 먼저 선언하고 이 파일을 로드한다.
    ============================================= */
 
+/* ---- 전역 이미지 오류 핸들러 (서버 부재/500 에러 시 대체 이미지 표시) ---- */
+if (!window.__imgErrHandlerSet) {
+    window.__imgErrHandlerSet = true;
+    document.addEventListener('error', function (e) {
+        if (e.target.tagName === 'IMG' && e.target.src !== location.origin + '/img/no-image.svg') {
+            e.target.src = '/img/no-image.svg';
+        }
+    }, true);
+}
+
 /* ---- 검색어 자동완성 (AJAX) ---- */
 (function initSearchSuggest() {
     const input    = document.getElementById('searchInput');

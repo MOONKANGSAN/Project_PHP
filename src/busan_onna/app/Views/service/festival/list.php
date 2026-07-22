@@ -7,6 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">
+    <link rel="stylesheet" href="/css/modules/auth-common.css">
+    <link rel="stylesheet" href="/css/modules/login.css">
+    <link rel="stylesheet" href="/css/modules/signup.css">
 </head>
 <body>
 
@@ -334,106 +337,13 @@
     </div>
 </footer>
 
-<!-- ===================== 로그인 모달 ===================== -->
-<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
-    <div class="modal-box modal-box--sm">
-        <div class="modal-header">
-            <h2 class="modal-title" id="loginModalTitle">로그인</h2>
-            <button type="button" class="modal-close" id="btnCloseLogin" aria-label="닫기">&times;</button>
-        </div>
-        <form class="signup-form" id="loginForm" novalidate>
-            <?= csrf_field() ?>
-            <div class="form-group" id="lfg-id">
-                <label class="form-label" for="loginId">아이디 <span class="required">*</span></label>
-                <input type="text" id="loginId" name="id" class="form-input" placeholder="아이디 입력"
-                       autocomplete="username" maxlength="50" value="<?= esc($saved_id) ?>">
-                <span class="form-error" id="lerr-id"></span>
-            </div>
-            <div class="form-group" id="lfg-password">
-                <label class="form-label" for="loginPw">비밀번호 <span class="required">*</span></label>
-                <input type="password" id="loginPw" name="password" class="form-input" placeholder="비밀번호 입력"
-                       autocomplete="current-password" maxlength="100">
-                <span class="form-error" id="lerr-password"></span>
-            </div>
-            <div class="login-options">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="save_id" id="chkSaveId" value="1" <?= $saved_id ? 'checked' : '' ?>>
-                    <span class="checkbox-text">아이디 저장</span>
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" name="keep_login" id="chkKeepLogin" value="1">
-                    <span class="checkbox-text">상시 로그인</span>
-                </label>
-            </div>
-            <div class="form-msg" id="loginFormMsg" style="display:none"></div>
-            <button type="submit" class="btn-submit" id="btnSubmitLogin">로그인</button>
-            <div class="login-footer">
-                <span>아직 회원이 아니신가요?</span>
-                <button type="button" class="link-btn" id="btnSwitchToSignup">회원가입</button>
-            </div>
-        </form>
-    </div>
-</div>
+<?= view('modules/auth/login_modal') ?>
 
-<!-- ===================== 회원가입 모달 ===================== -->
-<div class="modal-overlay" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h2 class="modal-title" id="modalTitle">회원가입</h2>
-            <button type="button" class="modal-close" id="btnCloseSignup" aria-label="닫기">&times;</button>
-        </div>
-        <form class="signup-form" id="signupForm" novalidate>
-            <?= csrf_field() ?>
-            <div class="form-group" id="fg-id">
-                <label class="form-label" for="signupId">아이디 <span class="required">*</span></label>
-                <input type="text" id="signupId" name="id" class="form-input" placeholder="영문·숫자 4자 이상"
-                       autocomplete="username" maxlength="50">
-                <span class="form-error" id="err-id"></span>
-            </div>
-            <div class="form-group" id="fg-password">
-                <label class="form-label" for="signupPw">비밀번호 <span class="required">*</span></label>
-                <input type="password" id="signupPw" name="password" class="form-input" placeholder="8자 이상 입력"
-                       autocomplete="new-password" maxlength="100">
-                <span class="form-error" id="err-password"></span>
-            </div>
-            <div class="form-group" id="fg-password_confirm">
-                <label class="form-label" for="signupPwConfirm">비밀번호 확인 <span class="required">*</span></label>
-                <input type="password" id="signupPwConfirm" name="password_confirm" class="form-input"
-                       placeholder="비밀번호를 다시 입력" autocomplete="new-password" maxlength="100">
-                <span class="form-error" id="err-password_confirm"></span>
-            </div>
-            <div class="form-group" id="fg-email">
-                <label class="form-label" for="emailLocal">이메일 <span class="required">*</span></label>
-                <div class="email-wrap">
-                    <input type="text" id="emailLocal" class="form-input email-local" placeholder="이메일 아이디" autocomplete="email">
-                    <span class="at-sign">@</span>
-                    <select id="emailDomainSelect" class="form-select email-domain-select">
-                        <option value="naver.com">naver.com</option>
-                        <option value="gmail.com">gmail.com</option>
-                        <option value="daum.net">daum.net</option>
-                        <option value="kakao.com">kakao.com</option>
-                        <option value="nate.com">nate.com</option>
-                        <option value="direct">직접입력</option>
-                    </select>
-                    <input type="text" id="emailDomainDirect" class="form-input email-domain-direct"
-                           placeholder="도메인 직접 입력" style="display:none">
-                </div>
-                <input type="hidden" name="email" id="emailFull">
-                <span class="form-error" id="err-email"></span>
-            </div>
-            <div class="form-group" id="fg-phone">
-                <label class="form-label" for="signupPhone">휴대폰 번호</label>
-                <input type="tel" id="signupPhone" name="phone" class="form-input"
-                       placeholder="010-0000-0000" maxlength="13">
-                <span class="form-error" id="err-phone"></span>
-            </div>
-            <div class="form-msg" id="formMsg" style="display:none"></div>
-            <button type="submit" class="btn-submit" id="btnSubmitSignup">가입하기</button>
-        </form>
-    </div>
-</div>
+<?= view('modules/auth/signup_modal') ?>
 
 <script src="/js/busan.js"></script>
+<script src="/js/modules/login.js"></script>
+<script src="/js/modules/signup.js"></script>
 <script>
 /* 자동완성 suggest URL */
 const SUGGEST_URL = '/festivals/suggest';

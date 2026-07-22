@@ -1,0 +1,26 @@
+/* =============================================
+   회원가입 모달 전용 스타일
+   ============================================= */
+
+/* 이메일 입력 분리 레이아웃 */
+.email-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.email-local { flex: 1; min-width: 0; }
+.at-sign {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.email-domain-select { flex: 1.1; min-width: 0; padding: 0 10px; }
+.email-domain-direct { flex: 1.1; min-width: 0; }
+
+/* 모바일 — 이메일 필드 세로 배치 */
+@media (max-width: 520px) {
+    .email-wrap { flex-wrap: wrap; }
+    .email-local, .email-domain-select, .email-domain-direct { flex: 1 1 100%; }
+    .at-sign { display: none; }
+}

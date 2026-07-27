@@ -1,0 +1,56 @@
+/* =============================================
+   로그인 모달 전용 스타일
+   ============================================= */
+
+/* 로그인 모달 — 너비를 회원가입보다 좁게 */
+.modal-box--sm { max-width: 400px; }
+
+/* 체크박스 옵션 행 */
+.login-options {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+}
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-light);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.checkbox-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.checkbox-label:hover .checkbox-text { color: var(--text); }
+
+/* 로그인 폼 하단 — 회원가입 유도 링크 */
+.login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--primary-light);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.link-btn:hover { color: var(--primary); }

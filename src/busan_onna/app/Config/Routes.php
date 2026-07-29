@@ -21,6 +21,9 @@ $routes->get('/festivals/suggest',   'Service::festivalsSuggest');
 $routes->get('/api/region-explore',                'BackofficeRegionExplore::apiRegions');
 $routes->get('/api/region-explore/(:num)/top5',    'BackofficeRegionExplore::apiTop5/$1');
 
+// 추천/비추천 반응 API
+$routes->post('/api/reaction/toggle', 'Reaction::toggle');
+
 // 지역별 핫플레이스
 $routes->get('/hotplace',          'Service::hotplace');
 $routes->get('/hotplace/(:num)',   'Service::hotplace/$1');

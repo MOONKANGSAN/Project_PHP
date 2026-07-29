@@ -7,51 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">
-    <style>
-        .coming-wrap {
-            min-height: 70vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            padding: 80px 20px;
-            text-align: center;
-        }
-        .coming-icon { font-size: 64px; }
-        .coming-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #111;
-        }
-        .coming-district {
-            display: inline-block;
-            background: #eff6ff;
-            color: #3b82f6;
-            font-size: 16px;
-            font-weight: 700;
-            padding: 6px 20px;
-            border-radius: 999px;
-            margin-bottom: 4px;
-        }
-        .coming-desc {
-            font-size: 15px;
-            color: #6b7280;
-            line-height: 1.7;
-        }
-        .coming-back {
-            margin-top: 10px;
-            padding: 12px 32px;
-            background: #111;
-            color: #fff;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background .15s;
-        }
-        .coming-back:hover { background: #374151; }
-    </style>
 </head>
 <body>
 

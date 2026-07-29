@@ -1677,3 +1677,451 @@ ul { list-style: none; }
     .inquiry-title { min-width: 0; width: calc(100% - 120px); }
     .inquiry-date { display: none; }
 }
+
+/* =============================================
+   상세 뷰 페이지 공통 레이아웃 (관광지·맛집·축제)
+   ============================================= */
+
+/* 뷰 페이지 배경 */
+body:has(.rv-page) { background: #f0f2f5; }
+
+/* 헤더를 중앙 패널과 동일 너비로 축소 */
+body:has(.rv-page) .site-header {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 50vw;
+    min-width: 360px;
+    max-width: 760px;
+    border-radius: 0 0 10px 10px;
+}
+
+/* 페이지 래퍼 */
+.rv-page {
+    padding-top: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 60px;
+}
+
+/* 중앙 패널 */
+.rv-panel {
+    width: 50vw;
+    min-width: 360px;
+    max-width: 760px;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+}
+
+/* 이미지 슬라이더 */
+.rv-slider {
+    position: relative;
+    width: 100%;
+    height: 360px;
+    overflow: hidden;
+    background: #1a1a2e;
+}
+.rv-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease; }
+.rv-slide.active { opacity: 1; }
+.rv-slide img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 기본 슬라이드 배경 — 페이지별 테마 */
+.rv-slide-default {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 90px;
+    background: linear-gradient(135deg, #1e3a5f, #2563eb);
+}
+.rv-page--spot       .rv-slide-default { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+.rv-page--restaurant .rv-slide-default { background: linear-gradient(135deg, #e17055, #fdcb6e); }
+.rv-page--festival   .rv-slide-default { background: linear-gradient(135deg, #6c5ce7, #fd79a8); }
+
+.rv-slider-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.04), rgba(0,0,0,0.40));
+    z-index: 1; pointer-events: none;
+}
+.rv-img-counter {
+    position: absolute; top: 12px; right: 14px; z-index: 3;
+    background: rgba(0,0,0,0.42); color: #fff;
+    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+}
+.rv-slider-controls {
+    position: absolute; bottom: 16px; left: 50%;
+    transform: translateX(-50%); z-index: 3;
+    display: flex; align-items: center; gap: 10px;
+}
+.rv-arrow {
+    background: rgba(255,255,255,0.28); backdrop-filter: blur(4px);
+    border: none; color: #fff; width: 32px; height: 32px;
+    border-radius: 50%; font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+}
+.rv-arrow:hover { background: rgba(255,255,255,0.55); }
+.rv-dots { display: flex; gap: 7px; }
+.rv-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.45); cursor: pointer;
+    transition: background 0.25s, transform 0.25s;
+}
+.rv-dot.active { background: #fff; transform: scale(1.35); }
+
+/* 콘텐츠 패딩 */
+.rv-content { padding: 0 20px; }
+
+/* 기본 정보 헤더 */
+.rv-header { padding: 20px 0 18px; border-bottom: 1px solid #eee; }
+.rv-name { font-size: 21px; font-weight: 700; color: #1a1a2e; margin-bottom: 10px; }
+.rv-badge-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.rv-cat-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 600; color: #fff; }
+.rv-rating-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.rv-stars { color: #f39c12; font-size: 15px; letter-spacing: 1px; }
+.rv-rating-score { font-weight: 700; font-size: 15px; color: #1a1a2e; }
+.rv-meta-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.rv-meta-item { display: flex; align-items: flex-start; gap: 7px; font-size: 13px; color: #444; }
+.rv-meta-item .rv-icon { flex-shrink: 0; }
+.rv-tag-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.rv-tag { background: #f0f4ff; color: #4a90e2; font-size: 12px; padding: 3px 10px; border-radius: 20px; }
+
+/* 탭 */
+.rv-tabs {
+    position: sticky; top: 68px; z-index: 20;
+    background: #fff; display: flex;
+    border-bottom: 2px solid #eee;
+    margin: 0 -20px; padding: 0 20px;
+}
+.rv-tab {
+    padding: 13px 22px; font-size: 14px; font-weight: 500;
+    color: #aaa; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s; user-select: none;
+}
+.rv-tab.active { color: #1a1a2e; border-bottom-color: #1a1a2e; font-weight: 700; }
+.rv-tab-pane { display: none; }
+.rv-tab-pane.active { display: block; }
+
+/* 공통 섹션 */
+.rv-section { padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+.rv-section:last-child { border-bottom: none; padding-bottom: 10px; }
+.rv-section-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+
+/* 정보 행 */
+.rv-info-row { display: flex; padding: 5px 0; font-size: 13px; gap: 12px; }
+.rv-info-key { font-weight: 600; min-width: 80px; color: #4a90e2; }
+.rv-info-val { color: #333; }
+
+/* 정보 키 색상 — 페이지별 테마 */
+.rv-page--spot       .rv-info-key { color: #0984e3; }
+.rv-page--restaurant .rv-info-key { color: #4a90e2; }
+.rv-page--festival   .rv-info-key { color: #6c5ce7; }
+
+/* 소개 텍스트 */
+.rv-intro-text { font-size: 13px; color: #444; line-height: 1.85; white-space: pre-wrap; }
+
+/* 지도 */
+.rv-map-box {
+    width: 100%; height: 200px;
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid #ddd; margin-bottom: 10px;
+    background: #e8ece8;
+    display: flex; align-items: center; justify-content: center;
+}
+#naverMap { width: 100%; height: 100%; }
+.rv-map-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #888; font-size: 13px; }
+.rv-map-placeholder .map-icon { font-size: 38px; }
+.rv-address-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rv-address-text { font-size: 13px; color: #333; flex: 1; }
+.rv-copy-btn { font-size: 12px; color: #666; border: 1px solid #ddd; padding: 4px 10px; border-radius: 4px; cursor: pointer; background: #fff; flex-shrink: 0; }
+.rv-copy-btn:hover { background: #f5f5f5; }
+.rv-map-link { display: inline-block; margin-top: 8px; font-size: 12px; color: #4a90e2; }
+.rv-map-link:hover { text-decoration: underline; }
+
+/* 주차 */
+.rv-park-ok { color: #27ae60; font-weight: 500; }
+.rv-park-no { color: #aaa; }
+
+/* 편의시설 */
+.rv-facilities { display: flex; gap: 24px; flex-wrap: wrap; }
+.rv-facility { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; color: #666; min-width: 52px; }
+.rv-facility-icon { font-size: 26px; }
+
+/* 빈 탭 */
+.rv-empty-tab { padding: 50px 0; text-align: center; color: #bbb; font-size: 14px; }
+
+/* 관광지 전용 뱃지 */
+.rv-fee-badge { background: #e8f5e9; color: #2e7d32; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+.rv-fee-badge.free { background: #e3f2fd; color: #1565c0; }
+
+/* 맛집 전용 뱃지 */
+.rv-price-badge { background: #fff3e0; color: #e67e22; font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+
+/* 축제 전용 뱃지 */
+.rv-status-badge { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 600; color: #fff; }
+.rv-status-ongoing  { background: #00b894; }
+.rv-status-upcoming { background: #0984e3; }
+.rv-status-ended    { background: #b2bec3; }
+.rv-free-badge  { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; background: #e3f2fd; color: #1565c0; }
+.rv-paid-badge  { font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 500; background: #fff3e0; color: #e67e22; }
+.rv-detail-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 12px; padding: 8px 16px;
+    background: #6c5ce7; color: #fff;
+    font-size: 13px; font-weight: 600;
+    border-radius: 8px; text-decoration: none;
+    transition: background 0.2s;
+}
+.rv-detail-link:hover { background: #5a4bd1; }
+
+/* 뷰 페이지 반응형 */
+@media (max-width: 800px) {
+    body:has(.rv-page) .site-header { width: 100%; min-width: 100%; border-radius: 0; }
+    .rv-panel  { width: 100%; min-width: 100%; border-radius: 0; }
+    .rv-slider { height: 240px; }
+}
+
+/* =============================================
+   여행코스 상세 뷰 (travel_course/view)
+   ============================================= */
+
+.course-detail-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+}
+
+/* 히어로 이미지 */
+.course-hero-img {
+    width: 100%;
+    aspect-ratio: 16/7;
+    object-fit: cover;
+    border-radius: 16px;
+    margin-bottom: 32px;
+}
+.course-hero-placeholder {
+    width: 100%;
+    aspect-ratio: 16/7;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px;
+    margin-bottom: 32px;
+}
+
+/* 코스 기본 정보 */
+.course-info-header { margin-bottom: 28px; }
+.course-info-meta {
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.course-sido-badge {
+    background: #eff6ff; color: #2563eb;
+    font-size: 13px; font-weight: 600;
+    padding: 4px 14px; border-radius: 20px;
+}
+.course-count-badge {
+    background: #f0fdf4; color: #16a34a;
+    font-size: 13px; font-weight: 600;
+    padding: 4px 14px; border-radius: 20px;
+}
+.course-info-title {
+    font-size: 28px; font-weight: 800; color: #0f172a;
+    line-height: 1.3; margin: 0 0 14px;
+}
+.course-info-desc {
+    font-size: 15px; color: #475569; line-height: 1.8;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-left: 3px solid #2563eb;
+    border-radius: 0 8px 8px 0;
+}
+
+/* 타임라인 */
+.course-timeline { margin-top: 40px; }
+.course-timeline-title {
+    font-size: 18px; font-weight: 700; color: #1e293b;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 8px;
+}
+.timeline-list {
+    position: relative; padding-left: 0; list-style: none; margin: 0;
+}
+.timeline-list::before {
+    content: '';
+    position: absolute; left: 24px; top: 28px; bottom: 28px;
+    width: 2px;
+    background: linear-gradient(to bottom, #2563eb, #93c5fd);
+}
+.timeline-item {
+    display: flex; gap: 20px;
+    margin-bottom: 24px; position: relative;
+}
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-num {
+    flex-shrink: 0; width: 48px; height: 48px;
+    border-radius: 50%; background: #2563eb; color: #fff;
+    font-size: 16px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 4px #eff6ff;
+    position: relative; z-index: 1;
+}
+.timeline-card {
+    flex: 1; background: #fff;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.05);
+}
+.timeline-card-header {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; flex-wrap: wrap;
+}
+.timeline-card-name { font-size: 16px; font-weight: 700; color: #1e293b; flex: 1; }
+.timeline-card-type {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 12px; flex-shrink: 0;
+}
+.type-restaurant { background: #fef3c7; color: #b45309; }
+.type-place      { background: #dbeafe; color: #1d4ed8; }
+.type-event      { background: #fce7f3; color: #be185d; }
+.type-custom     { background: #f3f4f6; color: #4b5563; }
+.timeline-stay {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; color: #2563eb;
+    background: #eff6ff; padding: 2px 10px; border-radius: 12px;
+}
+.timeline-card-desc { font-size: 14px; color: #64748b; line-height: 1.7; margin: 8px 0 0; }
+.timeline-card-addr {
+    margin-top: 10px; font-size: 13px; color: #94a3b8;
+    display: flex; align-items: center; gap: 4px;
+}
+
+/* 코스 지도 */
+.course-map-section { margin-top: 48px; }
+.course-map-title {
+    font-size: 18px; font-weight: 700; color: #1e293b;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+}
+#courseMap {
+    width: 100%; height: 420px;
+    border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden;
+}
+
+/* 뒤로가기 버튼 */
+.back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 24px; font-size: 14px; font-weight: 500;
+    color: #64748b; text-decoration: none;
+    padding: 6px 14px; border: 1px solid #e2e8f0;
+    border-radius: 8px; background: #fff; transition: all .15s;
+}
+.back-btn:hover { background: #f8fafc; color: #1e293b; }
+
+/* =============================================
+   여행코스 목록 (travel_course/list)
+   ============================================= */
+
+.course-card {
+    display: flex; flex-direction: column;
+    background: #fff; border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    transition: transform .2s, box-shadow .2s;
+    text-decoration: none; color: inherit;
+}
+.course-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.13); }
+.course-card-thumb {
+    position: relative; width: 100%;
+    aspect-ratio: 16/9; overflow: hidden; background: #f1f5f9;
+}
+.course-card-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover; transition: transform .3s;
+}
+.course-card:hover .course-card-thumb img { transform: scale(1.04); }
+.course-card-thumb-default {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    background: linear-gradient(135deg, #667eea22, #764ba222);
+}
+.course-card-sido {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(37,99,235,.85); color: #fff;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+.course-card-count {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,.55); color: #fff;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+.course-card-body {
+    padding: 18px 20px 20px;
+    display: flex; flex-direction: column; gap: 8px; flex: 1;
+}
+.course-card-title {
+    font-size: 16px; font-weight: 700; color: #1e293b; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+.course-card-desc {
+    font-size: 13px; color: #64748b; line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+}
+.course-card-footer {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; margin-top: auto;
+    padding-top: 8px; border-top: 1px solid #f1f5f9;
+}
+.course-step-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #eff6ff; color: #2563eb;
+    font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+}
+.sido-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.sido-chip {
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+    background: #f1f5f9; color: #475569;
+    transition: background .15s, color .15s;
+}
+.sido-chip:hover, .sido-chip.active { background: #2563eb; color: #fff; }
+
+/* =============================================
+   핫플레이스 준비 중 페이지 (hotplace_temp)
+   ============================================= */
+
+.coming-wrap {
+    min-height: 70vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; padding: 80px 20px; text-align: center;
+}
+.coming-icon { font-size: 64px; }
+.coming-title { font-size: 28px; font-weight: 800; color: #111; }
+.coming-district {
+    display: inline-block;
+    background: #eff6ff; color: #3b82f6;
+    font-size: 16px; font-weight: 700;
+    padding: 6px 20px; border-radius: 999px; margin-bottom: 4px;
+}
+.coming-desc { font-size: 15px; color: #6b7280; line-height: 1.7; }
+.coming-back {
+    margin-top: 10px; padding: 12px 32px;
+    background: #111; color: #fff;
+    border-radius: 10px; font-size: 14px; font-weight: 600;
+    text-decoration: none; transition: background .15s;
+}
+.coming-back:hover { background: #374151; }

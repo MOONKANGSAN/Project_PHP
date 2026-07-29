@@ -64,7 +64,36 @@
 
             <!-- 기본 정보 -->
             <div class="rv-header">
-                <h1 class="rv-name"><?= esc($festival['name']) ?></h1>
+                <!-- rv-name과 추천/비추천 버튼을 같은 행에 배치 -->
+                <div class="rv-name-row">
+                    <h1 class="rv-name"><?= esc($festival['name']) ?></h1>
+
+                    <!-- 추천/비추천 영역 (기존 별점 대체) -->
+                    <div class="rv-reaction-row">
+                        <!-- 추천 버튼: 하트 아이콘 + 숫자 -->
+                        <button class="rv-reaction-btn rv-reaction-like" id="btnLike" title="추천">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+                                         2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+                                         C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5
+                                         c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            <span class="rv-reaction-count" id="likeCount"><?= (int)$likeCount ?></span>
+                        </button>
+
+                        <!-- 비추천 버튼: 엄지 내림 아이콘 + 숫자 -->
+                        <button class="rv-reaction-btn rv-reaction-dislike" id="btnDislike" title="비추천">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05
+                                         C1.05 11.5 1 11.74 1 12v2c0 1.1.9 2 2 2h6.31
+                                         l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23
+                                         l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2z
+                                         M19 3v12h4V3h-4z"/>
+                            </svg>
+                            <span class="rv-reaction-count" id="dislikeCount"><?= (int)$dislikeCount ?></span>
+                        </button>
+                    </div>
+                </div>
 
                 <div class="rv-badge-row">
                     <span class="rv-cat-badge" style="background:<?= $color ?>;">
@@ -81,19 +110,6 @@
                     <span class="rv-paid-badge">🎫 유료</span>
                     <?php endif; ?>
                 </div>
-
-                <?php if ($starVal > 0):
-                    $full  = (int)floor($starVal);
-                    $half  = ($starVal - $full) >= 0.5 ? 1 : 0;
-                    $empty = 5 - $full - $half;
-                ?>
-                <div class="rv-rating-row">
-                    <span class="rv-stars">
-                        <?= str_repeat('★', $full) ?><?= $half ? '⭒' : '' ?><?= str_repeat('☆', $empty) ?>
-                    </span>
-                    <span class="rv-rating-score"><?= number_format($starVal, 1) ?></span>
-                </div>
-                <?php endif; ?>
 
                 <div class="rv-meta-list">
                     <?php if (!empty($festival['start_date'])): ?>
@@ -128,12 +144,13 @@
                 <?php endif; ?>
             </div>
 
-            <!-- 탭 -->
+            <!-- 탭 메뉴 (임시 비활성화)
             <div class="rv-tabs">
                 <div class="rv-tab active" data-tab="home">홈</div>
                 <div class="rv-tab" data-tab="detail">상세</div>
                 <div class="rv-tab" data-tab="review">리뷰</div>
             </div>
+            -->
 
             <!-- 홈 탭 -->
             <div class="rv-tab-pane active" id="tab-home">
@@ -221,15 +238,17 @@
 
             </div>
 
-            <!-- 상세 탭 -->
+            <!-- 상세 탭 (임시 비활성화)
             <div class="rv-tab-pane" id="tab-detail">
                 <div class="rv-section"><div class="rv-empty-tab">추가 상세 정보가 없습니다</div></div>
             </div>
+            -->
 
-            <!-- 리뷰 탭 -->
+            <!-- 리뷰 탭 (임시 비활성화)
             <div class="rv-tab-pane" id="tab-review">
                 <div class="rv-section"><div class="rv-empty-tab">등록된 리뷰가 없습니다</div></div>
             </div>
+            -->
 
         </div><!-- /rv-content -->
     </div><!-- /rv-panel -->
@@ -317,6 +336,62 @@ document.querySelectorAll('.rv-tab').forEach(function (tab) {
     });
 })();
 <?php endif; ?>
+
+/* 추천/비추천 (DB 연동) */
+(function () {
+    var btnLike      = document.getElementById('btnLike');
+    var btnDislike   = document.getElementById('btnDislike');
+    var likeCount    = document.getElementById('likeCount');
+    var dislikeCount = document.getElementById('dislikeCount');
+
+    if (!btnLike || !btnDislike) return;
+
+    var isLoggedIn   = <?= session()->get('user.idx') ? 'true' : 'false' ?>;
+    var targetType   = 'festival';
+    var targetIdx    = <?= (int)$festival['idx'] ?>;
+    var userReaction = <?= json_encode($userReaction) ?>;
+
+    /* 초기 활성 상태 반영 */
+    if (userReaction === 'like')    btnLike.classList.add('active');
+    if (userReaction === 'dislike') btnDislike.classList.add('active');
+
+    /* 로그인 유도 토스트 */
+    function showToast(msg) {
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);'
+            + 'background:rgba(0,0,0,.75);color:#fff;padding:10px 22px;border-radius:20px;'
+            + 'font-size:14px;z-index:9999;opacity:0;transition:opacity .25s;white-space:nowrap;';
+        document.body.appendChild(t);
+        requestAnimationFrame(function () { t.style.opacity = '1'; });
+        setTimeout(function () {
+            t.style.opacity = '0';
+            setTimeout(function () { t.remove(); }, 300);
+        }, 2000);
+    }
+
+    function handleClick(type) {
+        if (!isLoggedIn) { showToast('로그인이 필요합니다.'); return; }
+
+        fetch('/api/reaction/toggle', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ target_type: targetType, target_idx: targetIdx, type: type }),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) return;
+            likeCount.textContent    = data.like_count;
+            dislikeCount.textContent = data.dislike_count;
+            userReaction             = data.user_reaction;
+            btnLike.classList.toggle('active', userReaction === 'like');
+            btnDislike.classList.toggle('active', userReaction === 'dislike');
+        });
+    }
+
+    btnLike.addEventListener('click',    function () { handleClick('like'); });
+    btnDislike.addEventListener('click', function () { handleClick('dislike'); });
+})();
 
 /* 주소 복사 */
 (function () {

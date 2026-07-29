@@ -2125,3 +2125,61 @@ body:has(.rv-page) .site-header {
     text-decoration: none; transition: background .15s;
 }
 .coming-back:hover { background: #374151; }
+
+/* =============================================
+   추천/비추천 반응 버튼 (뷰페이지 공통)
+   ============================================= */
+
+/* rv-name과 추천/비추천을 한 행으로 묶는 wrapper */
+.rv-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+/* 추천/비추천 버튼 영역 */
+.rv-reaction-row {
+    display: flex;
+    gap: 11px;
+    align-items: center;
+    flex-shrink: 0;
+}
+/* 추천/비추천 개별 버튼 - 원형 */
+.rv-reaction-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: 1.5px solid #e0e0e0;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    transition: background 0.2s, border-color 0.2s;
+    color: #aaa;
+}
+.rv-reaction-btn:hover { background: #f8f8f8; }
+/* 하트(추천) 아이콘 */
+.rv-reaction-like svg {
+    width: 18px;
+    height: 18px;
+    fill: #ddd;
+    transition: fill 0.2s;
+}
+/* 비추천 아이콘 */
+.rv-reaction-dislike svg {
+    width: 18px;
+    height: 18px;
+    fill: #ddd;
+    transition: fill 0.2s;
+}
+/* 추천 활성화 */
+.rv-reaction-like.active { border-color: #e84393; color: #e84393; }
+.rv-reaction-like.active svg { fill: #e84393; }
+/* 비추천 활성화 */
+.rv-reaction-dislike.active { border-color: #636e72; color: #636e72; }
+.rv-reaction-dislike.active svg { fill: #636e72; }
+/* 숫자 */
+.rv-reaction-count { font-size: 10px; font-weight: 600; }

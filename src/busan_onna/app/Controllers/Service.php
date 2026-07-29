@@ -10,6 +10,7 @@ use App\Models\HashtagNumberModel;
 use App\Models\BusanMapsModel;
 use App\Models\TravelCourseModel;
 use App\Models\TravelCourseItemModel;
+use App\Models\ReactionModel;
 
 /**
  * 서비스(프론트) 페이지 컨트롤러
@@ -134,6 +135,15 @@ class Service extends BaseController
         // 조회수 +1
         $restaurantModel->update($idx, ['view_cnt' => ((int) ($restaurant['view_cnt'] ?? 0)) + 1]);
 
+        // 추천/비추천 집계 및 현재 유저 반응 조회
+        $reactionModel  = new ReactionModel();
+        $reactionCounts = $reactionModel->getCounts('restaurant', $idx);
+        $userReaction   = null;
+        if ($userIdx = (int) session()->get('user.idx')) {
+            $row          = $reactionModel->getUserReaction($userIdx, 'restaurant', $idx);
+            $userReaction = ($row && (int) $row['state'] !== 9) ? $row['type'] : null;
+        }
+
         return view('service/restaurant/view', [
             'restaurant'       => $restaurant,
             'thumbnails'       => $thumbnails,
@@ -142,6 +152,9 @@ class Service extends BaseController
             'priceRanges'      => RestaurantModel::PRICE_RANGES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
             'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            'likeCount'        => $reactionCounts['like'],
+            'dislikeCount'     => $reactionCounts['dislike'],
+            'userReaction'     => $userReaction,
         ]);
     }
 
@@ -253,6 +266,15 @@ class Service extends BaseController
         // 조회수 +1
         $placeModel->update($idx, ['view_cnt' => ((int)($spot['view_cnt'] ?? 0)) + 1]);
 
+        // 추천/비추천 집계 및 현재 유저 반응 조회
+        $reactionModel  = new ReactionModel();
+        $reactionCounts = $reactionModel->getCounts('spot', $idx);
+        $userReaction   = null;
+        if ($userIdx = (int) session()->get('user.idx')) {
+            $row          = $reactionModel->getUserReaction($userIdx, 'spot', $idx);
+            $userReaction = ($row && (int) $row['state'] !== 9) ? $row['type'] : null;
+        }
+
         return view('service/spot/view', [
             'spot'             => $spot,
             'thumbnails'       => $thumbnails,
@@ -260,6 +282,9 @@ class Service extends BaseController
             'categories'       => PlaceModel::CATEGORIES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
             'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            'likeCount'        => $reactionCounts['like'],
+            'dislikeCount'     => $reactionCounts['dislike'],
+            'userReaction'     => $userReaction,
         ]);
     }
 
@@ -440,6 +465,15 @@ class Service extends BaseController
         // 조회수 +1
         $eventModel->update($idx, ['view_cnt' => ((int)($festival['view_cnt'] ?? 0)) + 1]);
 
+        // 추천/비추천 집계 및 현재 유저 반응 조회
+        $reactionModel  = new ReactionModel();
+        $reactionCounts = $reactionModel->getCounts('festival', $idx);
+        $userReaction   = null;
+        if ($userIdx = (int) session()->get('user.idx')) {
+            $row          = $reactionModel->getUserReaction($userIdx, 'festival', $idx);
+            $userReaction = ($row && (int) $row['state'] !== 9) ? $row['type'] : null;
+        }
+
         return view('service/festival/view', [
             'festival'         => $festival,
             'thumbnails'       => $thumbnails,
@@ -447,6 +481,9 @@ class Service extends BaseController
             'categories'       => EventModel::CATEGORIES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
             'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            'likeCount'        => $reactionCounts['like'],
+            'dislikeCount'     => $reactionCounts['dislike'],
+            'userReaction'     => $userReaction,
         ]);
     }
 

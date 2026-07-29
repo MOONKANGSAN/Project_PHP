@@ -22,17 +22,17 @@ document.addEventListener('error', function (e) {
 
     function goTo(idx) {
         slides[current].classList.remove('active');
-        dots[current].classList.remove('active');
+        if (dots[current]) dots[current].classList.remove('active');
         current = (idx + slides.length) % slides.length;
         slides[current].classList.add('active');
-        dots[current].classList.add('active');
+        if (dots[current]) dots[current].classList.add('active');
     }
 
     function startAuto() { timer = setInterval(() => goTo(current + 1), 4500); }
     function stopAuto()  { clearInterval(timer); }
 
-    prevBtn.addEventListener('click', () => { stopAuto(); goTo(current - 1); startAuto(); });
-    nextBtn.addEventListener('click', () => { stopAuto(); goTo(current + 1); startAuto(); });
+    if (prevBtn) prevBtn.addEventListener('click', () => { stopAuto(); goTo(current - 1); startAuto(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { stopAuto(); goTo(current + 1); startAuto(); });
     dots.forEach((dot, i) => {
         dot.addEventListener('click', () => { stopAuto(); goTo(i); startAuto(); });
     });
@@ -43,6 +43,7 @@ document.addEventListener('error', function (e) {
 /* ---- 헤더 스크롤 효과 ---- */
 (function initHeaderScroll() {
     const header = document.getElementById('siteHeader');
+    if (!header) return;
     window.addEventListener('scroll', () => {
         header.style.background = window.scrollY > 60
             ? 'rgba(8, 15, 30, 0.98)'

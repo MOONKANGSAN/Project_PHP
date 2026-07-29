@@ -146,59 +146,6 @@ $initItems = $course_items ?? [];
     </div>
 </form>
 
-<style>
-/* 코스 항목 행 스타일 */
-.course-item-row {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    background: #fafafa;
-}
-.course-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 4px;
-}
-.course-item-num {
-    font-size: 13px;
-    color: #374151;
-}
-.course-item-num strong {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: #2563eb;
-    color: #fff;
-    font-size: 12px;
-    margin-left: 4px;
-}
-.item-search-wrap { position: relative; }
-.item-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 100;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    box-shadow: 0 4px 16px rgba(0,0,0,.12);
-    min-width: 280px;
-    max-height: 200px;
-    overflow-y: auto;
-    display: none;
-}
-.item-search-result-item {
-    padding: 8px 12px;
-    font-size: 13px;
-    cursor: pointer;
-}
-.item-search-result-item:hover { background: #f3f4f6; }
-</style>
 
 <script>
 // ---------------------------------------------------------------

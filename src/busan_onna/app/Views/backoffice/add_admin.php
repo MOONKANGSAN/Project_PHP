@@ -15,7 +15,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="/backoffice/add-admin" method="post" class="bo-form">
+    <form action="/backoffice/site/admins/add" method="post" class="bo-form">
         <?= csrf_field() ?>
 
         <div class="bo-form-group">
@@ -46,7 +46,7 @@
         </div>
 
         <div class="bo-form-actions">
-            <a href="/backoffice/login" class="bo-btn bo-btn-ghost">취소</a>
+            <a href="/backoffice/dashboard" class="bo-btn bo-btn-ghost">취소</a>
             <button type="submit" class="bo-btn bo-btn-primary">계정 생성</button>
         </div>
     </form>

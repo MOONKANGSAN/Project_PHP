@@ -61,13 +61,6 @@
                         <span>로그인</span>
                     </a>
                 </li>
-                <li>
-                    <a href="/backoffice/add-admin"
-                       class="bo-nav-item <?= $current_uri === '/backoffice/add-admin' ? 'active' : '' ?>">
-                        <span class="bo-nav-icon">👤</span>
-                        <span>관리자 추가</span>
-                    </a>
-                </li>
             </ul>
 
         <?php else: ?>
@@ -190,6 +183,13 @@
                            class="bo-nav-item <?= $current_uri === '/backoffice/site-config' ? 'active' : '' ?>">
                             <span class="bo-nav-icon">⚙️</span>
                             <span>헤더 및 Footer 수정</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/backoffice/site/admins/add"
+                           class="bo-nav-item <?= $current_uri === '/backoffice/site/admins/add' ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">👤</span>
+                            <span>관리자 추가</span>
                         </a>
                     </li>
                 </ul>

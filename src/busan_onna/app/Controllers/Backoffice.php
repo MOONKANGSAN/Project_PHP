@@ -128,8 +128,8 @@ class Backoffice extends BaseController
             'plus_ip' => $this->request->getIPAddress(),
         ]);
 
-        session()->setFlashdata('success', '관리자 계정이 생성되었습니다. 로그인해주세요.');
-        return redirect()->to('/backoffice/login');
+        session()->setFlashdata('success', '관리자 계정이 생성되었습니다.');
+        return redirect()->to('/backoffice/site/admins/add');
     }
 
     // ----------------------------------------------------------------

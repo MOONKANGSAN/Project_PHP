@@ -3,6 +3,9 @@
 namespace App\Controllers;
 
 use App\Models\BackofficeUserModel;
+use App\Models\EventModel;
+use App\Models\PlaceModel;
+use App\Models\RestaurantModel;
 use App\Models\UserInfoModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -33,7 +36,8 @@ class Backoffice extends BaseController
                 'id'    => session()->get('backoffice.id'),
                 'level' => session()->get('backoffice.level'),
             ],
-            'current_uri' => '/' . uri_string(),
+            'current_uri'  => '/' . uri_string(),
+            'nav_history'  => session()->get('backoffice.nav_history') ?? [],
         ], $extra);
     }
 
@@ -142,8 +146,11 @@ class Backoffice extends BaseController
         // 대시보드용 간단 통계
         $userModel = new UserInfoModel();
         $stats = [
-            'total_members' => $userModel->where('state', 1)->countAllResults(),
-            'total_admins'  => (new BackofficeUserModel())->where('state', 1)->countAllResults(),
+            'total_members'     => $userModel->where('state', 1)->countAllResults(),
+            'total_admins'      => (new BackofficeUserModel())->where('state', 1)->countAllResults(),
+            'total_places'      => (new PlaceModel())->where('state', 1)->countAllResults(),
+            'total_restaurants' => (new RestaurantModel())->where('state', 1)->countAllResults(),
+            'total_events'      => (new EventModel())->where('state', 1)->countAllResults(),
         ];
 
         return view('backoffice/dashboard', $this->base('대시보드', ['stats' => $stats]));

@@ -131,16 +131,20 @@ class BackofficePlace extends BaseController
     /** GET /backoffice/spots */
     public function list(): string
     {
-        $q     = (string) ($this->request->getGet('q') ?? '');
-        $state = (string) ($this->request->getGet('state') ?? '');
+        $q        = (string) ($this->request->getGet('q') ?? '');
+        $state    = (string) ($this->request->getGet('state') ?? '');
+        $sido     = (string) ($this->request->getGet('sido') ?? '');
+        $category = (string) ($this->request->getGet('category') ?? '');
 
-        $items = $this->model->getList($q, $state);
+        $items = $this->model->getList($q, $state, $sido, $category);
 
         return view('backoffice/place/list', $this->base('관광지 관리', [
-            'items' => $items,
-            'pager' => $this->model->pager,
-            'q'     => $q,
-            'state' => $state,
+            'items'    => $items,
+            'pager'    => $this->model->pager,
+            'q'        => $q,
+            'state'    => $state,
+            'sido'     => $sido,
+            'category' => $category,
         ]));
     }
 

@@ -26,10 +26,15 @@
                    class="bo-topnav-link <?= $current_uri === '/backoffice/dashboard' ? 'active' : '' ?>">
                     대시보드
                 </a>
-                <a href="/backoffice/dashboard"
-                   class="bo-topnav-link">
-                    통계
+                <?php if (!empty($nav_history ?? [])): ?>
+                <span class="bo-topnav-divider"></span>
+                <?php foreach ($nav_history as $item): ?>
+                <a href="<?= esc($item['url']) ?>"
+                   class="bo-topnav-link bo-topnav-recent <?= $current_uri === $item['url'] ? 'active' : '' ?>">
+                    <?= esc($item['name']) ?>
                 </a>
+                <?php endforeach; ?>
+                <?php endif; ?>
             </nav>
         </div>
         <div class="bo-topnav-right">

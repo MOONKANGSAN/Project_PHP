@@ -29,6 +29,18 @@
                 <option value="1" <?= $state === '1' ? 'selected' : '' ?>>활성</option>
                 <option value="0" <?= $state === '0' ? 'selected' : '' ?>>비활성</option>
             </select>
+            <select name="sido" class="bo-form-select bo-filter-select">
+                <option value="">전체 지역구</option>
+                <?php foreach (['강서구','금정구','기장군','남구','동구','동래구','부산진구','북구','사상구','사하구','서구','수영구','연제구','영도구','중구','해운대구'] as $gu): ?>
+                <option value="<?= $gu ?>" <?= $sido === $gu ? 'selected' : '' ?>><?= $gu ?></option>
+                <?php endforeach; ?>
+            </select>
+            <select name="category" class="bo-form-select bo-filter-select">
+                <option value="">전체 카테고리</option>
+                <?php foreach ($categories as $num => $label): ?>
+                <option value="<?= $num ?>" <?= $category === (string)$num ? 'selected' : '' ?>><?= esc($label) ?></option>
+                <?php endforeach; ?>
+            </select>
             <button type="submit" class="bo-btn bo-btn-primary">검색</button>
             <a href="/backoffice/restaurants" class="bo-btn bo-btn-ghost">초기화</a>
         </div>

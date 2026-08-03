@@ -35,14 +35,12 @@ class EventModel extends Model
         8 => '기타',
     ];
 
-    public function getList(string $q = '', string $state = ''): array
+    public function getList(string $q = '', string $state = '', string $sido = '', string $category = ''): array
     {
-        if ($q !== '') {
-            $this->like('name', $q);
-        }
-        if ($state !== '') {
-            $this->where('state', (int) $state);
-        }
+        if ($q !== '')        { $this->like('name', $q); }
+        if ($state !== '')    { $this->where('state', (int) $state); }
+        if ($sido !== '')     { $this->where('sido', $sido); }
+        if ($category !== '') { $this->where('category_num', (int) $category); }
 
         return $this->orderBy('idx', 'DESC')->paginate(20);
     }

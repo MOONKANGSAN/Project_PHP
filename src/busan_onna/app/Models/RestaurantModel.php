@@ -46,14 +46,12 @@ class RestaurantModel extends Model
     /**
      * 이름 검색 + 상태 필터 후 페이지네이션
      */
-    public function getList(string $q = '', string $state = ''): array
+    public function getList(string $q = '', string $state = '', string $sido = '', string $category = ''): array
     {
-        if ($q !== '') {
-            $this->like('name', $q);
-        }
-        if ($state !== '') {
-            $this->where('state', (int) $state);
-        }
+        if ($q !== '')       { $this->like('name', $q); }
+        if ($state !== '')   { $this->where('state', (int) $state); }
+        if ($sido !== '')    { $this->where('sido', $sido); }
+        if ($category !== '') { $this->where('category_num', (int) $category); }
 
         return $this->orderBy('idx', 'DESC')->paginate(20);
     }

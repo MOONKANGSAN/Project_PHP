@@ -5,8 +5,8 @@
     <p class="bo-page-desc"><?= date('Y년 m월 d일') ?> 기준 서비스 현황입니다.</p>
 </div>
 
-<!-- 통계 카드 -->
-<div class="bo-stats-grid">
+<!-- 통계 카드 — 회원/관리자 -->
+<div class="bo-stats-grid bo-stats-grid--2">
 
     <div class="bo-stat-card">
         <div class="bo-stat-icon" style="background:#eff6ff; color:#3b82f6;">👥</div>
@@ -24,11 +24,16 @@
         </div>
     </div>
 
+</div>
+
+<!-- 통계 카드 — 콘텐츠 현황 -->
+<div class="bo-stats-grid bo-stats-grid--3">
+
     <div class="bo-stat-card">
         <div class="bo-stat-icon" style="background:#fff7ed; color:#f97316;">🗺️</div>
         <div class="bo-stat-body">
             <p class="bo-stat-label">등록 관광지</p>
-            <p class="bo-stat-value">—<span class="bo-stat-unit"></span></p>
+            <p class="bo-stat-value"><?= number_format($stats['total_places']) ?><span class="bo-stat-unit">건</span></p>
         </div>
     </div>
 
@@ -36,7 +41,15 @@
         <div class="bo-stat-icon" style="background:#fdf4ff; color:#a855f7;">🍽️</div>
         <div class="bo-stat-body">
             <p class="bo-stat-label">등록 맛집</p>
-            <p class="bo-stat-value">—<span class="bo-stat-unit"></span></p>
+            <p class="bo-stat-value"><?= number_format($stats['total_restaurants']) ?><span class="bo-stat-unit">건</span></p>
+        </div>
+    </div>
+
+    <div class="bo-stat-card">
+        <div class="bo-stat-icon" style="background:#fef9c3; color:#eab308;">🎉</div>
+        <div class="bo-stat-body">
+            <p class="bo-stat-label">등록 행사/축제</p>
+            <p class="bo-stat-value"><?= number_format($stats['total_events']) ?><span class="bo-stat-unit">건</span></p>
         </div>
     </div>
 

@@ -131,16 +131,20 @@ class BackofficeEvent extends BaseController
     /** GET /backoffice/festivals */
     public function list(): string
     {
-        $q     = (string) ($this->request->getGet('q') ?? '');
-        $state = (string) ($this->request->getGet('state') ?? '');
+        $q        = (string) ($this->request->getGet('q') ?? '');
+        $state    = (string) ($this->request->getGet('state') ?? '');
+        $sido     = (string) ($this->request->getGet('sido') ?? '');
+        $category = (string) ($this->request->getGet('category') ?? '');
 
-        $items = $this->model->getList($q, $state);
+        $items = $this->model->getList($q, $state, $sido, $category);
 
         return view('backoffice/event/list', $this->base('행사·축제 관리', [
-            'items' => $items,
-            'pager' => $this->model->pager,
-            'q'     => $q,
-            'state' => $state,
+            'items'    => $items,
+            'pager'    => $this->model->pager,
+            'q'        => $q,
+            'state'    => $state,
+            'sido'     => $sido,
+            'category' => $category,
         ]));
     }
 

@@ -43,7 +43,7 @@
 
 | 구분 | 기술 |
 |------|------|
-| Backend | PHP 8.2+, CodeIgniter 4 |
+| Backend | PHP 8.4+, CodeIgniter 4 |
 | Frontend | HTML5, CSS3, Vanilla JS |
 | Database | MySQL 8.0 |
 | 지도 | SVG 인터랙티브 맵 (자체 구현) + Naver Maps API |
@@ -86,10 +86,10 @@ busan_onna/
 
 ### 1. 요구 사항
 
-- PHP 8.2 이상
+- PHP 8.4 이상
 - Composer
 - MySQL 8.0 이상
-- Apache 또는 Nginx
+- Nginx
 
 PHP 필수 확장:
 - `intl`, `mbstring`, `json`, `mysqlnd`, `libcurl`
@@ -97,8 +97,8 @@ PHP 필수 확장:
 ### 2. 저장소 클론 및 의존성 설치
 
 ```bash
-git clone https://github.com/your-username/busan-onna.git
-cd busan-onna/busan_onna
+git clone https://github.com/MOONKANGSAN/busan-onna.git
+cd project_php/src/busan_onna
 composer install
 ```
 
@@ -122,11 +122,9 @@ database.default.password = DB_비밀번호
 NAVER_MAP_CLIENT_ID     = 네이버클라우드_클라이언트_ID
 NAVER_MAP_CLIENT_SECRET = 네이버클라우드_클라이언트_시크릿
 ```
-
 > Naver Maps API 키는 [네이버 클라우드 플랫폼](https://console.ncloud.com)에서 발급받습니다.
 
 ### 4. 데이터베이스 생성 및 마이그레이션
-
 ```bash
 # MySQL에서 데이터베이스 생성
 CREATE DATABASE busan_onna CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -172,8 +170,7 @@ server {
 | `busan_event` | 축제·행사 |
 | `hashtag` | 해시태그 |
 | `hashtag_number` | 콘텐츠별 해시태그 매핑 |
-
-> 전체 스키마는 `app/Database/Migrations/` 파일을 참고하세요.
+| `travel_cousrse` | 여행코스추천 |
 
 ---
 
@@ -186,19 +183,7 @@ php spark serve
 # 이후 브라우저에서 접속
 http://localhost:8080
 ```
-
----
-
-## 기여 방법
-
-1. 이 저장소를 Fork합니다.
-2. 기능 브랜치를 생성합니다. (`git checkout -b feature/기능명`)
-3. 변경 사항을 커밋합니다. (`git commit -m '기능 설명'`)
-4. 브랜치에 Push합니다. (`git push origin feature/기능명`)
-5. Pull Request를 생성합니다.
-
 ---
 
 ## 라이선스
-
 이 프로젝트는 개인/학습 목적으로 개발되었습니다.

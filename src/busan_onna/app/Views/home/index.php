@@ -32,9 +32,17 @@
         <?php foreach ($banners as $i => $banner): ?>
         <div class="banner-slide <?= $i === 0 ? 'active' : '' ?>">
             <!-- 실제 등록 이미지 -->
+            <?php
+                $pos   = $banner['image_position'] ?? '50 50';
+                $parts = explode(' ', trim($pos));
+                $objPos = (count($parts) === 2)
+                    ? ((int)$parts[0]) . '% ' . ((int)$parts[1]) . '%'
+                    : '50% 50%';
+            ?>
             <img class="banner-bg-img"
                  src="<?= esc($banner['image_url']) ?>"
                  alt="<?= esc($banner['alt_text'] ?? '') ?>"
+                 style="object-position:<?= $objPos ?>;"
                  onerror="this.onerror=null; this.src='/img/no-image.svg';">
             <div class="banner-overlay"></div>
             <div class="banner-content">

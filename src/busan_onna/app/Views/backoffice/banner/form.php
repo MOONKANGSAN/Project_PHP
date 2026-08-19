@@ -56,7 +56,30 @@ $v = fn(string $f, mixed $d = '') => old($f) ?? ($item[$f] ?? $d);
                  src="<?= ($mode === 'edit' && $item['image_url']) ? esc($item['image_url']) : '' ?>"
                  alt=""
                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+                        object-position:<?= esc($v('image_position', '50 50')) !== '' ? str_replace(' ', '% ', esc($v('image_position', '50 50'))).'%' : '50% 50%' ?>;
                         display:<?= ($mode === 'edit' && $item['image_url']) ? 'block' : 'none' ?>;">
+
+            <!-- 드래그 위치 조정 힌트 (이미지가 잘릴 때만 표시) -->
+            <div id="dragHint" style="
+                display:none;
+                position:absolute;
+                top:10px;left:10px;
+                background:rgba(0,0,0,0.58);
+                color:#fff;
+                font-size:12px;
+                padding:5px 10px;
+                border-radius:6px;
+                z-index:10;
+                align-items:center;
+                gap:6px;
+                pointer-events:none;
+                user-select:none;
+            ">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                    <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M12 3v18M3 12h18"/>
+                </svg>
+                드래그하여 표시 영역 조정
+            </div>
 
             <!-- 어두운 오버레이 (실제 배너와 동일) -->
             <div style="position:absolute;inset:0;background:rgba(0,0,0,0.28);"></div>
@@ -244,6 +267,10 @@ $v = fn(string $f, mixed $d = '') => old($f) ?? ($item[$f] ?? $d);
         </div>
     </div>
 
+    <!-- 이미지 표시 위치 (드래그로 결정한 object-position, "X Y" 형식 0~100) -->
+    <input type="hidden" name="image_position" id="imagePosition"
+           value="<?= esc($v('image_position', '50 50')) ?>">
+
     <!-- 저장 버튼 -->
     <div style="display:flex;justify-content:flex-end;gap:10px;">
         <a href="/backoffice/banners" class="bo-btn bo-btn-ghost">취소</a>
@@ -255,27 +282,139 @@ $v = fn(string $f, mixed $d = '') => old($f) ?? ($item[$f] ?? $d);
 
 <script>
 (function () {
-    // 이미지 선택 시 미리보기 즉시 업데이트
+    var img       = document.getElementById('previewImg');
+    var container = document.getElementById('bannerPreview');
+    var posInput  = document.getElementById('imagePosition');
+    var dragHint  = document.getElementById('dragHint');
+
+    // 현재 object-position 값 (0~100 퍼센트)
+    var posX = 50, posY = 50;
+    var dragging = false;
+    var lastX, lastY;
+    var overflowX = 0, overflowY = 0;
+
+    // object-position CSS 및 hidden input 동기화
+    function applyPos() {
+        img.style.objectPosition = posX + '% ' + posY + '%';
+        posInput.value = Math.round(posX) + ' ' + Math.round(posY);
+    }
+
+    // 이미지가 컨테이너를 넘치는 픽셀 계산 (object-fit:cover 기준)
+    function calcOverflow() {
+        var cW = container.offsetWidth;
+        var cH = container.offsetHeight;
+        var nW = img.naturalWidth;
+        var nH = img.naturalHeight;
+        if (!nW || !nH) { overflowX = overflowY = 0; return; }
+        var scale = Math.max(cW / nW, cH / nH);
+        overflowX = Math.max(0, nW * scale - cW);
+        overflowY = Math.max(0, nH * scale - cH);
+    }
+
+    // 드래그 가능 여부에 따라 커서·힌트 UI 갱신
+    // container에 cursor를 적용해야 오버레이 div 위에서도 작동함
+    function updateDragUI() {
+        calcOverflow();
+        var canDrag = overflowX > 1 || overflowY > 1;
+        dragHint.style.display = canDrag ? 'flex' : 'none';
+        container.style.cursor = canDrag ? 'grab' : 'default';
+    }
+
+    // 이미지 로드 완료 시 저장된 위치로 초기화
+    img.addEventListener('load', function () {
+        var saved = (posInput.value || '50 50').split(' ');
+        posX = parseFloat(saved[0]) || 50;
+        posY = parseFloat(saved[1]) || 50;
+        applyPos();
+        updateDragUI();
+    });
+
+    // ── 마우스 드래그 ─────────────────────────────────────────
+    // img가 아닌 container에 등록: 오버레이 div가 img 위를 덮어 img의 mousedown이 차단되기 때문
+    container.addEventListener('mousedown', function (e) {
+        if (img.style.display === 'none') return;
+        if (overflowX <= 1 && overflowY <= 1) return;
+        dragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!dragging) return;
+        var dx = e.clientX - lastX;
+        var dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        calcOverflow();
+        // 드래그 방향이 반대여야 이미지가 자연스럽게 따라옴
+        if (overflowX > 1) posX = Math.max(0, Math.min(100, posX - (dx / overflowX * 100)));
+        if (overflowY > 1) posY = Math.max(0, Math.min(100, posY - (dy / overflowY * 100)));
+        applyPos();
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (!dragging) return;
+        dragging = false;
+        container.style.cursor = (overflowX > 1 || overflowY > 1) ? 'grab' : 'default';
+    });
+
+    // ── 터치 드래그 (태블릿·모바일 관리자) ──────────────────────
+    container.addEventListener('touchstart', function (e) {
+        if (img.style.display === 'none') return;
+        if (overflowX <= 1 && overflowY <= 1) return;
+        var t = e.touches[0];
+        dragging = true;
+        lastX = t.clientX;
+        lastY = t.clientY;
+        e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function (e) {
+        if (!dragging) return;
+        var t = e.touches[0];
+        var dx = t.clientX - lastX;
+        var dy = t.clientY - lastY;
+        lastX = t.clientX;
+        lastY = t.clientY;
+
+        calcOverflow();
+        if (overflowX > 1) posX = Math.max(0, Math.min(100, posX - (dx / overflowX * 100)));
+        if (overflowY > 1) posY = Math.max(0, Math.min(100, posY - (dy / overflowY * 100)));
+        applyPos();
+        e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('touchend', function () { dragging = false; });
+
+    // 브라우저 기본 이미지 드래그 방지
+    img.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    // ── 이미지 선택 시 미리보기 업데이트 ────────────────────────
     window.onImageChange = function (input) {
         if (!input.files || !input.files[0]) return;
 
         var file = input.files[0];
-
-        // 파일명 표시 업데이트
         document.getElementById('fileNameDisplay').textContent = file.name;
         document.getElementById('previewHint').style.display = 'none';
 
         var reader = new FileReader();
         reader.onload = function (e) {
-            var img = document.getElementById('previewImg');
+            // 새 이미지 선택 시 위치 중앙으로 초기화
+            posX = 50; posY = 50;
+            applyPos();
+
             img.src = e.target.result;
             img.style.display = 'block';
             document.getElementById('previewPlaceholder').style.display = 'none';
+            // load 이벤트에서 updateDragUI() 자동 호출됨
         };
         reader.readAsDataURL(file);
     };
 
-    // 제목·부제목 입력 시 미리보기 실시간 반영
+    // ── 제목·부제목 실시간 미리보기 ──────────────────────────────
     window.updatePreviewText = function () {
         var title    = document.getElementById('inputTitle').value.trim();
         var subtitle = document.getElementById('inputSubtitle').value.trim();
@@ -283,8 +422,8 @@ $v = fn(string $f, mixed $d = '') => old($f) ?? ($item[$f] ?? $d);
         var previewTitle    = document.getElementById('previewTitle');
         var previewSubtitle = document.getElementById('previewSubtitle');
 
-        previewTitle.textContent     = title;
-        previewTitle.style.display   = title ? 'block' : 'none';
+        previewTitle.textContent   = title;
+        previewTitle.style.display = title ? 'block' : 'none';
 
         previewSubtitle.textContent   = subtitle;
         previewSubtitle.style.display = subtitle ? 'block' : 'none';

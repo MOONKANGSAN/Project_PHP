@@ -16,6 +16,7 @@ class MainBannerModel extends Model
     protected $allowedFields = [
         'state',
         'image_url',
+        'image_position',
         'alt_text',
         'location',
         'title',

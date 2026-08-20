@@ -48,7 +48,7 @@ $imageSlots     = 8 - count($existingImages);
 <?php endif; ?>
 
 <!-- enctype="multipart/form-data" — 이미지 파일 업로드 필수 -->
-<form method="post" action="<?= $action ?>" enctype="multipart/form-data">
+<form method="post" action="<?= $action ?>" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?>
 
     <!-- 기본 정보 -->
@@ -705,6 +705,47 @@ $imageSlots     = 8 - count($existingImages);
         el.textContent = text; el.style.color = color; el.style.display = 'block';
     }
 }());
+</script>
+
+<script>
+/* 맛집 등록·수정 폼 — 기본정보·위치정보 필수 입력 검증 */
+document.querySelector('form').addEventListener('submit', function (e) {
+    var missing = [];
+
+    // ── 기본 정보 ──────────────────────────────────────────
+    if (!document.querySelector('[name="name"]').value.trim()) {
+        missing.push({ sec: '기본 정보', label: '맛집명' });
+    }
+
+    // ── 위치 정보 ──────────────────────────────────────────
+    if (!document.getElementById('address1').value.trim()) {
+        missing.push({ sec: '위치 정보', label: '도로명 주소' });
+    }
+    if (!document.getElementById('sido').value) {
+        missing.push({ sec: '위치 정보', label: '지역(구)' });
+    }
+    if (!document.getElementById('latitude').value.trim()) {
+        missing.push({ sec: '위치 정보', label: '위치 좌표 (주소 검색 후 지도에서 위치를 지정해주세요)' });
+    }
+
+    if (!missing.length) return;
+
+    e.preventDefault();
+
+    var sections = {};
+    missing.forEach(function (m) {
+        (sections[m.sec] = sections[m.sec] || []).push(m.label);
+    });
+
+    var msg = '⚠ 입력 누락 항목이 있습니다.\n\n';
+    Object.keys(sections).forEach(function (sec) {
+        msg += '[ ' + sec + ' ]\n';
+        sections[sec].forEach(function (lbl) { msg += '  • ' + lbl + '\n'; });
+        msg += '\n';
+    });
+
+    alert(msg.trim());
+});
 </script>
 
 <?= view('backoffice/partials/footer') ?>

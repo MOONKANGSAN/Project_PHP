@@ -29,7 +29,7 @@ $initItems = $course_items ?? [];
     </div>
 <?php endif; ?>
 
-<form method="post" action="<?= $action ?>" enctype="multipart/form-data">
+<form method="post" action="<?= $action ?>" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?>
 
     <!-- 기본 정보 -->
@@ -503,6 +503,36 @@ $initItems = $course_items ?? [];
             .replace(/'/g, '&#39;');
     }
 })();
+</script>
+
+<script>
+/* 여행코스 등록·수정 폼 — 기본정보 필수 입력 검증 */
+document.querySelector('form').addEventListener('submit', function (e) {
+    var missing = [];
+
+    // ── 기본 정보 ──────────────────────────────────────────
+    if (!document.querySelector('[name="title"]').value.trim()) {
+        missing.push({ sec: '기본 정보', label: '코스명' });
+    }
+
+    if (!missing.length) return;
+
+    e.preventDefault();
+
+    var sections = {};
+    missing.forEach(function (m) {
+        (sections[m.sec] = sections[m.sec] || []).push(m.label);
+    });
+
+    var msg = '⚠ 입력 누락 항목이 있습니다.\n\n';
+    Object.keys(sections).forEach(function (sec) {
+        msg += '[ ' + sec + ' ]\n';
+        sections[sec].forEach(function (lbl) { msg += '  • ' + lbl + '\n'; });
+        msg += '\n';
+    });
+
+    alert(msg.trim());
+});
 </script>
 
 <?= view('backoffice/partials/footer') ?>

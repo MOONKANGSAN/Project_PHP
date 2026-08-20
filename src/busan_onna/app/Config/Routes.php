@@ -46,10 +46,12 @@ $routes->post('/auth/login',    'Auth::login');
 $routes->get('/auth/logout',    'Auth::logout');
 
 // 백오피스 — 인증 불필요
-$routes->get('backoffice',            'Backoffice::index');
-$routes->get('backoffice/login',      'Backoffice::login');
-$routes->post('backoffice/login',     'Backoffice::doLogin');
-$routes->get('backoffice/logout',     'Backoffice::logout');
+$routes->get('backoffice',                  'Backoffice::index');
+$routes->get('backoffice/login',            'Backoffice::login');
+$routes->post('backoffice/login',           'Backoffice::doLogin');
+$routes->get('backoffice/logout',           'Backoffice::logout');
+$routes->get('backoffice/site/admins/add',  'Backoffice::addAdmin');
+$routes->post('backoffice/site/admins/add', 'Backoffice::doAddAdmin');
 
 // 백오피스 — 로그인 필요 (BackofficeAuthFilter 적용)
 $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($routes) {
@@ -113,10 +115,6 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('banners/(:num)/delete',  'BackofficeBanner::delete/$1');
 
     $routes->get('site-config',           'Backoffice::siteConfig');
-
-    // 사이트 관리 — 관리자 계정
-    $routes->get('site/admins/add',   'Backoffice::addAdmin');
-    $routes->post('site/admins/add',  'Backoffice::doAddAdmin');
 
     // 맛집 관리
     $routes->get('restaurants',                    'BackofficeRestaurant::list');

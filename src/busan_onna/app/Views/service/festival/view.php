@@ -3,7 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($festival['name']) ?> - 부산온나</title>
+
+    <?php
+    /* ---- SEO 변수 계산 ---- */
+    $seoName    = $festival['name'] ?? '';
+    $seoRawInfo = strip_tags($festival['info'] ?? '');
+    // 날짜 정보를 description에 포함
+    $datePart = '';
+    if (!empty($festival['start_date'])) {
+        $datePart = $festival['start_date'];
+        if (!empty($festival['end_date'])) $datePart .= ' ~ ' . $festival['end_date'];
+        $datePart = '(' . $datePart . ') ';
+    }
+    $seoDesc = $seoRawInfo !== ''
+        ? $datePart . mb_substr($seoRawInfo, 0, 110) . (mb_strlen($seoRawInfo) > 110 ? '…' : '')
+        : esc($seoName) . '. ' . $datePart . '부산 축제·행사 정보를 부산온나에서 확인하세요.';
+    $seoTitle     = esc($seoName) . ' | 부산 축제·행사 - 부산온나';
+    $canonicalUrl = 'https://busanonna.com/festivals/' . (int)$festival['idx'];
+    $ogImage = !empty($thumbnails[0]['img_url'])
+        ? esc($thumbnails[0]['img_url'])
+        : 'https://busanonna.com/img/og-festival.jpg';
+    preg_match('/부산광역시\s+(\S+(?:구|군))/', $festival['address1'] ?? '', $addrMatch);
+    $district    = $addrMatch[1] ?? '부산';
+    $tagKeywords = implode(', ', array_column($tags ?? [], 'name'));
+    $seoKeywords = esc($seoName) . ', 부산축제, ' . esc($district) . ' 행사' . ($tagKeywords ? ', ' . esc($tagKeywords) : '') . ', 부산온나';
+    ?>
+
+    <title><?= $seoTitle ?></title>
+    <meta name="description" content="<?= esc($seoDesc) ?>">
+    <meta name="keywords"    content="<?= $seoKeywords ?>">
+    <meta name="robots"      content="index, follow">
+    <link rel="canonical"    href="<?= $canonicalUrl ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:type"         content="website">
+    <meta property="og:title"        content="<?= $seoTitle ?>">
+    <meta property="og:description"  content="<?= esc($seoDesc) ?>">
+    <meta property="og:url"          content="<?= $canonicalUrl ?>">
+    <meta property="og:image"        content="<?= $ogImage ?>">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name"    content="부산온나">
+    <meta property="og:locale"       content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= $seoTitle ?>">
+    <meta name="twitter:description" content="<?= esc($seoDesc) ?>">
+    <meta name="twitter:image"       content="<?= $ogImage ?>">
+
+    <!-- 구조화 데이터 (JSON-LD) - Event -->
+    <script type="application/ld+json">
+    <?php
+    $ld = [
+        '@context'    => 'https://schema.org',
+        '@type'       => 'Event',
+        'name'        => $seoName,
+        'url'         => $canonicalUrl,
+        'description' => $seoRawInfo !== '' ? mb_substr($seoRawInfo, 0, 200) : null,
+        'eventStatus' => match($festival['status'] ?? '') {
+            'ongoing'  => 'https://schema.org/EventScheduled',
+            'upcoming' => 'https://schema.org/EventScheduled',
+            'ended'    => 'https://schema.org/EventPast',
+            default    => 'https://schema.org/EventScheduled',
+        },
+        'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
+        'location' => [
+            '@type'   => 'Place',
+            'name'    => $festival['address1'] ?? '부산',
+            'address' => [
+                '@type'          => 'PostalAddress',
+                'addressCountry' => 'KR',
+                'addressRegion'  => '부산광역시',
+                'streetAddress'  => $festival['address1'] ?? '',
+            ],
+        ],
+    ];
+    if (!empty($festival['start_date'])) {
+        $ld['startDate'] = $festival['start_date'];
+    }
+    if (!empty($festival['end_date'])) {
+        $ld['endDate'] = $festival['end_date'];
+    }
+    if (!empty($festival['host'])) {
+        $ld['organizer'] = ['@type' => 'Organization', 'name' => $festival['host']];
+    }
+    if (!empty($thumbnails[0]['img_url'])) {
+        $ld['image'] = $thumbnails[0]['img_url'];
+    }
+    // 무료/유료 오퍼
+    $ld['offers'] = [
+        '@type'         => 'Offer',
+        'price'         => !empty($festival['is_free']) ? '0' : null,
+        'priceCurrency' => 'KRW',
+        'availability'  => 'https://schema.org/InStock',
+        'url'           => $canonicalUrl,
+    ];
+    if (empty($festival['is_free'])) {
+        unset($ld['offers']['price']);
+    }
+    if (!empty($tagKeywords)) {
+        $ld['keywords'] = $tagKeywords;
+    }
+    $ld = array_filter($ld, fn($v) => $v !== null && $v !== '');
+    echo json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    ?>
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">

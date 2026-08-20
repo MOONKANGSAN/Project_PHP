@@ -80,6 +80,23 @@ class Service extends BaseController
         }
         unset($r);
 
+        // 맛집 like_count 일괄 조회 (단일 쿼리)
+        if (!empty($restaurants)) {
+            $rows = $db->table('reactions')
+                       ->select('target_idx, COUNT(*) as cnt')
+                       ->where('target_type', 'restaurant')
+                       ->where('type', 'like')
+                       ->where('state !=', 9)
+                       ->whereIn('target_idx', array_column($restaurants, 'idx'))
+                       ->groupBy('target_idx')
+                       ->get()->getResultArray();
+            $likeCounts = array_column($rows, 'cnt', 'target_idx');
+            foreach ($restaurants as &$r) {
+                $r['like_count'] = (int)($likeCounts[$r['idx']] ?? 0);
+            }
+            unset($r);
+        }
+
         // 필터 드롭다운용 구 목록 (DB 기준 동적 생성)
         $allAddresses = $db->table('busan_restaurant')
                            ->select('address1')
@@ -345,6 +362,23 @@ class Service extends BaseController
         }
         unset($s);
 
+        // 관광지 like_count 일괄 조회 (단일 쿼리)
+        if (!empty($spots)) {
+            $rows = $db->table('reactions')
+                       ->select('target_idx, COUNT(*) as cnt')
+                       ->where('target_type', 'spot')
+                       ->where('type', 'like')
+                       ->where('state !=', 9)
+                       ->whereIn('target_idx', array_column($spots, 'idx'))
+                       ->groupBy('target_idx')
+                       ->get()->getResultArray();
+            $likeCounts = array_column($rows, 'cnt', 'target_idx');
+            foreach ($spots as &$s) {
+                $s['like_count'] = (int)($likeCounts[$s['idx']] ?? 0);
+            }
+            unset($s);
+        }
+
         $allAddresses = $db->table('busan_place')
                            ->select('address1')
                            ->where('state', 1)
@@ -561,6 +595,23 @@ class Service extends BaseController
             }
         }
         unset($f);
+
+        // 축제 like_count 일괄 조회 (단일 쿼리)
+        if (!empty($festivals)) {
+            $rows = $db->table('reactions')
+                       ->select('target_idx, COUNT(*) as cnt')
+                       ->where('target_type', 'festival')
+                       ->where('type', 'like')
+                       ->where('state !=', 9)
+                       ->whereIn('target_idx', array_column($festivals, 'idx'))
+                       ->groupBy('target_idx')
+                       ->get()->getResultArray();
+            $likeCounts = array_column($rows, 'cnt', 'target_idx');
+            foreach ($festivals as &$f) {
+                $f['like_count'] = (int)($likeCounts[$f['idx']] ?? 0);
+            }
+            unset($f);
+        }
 
         $allAddresses = $db->table('busan_event')
                            ->select('address1')

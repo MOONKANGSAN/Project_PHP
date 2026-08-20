@@ -3,7 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($spot['name']) ?> - 부산온나</title>
+
+    <?php
+    /* ---- SEO 변수 계산 ---- */
+    $seoName    = $spot['name'] ?? '';
+    $seoRawInfo = strip_tags($spot['info'] ?? '');
+    $seoDesc = $seoRawInfo !== ''
+        ? mb_substr($seoRawInfo, 0, 120) . (mb_strlen($seoRawInfo) > 120 ? '…' : '')
+        : esc($seoName) . '. 부산 관광지 정보 - 위치, 입장료, 운영시간을 부산온나에서 확인하세요.';
+    $seoTitle     = esc($seoName) . ' | 부산 관광지 - 부산온나';
+    $canonicalUrl = 'https://busanonna.com/spots/' . (int)$spot['idx'];
+    $ogImage = !empty($thumbnails[0]['img_url'])
+        ? esc($thumbnails[0]['img_url'])
+        : 'https://busanonna.com/img/og-spot.jpg';
+    preg_match('/부산광역시\s+(\S+(?:구|군))/', $spot['address1'] ?? '', $addrMatch);
+    $district    = $addrMatch[1] ?? '부산';
+    $tagKeywords = implode(', ', array_column($tags ?? [], 'name'));
+    $seoKeywords = esc($seoName) . ', ' . esc($district) . ' 관광지, 부산관광지, 부산명소' . ($tagKeywords ? ', ' . esc($tagKeywords) : '') . ', 부산온나';
+    ?>
+
+    <title><?= $seoTitle ?></title>
+    <meta name="description" content="<?= esc($seoDesc) ?>">
+    <meta name="keywords"    content="<?= $seoKeywords ?>">
+    <meta name="robots"      content="index, follow">
+    <link rel="canonical"    href="<?= $canonicalUrl ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:type"         content="website">
+    <meta property="og:title"        content="<?= $seoTitle ?>">
+    <meta property="og:description"  content="<?= esc($seoDesc) ?>">
+    <meta property="og:url"          content="<?= $canonicalUrl ?>">
+    <meta property="og:image"        content="<?= $ogImage ?>">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name"    content="부산온나">
+    <meta property="og:locale"       content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= $seoTitle ?>">
+    <meta name="twitter:description" content="<?= esc($seoDesc) ?>">
+    <meta name="twitter:image"       content="<?= $ogImage ?>">
+
+    <!-- 구조화 데이터 (JSON-LD) - TouristAttraction -->
+    <script type="application/ld+json">
+    <?php
+    $ld = [
+        '@context'    => 'https://schema.org',
+        '@type'       => 'TouristAttraction',
+        'name'        => $seoName,
+        'url'         => $canonicalUrl,
+        'description' => $seoRawInfo !== '' ? mb_substr($seoRawInfo, 0, 200) : null,
+        'address' => [
+            '@type'          => 'PostalAddress',
+            'addressCountry' => 'KR',
+            'addressRegion'  => '부산광역시',
+            'streetAddress'  => $spot['address1'] ?? '',
+        ],
+        'touristType' => $categories[(int)($spot['category_num'] ?? 8)] ?? '관광지',
+    ];
+    if (!empty($thumbnails[0]['img_url'])) {
+        $ld['image'] = $thumbnails[0]['img_url'];
+    }
+    // 좌표가 있으면 geo 추가
+    if (!empty($spot['latitude']) && !empty($spot['longitude'])) {
+        $ld['geo'] = [
+            '@type'     => 'GeoCoordinates',
+            'latitude'  => (float)$spot['latitude'],
+            'longitude' => (float)$spot['longitude'],
+        ];
+    }
+    if (!empty($spot['open_time'])) {
+        $ld['openingHours'] = $spot['open_time'];
+    }
+    // 입장료 정보
+    if (!empty($spot['admission_fee'])) {
+        $ld['offers'] = [
+            '@type'    => 'Offer',
+            'name'     => '입장료',
+            'price'    => $spot['admission_fee'],
+            'priceCurrency' => 'KRW',
+        ];
+    }
+    if (!empty($tagKeywords)) {
+        $ld['keywords'] = $tagKeywords;
+    }
+    $ld = array_filter($ld, fn($v) => $v !== null && $v !== '');
+    echo json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    ?>
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">

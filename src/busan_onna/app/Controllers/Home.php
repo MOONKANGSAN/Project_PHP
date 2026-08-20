@@ -38,6 +38,24 @@ class Home extends BaseController
         }
         unset($s);
 
+        // 관광지 like_count 일괄 조회 (단일 쿼리)
+        $db = \Config\Database::connect();
+        if (!empty($spotsRaw)) {
+            $rows = $db->table('reactions')
+                       ->select('target_idx, COUNT(*) as cnt')
+                       ->where('target_type', 'spot')
+                       ->where('type', 'like')
+                       ->where('state !=', 9)
+                       ->whereIn('target_idx', array_column($spotsRaw, 'idx'))
+                       ->groupBy('target_idx')
+                       ->get()->getResultArray();
+            $spotLikes = array_column($rows, 'cnt', 'target_idx');
+            foreach ($spotsRaw as &$s) {
+                $s['like_count'] = (int)($spotLikes[$s['idx']] ?? 0);
+            }
+            unset($s);
+        }
+
         // DB에서 활성 맛집 최신 6개 조회
         $restaurantsRaw = $restaurantModel->where('state', 1)
                                           ->orderBy('idx', 'DESC')
@@ -53,6 +71,23 @@ class Home extends BaseController
             $r['district'] = $m[1] ?? '';
         }
         unset($r);
+
+        // 맛집 like_count 일괄 조회 (단일 쿼리)
+        if (!empty($restaurantsRaw)) {
+            $rows = $db->table('reactions')
+                       ->select('target_idx, COUNT(*) as cnt')
+                       ->where('target_type', 'restaurant')
+                       ->where('type', 'like')
+                       ->where('state !=', 9)
+                       ->whereIn('target_idx', array_column($restaurantsRaw, 'idx'))
+                       ->groupBy('target_idx')
+                       ->get()->getResultArray();
+            $restaurantLikes = array_column($rows, 'cnt', 'target_idx');
+            foreach ($restaurantsRaw as &$r) {
+                $r['like_count'] = (int)($restaurantLikes[$r['idx']] ?? 0);
+            }
+            unset($r);
+        }
 
         // 지역별 탐색: 활성 구·군 목록 + 각 지역 TOP5 (state=1만)
         $mapsModel    = new BusanMapsModel();

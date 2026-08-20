@@ -4,6 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산온나 - 부산 여행의 시작</title>
+
+    <!-- 검색엔진 기본 메타 태그 -->
+    <meta name="description" content="부산 여행의 시작, 부산온나. 관광지·맛집·축제·여행코스를 한곳에서 찾아보세요. 해운대, 광안리, 자갈치 등 부산의 숨은 명소를 소개합니다.">
+    <meta name="keywords" content="부산여행, 부산관광지, 부산맛집, 부산축제, 부산여행코스, 해운대, 광안리, 자갈치, 부산온나">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://busanonna.com/">
+
+    <!-- Open Graph (소셜 미디어 공유 미리보기) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="부산온나 - 부산 여행의 시작">
+    <meta property="og:description" content="부산 여행의 시작, 부산온나. 관광지·맛집·축제·여행코스를 한곳에서 찾아보세요.">
+    <meta property="og:url" content="https://busanonna.com/">
+    <meta property="og:image" content="https://busanonna.com/img/og-home.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="부산온나">
+    <meta property="og:locale" content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="부산온나 - 부산 여행의 시작">
+    <meta name="twitter:description" content="부산 여행의 시작, 부산온나. 관광지·맛집·축제·여행코스를 한곳에서 찾아보세요.">
+    <meta name="twitter:image" content="https://busanonna.com/img/og-home.jpg">
+
+    <!-- 구조화 데이터 (JSON-LD) - 검색결과 리치 스니펫용 -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "@id": "https://busanonna.com/#website",
+                "url": "https://busanonna.com/",
+                "name": "부산온나",
+                "description": "부산 여행의 시작, 관광지·맛집·축제·여행코스 정보 제공",
+                "inLanguage": "ko-KR",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": {
+                        "@type": "EntryPoint",
+                        "urlTemplate": "https://busanonna.com/spots?q={search_term_string}"
+                    },
+                    "query-input": "required name=search_term_string"
+                }
+            },
+            {
+                "@type": "Organization",
+                "@id": "https://busanonna.com/#organization",
+                "name": "부산온나",
+                "url": "https://busanonna.com/",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://busanonna.com/img/logo.png"
+                },
+                "description": "부산 지역 여행 정보 플랫폼"
+            }
+        ]
+    }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">
@@ -16,7 +76,10 @@
 <?= view('service/partials/header') ?>
 
 <!-- ===================== 메인 배너 슬라이더 ===================== -->
-<section class="main-banner">
+<!-- 페이지 대표 h1: 배너 유무와 관계없이 SEO h1을 보장하기 위해 시각적으로 숨김 처리 -->
+<h1 class="sr-only">부산온나 - 부산 여행의 시작</h1>
+
+<section class="main-banner" aria-label="메인 배너">
     <div class="banner-slider">
         <?php if (empty($banners)): ?>
         <!-- 등록된 활성 배너가 없을 때 기본 슬라이드 -->
@@ -24,24 +87,27 @@
             <div class="banner-overlay"></div>
             <div class="banner-content">
                 <span class="banner-location">📍 부산광역시</span>
-                <h1 class="banner-title">부산에 오신 걸 환영합니다</h1>
+                <p class="banner-title">부산에 오신 걸 환영합니다</p>
                 <p class="banner-subtitle">설레는 부산 여행을 부산온나와 함께하세요</p>
             </div>
         </div>
         <?php else: ?>
         <?php foreach ($banners as $i => $banner): ?>
-        <div class="banner-slide <?= $i === 0 ? 'active' : '' ?>">
-            <!-- 실제 등록 이미지 -->
+        <div class="banner-slide <?= $i === 0 ? 'active' : '' ?>" role="group" aria-label="배너 <?= $i + 1 ?>번">
             <?php
                 $pos   = $banner['image_position'] ?? '50 50';
                 $parts = explode(' ', trim($pos));
                 $objPos = (count($parts) === 2)
                     ? ((int)$parts[0]) . '% ' . ((int)$parts[1]) . '%'
                     : '50% 50%';
+                /* alt_text가 비어있으면 title 또는 위치 기반으로 대체 텍스트 생성 */
+                $altText = !empty($banner['alt_text'])
+                    ? $banner['alt_text']
+                    : (!empty($banner['title']) ? $banner['title'] . ' 배너 이미지' : '부산온나 메인 배너');
             ?>
             <img class="banner-bg-img"
                  src="<?= esc($banner['image_url']) ?>"
-                 alt="<?= esc($banner['alt_text'] ?? '') ?>"
+                 alt="<?= esc($altText) ?>"
                  style="object-position:<?= $objPos ?>;"
                  onerror="this.onerror=null; this.src='/img/no-image.svg';">
             <div class="banner-overlay"></div>
@@ -50,7 +116,8 @@
                 <span class="banner-location">📍 <?= esc($banner['location']) ?></span>
                 <?php endif; ?>
                 <?php if (!empty($banner['title'])): ?>
-                <h1 class="banner-title"><?= esc($banner['title']) ?></h1>
+                <!-- 배너 내 제목은 h2로: 실제 페이지 h1은 sr-only로 위에서 선언 -->
+                <h2 class="banner-title"><?= esc($banner['title']) ?></h2>
                 <?php endif; ?>
                 <?php if (!empty($banner['subtitle'])): ?>
                 <p class="banner-subtitle"><?= esc($banner['subtitle']) ?></p>
@@ -85,7 +152,7 @@
 </section>
 
 <!-- ===================== 부산 지도 섹션 ===================== -->
-<section class="map-section">
+<section class="map-section" aria-label="부산 지역별 탐색 지도">
     <div class="container">
         <div class="section-header fade-in">
             <h2>지역별 탐색</h2>
@@ -115,7 +182,7 @@
 </section>
 
 <!-- ===================== 추천 관광지 ===================== -->
-<section class="spots-section">
+<section class="spots-section" aria-label="추천 관광지">
     <div class="container">
         <div class="section-header-row fade-in">
             <div class="section-header">
@@ -170,6 +237,7 @@
                         <span class="r-card-hours">🕐 <?= esc($s['open_time']) ?></span>
                         <?php endif; ?>
                     </div>
+                    <?php /*별점 비활성화
                     <?php if ($starVal > 0): ?>
                     <div class="r-card-stars">
                         <?php
@@ -182,6 +250,10 @@
                         </span>
                         <span class="stars-score"><?= number_format($starVal, 1) ?></span>
                     </div>
+                    <?php endif; ?>
+                    */ ?>
+                    <?php if (($s['like_count'] ?? 0) > 0): ?>
+                    <div class="r-card-likes">♥ <?= (int)$s['like_count'] ?></div>
                     <?php endif; ?>
                     <?php if (!empty($s['admission_fee'])): ?>
                     <span class="price-badge">🎫 <?= esc($s['admission_fee']) ?></span>
@@ -197,7 +269,7 @@
 </section>
 
 <!-- ===================== 인기 맛집 ===================== -->
-<section class="food-section">
+<section class="food-section" aria-label="부산 대표 먹거리">
     <div class="container">
         <div class="section-header-row fade-in">
             <div class="section-header">
@@ -253,6 +325,7 @@
                         <span class="r-card-hours">🕐 <?= esc($r['open_time']) ?></span>
                         <?php endif; ?>
                     </div>
+                    <?php /*별점 비활성화
                     <?php if ($starVal > 0): ?>
                     <div class="r-card-stars">
                         <?php
@@ -265,6 +338,10 @@
                         </span>
                         <span class="stars-score"><?= number_format($starVal, 1) ?></span>
                     </div>
+                    <?php endif; ?>
+                    */ ?>
+                    <?php if (($r['like_count'] ?? 0) > 0): ?>
+                    <div class="r-card-likes">♥ <?= (int)$r['like_count'] ?></div>
                     <?php endif; ?>
                     <span class="price-badge"><?= esc($restaurantPrices[$priceNum] ?? '') ?></span>
                     <?php if (!empty($r['tags'])): ?>
@@ -283,7 +360,7 @@
 </section>
 
 <!-- ===================== 추천 여행 코스 ===================== -->
-<section class="courses-section">
+<section class="courses-section" aria-label="추천 여행 코스">
     <div class="container">
         <div class="section-header-row fade-in">
             <div class="section-header">

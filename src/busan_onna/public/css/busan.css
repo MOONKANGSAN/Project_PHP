@@ -23,6 +23,19 @@
     --transition:    all 0.3s ease;
 }
 
+/* --- 스크린 리더 전용 (시각적 숨김, SEO h1 등에 사용) --- */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* --- 기본 리셋 --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -866,6 +879,22 @@ ul { list-style: none; }
 }
 .stars-text  { font-size: 13px; color: #f39c12; letter-spacing: 1px; }
 .stars-score { font-size: 13px; font-weight: 700; color: var(--text); }
+/* 카드/리스트 좋아요 카운트 배지 */
+.r-card-likes {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e84393;
+    margin-bottom: 6px;
+}
+.r-list-likes {
+    font-size: 12px;
+    font-weight: 600;
+    color: #e84393;
+    flex-shrink: 0;
+}
 .price-badge {
     display: inline-block;
     padding: 3px 10px;

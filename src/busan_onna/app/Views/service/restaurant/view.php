@@ -3,7 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($restaurant['name']) ?> - 부산온나</title>
+
+    <?php
+    /* ---- SEO 변수 계산 ---- */
+    $seoName     = $restaurant['name'] ?? '';
+    $seoRawInfo  = strip_tags($restaurant['info'] ?? '');
+    // meta description: info 앞 120자, 없으면 기본문구
+    $seoDesc = $seoRawInfo !== ''
+        ? mb_substr($seoRawInfo, 0, 120) . (mb_strlen($seoRawInfo) > 120 ? '…' : '')
+        : esc($seoName) . '. 부산 맛집 정보 - 위치, 가격, 영업시간을 부산온나에서 확인하세요.';
+    $seoTitle      = esc($seoName) . ' | 부산 맛집 - 부산온나';
+    $canonicalUrl  = 'https://busanonna.com/restaurants/' . (int)$restaurant['idx'];
+    // OG 이미지: 첫 번째 썸네일, 없으면 기본
+    $ogImage = !empty($thumbnails[0]['img_url'])
+        ? esc($thumbnails[0]['img_url'])
+        : 'https://busanonna.com/img/og-restaurant.jpg';
+    // 주소 구/군 추출
+    preg_match('/부산광역시\s+(\S+(?:구|군))/', $restaurant['address1'] ?? '', $addrMatch);
+    $district = $addrMatch[1] ?? '부산';
+    // 가격대 레이블
+    $priceLabel = $priceRanges[(int)($restaurant['price_range'] ?? 1)] ?? '';
+    // 해시태그 키워드
+    $tagKeywords = implode(', ', array_column($tags ?? [], 'name'));
+    $seoKeywords = esc($seoName) . ', ' . esc($district) . ' 맛집, 부산맛집' . ($tagKeywords ? ', ' . esc($tagKeywords) : '') . ', 부산온나';
+    ?>
+
+    <title><?= $seoTitle ?></title>
+    <meta name="description" content="<?= esc($seoDesc) ?>">
+    <meta name="keywords"    content="<?= $seoKeywords ?>">
+    <meta name="robots"      content="index, follow">
+    <link rel="canonical"    href="<?= $canonicalUrl ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:type"         content="restaurant">
+    <meta property="og:title"        content="<?= $seoTitle ?>">
+    <meta property="og:description"  content="<?= esc($seoDesc) ?>">
+    <meta property="og:url"          content="<?= $canonicalUrl ?>">
+    <meta property="og:image"        content="<?= $ogImage ?>">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name"    content="부산온나">
+    <meta property="og:locale"       content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= $seoTitle ?>">
+    <meta name="twitter:description" content="<?= esc($seoDesc) ?>">
+    <meta name="twitter:image"       content="<?= $ogImage ?>">
+
+    <!-- 구조화 데이터 (JSON-LD) - Restaurant -->
+    <script type="application/ld+json">
+    <?php
+    $ld = [
+        '@context' => 'https://schema.org',
+        '@type'    => 'Restaurant',
+        'name'     => $seoName,
+        'url'      => $canonicalUrl,
+        'description' => $seoRawInfo !== '' ? mb_substr($seoRawInfo, 0, 200) : null,
+        'address'  => [
+            '@type'           => 'PostalAddress',
+            'addressCountry'  => 'KR',
+            'addressRegion'   => '부산광역시',
+            'streetAddress'   => $restaurant['address1'] ?? '',
+        ],
+        'servesCuisine' => $categories[(int)($restaurant['category_num'] ?? 8)] ?? '한식',
+    ];
+    if (!empty($restaurant['phone'])) {
+        $ld['telephone'] = $restaurant['phone'];
+    }
+    if (!empty($thumbnails[0]['img_url'])) {
+        $ld['image'] = $thumbnails[0]['img_url'];
+    }
+    if (!empty($restaurant['open_time'])) {
+        $ld['openingHours'] = $restaurant['open_time'];
+    }
+    if (!empty($tagKeywords)) {
+        $ld['keywords'] = $tagKeywords;
+    }
+    // null 값 제거
+    $ld = array_filter($ld, fn($v) => $v !== null && $v !== '');
+    echo json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    ?>
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">

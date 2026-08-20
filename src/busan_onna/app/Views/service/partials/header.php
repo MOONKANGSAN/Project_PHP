@@ -2,11 +2,11 @@
 <header class="site-header" id="siteHeader">
     <div class="container">
         <div class="header-inner">
-            <a href="/" class="logo">
+            <a href="/" class="logo" title="부산온나 홈으로 이동" aria-label="부산온나 홈">
                 <span class="logo-main">부산온나</span>
                 <span class="logo-sub">BUSAN ONNA</span>
             </a>
-            <nav class="main-nav">
+            <nav class="main-nav" aria-label="주요 메뉴">
                 <ul>
                     <li><a href="/spots"<?= ($activeNav ?? '') === 'spots' ? ' class="active"' : '' ?>>관광지</a></li>
                     <li><a href="/restaurants"<?= ($activeNav ?? '') === 'restaurants' ? ' class="active"' : '' ?>>맛집</a></li>

@@ -32,6 +32,10 @@ $routes->get('/hotplace/(:num)',   'Service::hotplace/$1');
 $routes->get('/travel-courses',        'Service::travelCourses');
 $routes->get('/travel-courses/(:num)', 'Service::travelCourseView/$1');
 
+// 이벤트
+$routes->get('/events',          'Service::events');
+$routes->get('/events/(:num)',   'Service::eventView/$1');
+
 // 고객센터
 $routes->get('/customer',                      'Customer::index');
 $routes->get('/customer/ajax/notice',          'Customer::ajaxNotice');

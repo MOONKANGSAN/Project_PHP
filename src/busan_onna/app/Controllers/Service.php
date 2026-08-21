@@ -11,6 +11,7 @@ use App\Models\BusanMapsModel;
 use App\Models\TravelCourseModel;
 use App\Models\TravelCourseItemModel;
 use App\Models\ReactionModel;
+use App\Models\SiteEventModel;
 
 /**
  * 서비스(프론트) 페이지 컨트롤러
@@ -922,6 +923,107 @@ class Service extends BaseController
             'items'            => $items,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
             'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+        ]);
+    }
+
+    // ================================================================
+    // 사이트 이벤트
+    // ================================================================
+
+    /**
+     * 이벤트 리스트 페이지
+     * GET /events
+     */
+    public function events(): string
+    {
+        $siteEventModel = new SiteEventModel();
+
+        $type   = trim($this->request->getGet('type')   ?? '');
+        $status = trim($this->request->getGet('status') ?? '');
+        $search = trim($this->request->getGet('q')      ?? '');
+
+        $query = $siteEventModel->where('state', 1);
+
+        if ($type !== '') {
+            $query->where('event_type', (int) $type);
+        }
+        if ($search !== '') {
+            $query->like('title', $search, 'both');
+        }
+
+        // 진행 상태 필터: DB 연산 없이 날짜 비교로 PHP 레벨에서 처리
+        $events     = $query->orderBy('start_date', 'DESC')->paginate(9);
+        $pager      = $siteEventModel->pager;
+        $totalCount = $pager->getTotal();
+
+        $today = date('Y-m-d');
+        foreach ($events as &$e) {
+            if (!empty($e['start_date']) && !empty($e['end_date'])) {
+                if ($today < $e['start_date'])      $e['event_status'] = 'upcoming';
+                elseif ($today > $e['end_date'])    $e['event_status'] = 'ended';
+                else                                $e['event_status'] = 'ongoing';
+            } else {
+                $e['event_status'] = '';
+            }
+        }
+        unset($e);
+
+        // 진행상태 필터는 PHP 레벨에서 적용 후 페이지네이션 totalCount는 근사치로 유지
+        if ($status !== '') {
+            $events = array_filter($events, fn($e) => ($e['event_status'] ?? '') === $status);
+        }
+
+        return view('service/event/list', [
+            'events'      => array_values($events),
+            'pager'       => $pager,
+            'totalCount'  => $totalCount,
+            'activeType'   => $type,
+            'activeStatus' => $status,
+            'activeSearch' => $search,
+            'saved_id'     => $this->request->getCookie('saved_id') ?? '',
+        ]);
+    }
+
+    /**
+     * 이벤트 상세 뷰 페이지
+     * GET /events/{idx}
+     * DB의 view_file 값으로 service/event/views/{view_file}.php 를 동적 호출
+     */
+    public function eventView(int $idx): string
+    {
+        $siteEventModel = new SiteEventModel();
+
+        $event = $siteEventModel->where('state', 1)->find($idx);
+
+        if (!$event) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        // 진행 상태 계산
+        $today = date('Y-m-d');
+        if (!empty($event['start_date']) && !empty($event['end_date'])) {
+            if ($today < $event['start_date'])      $event['event_status'] = 'upcoming';
+            elseif ($today > $event['end_date'])    $event['event_status'] = 'ended';
+            else                                    $event['event_status'] = 'ongoing';
+        } else {
+            $event['event_status'] = '';
+        }
+
+        // 조회수 +1
+        $siteEventModel->update($idx, ['view_cnt' => ((int)($event['view_cnt'] ?? 0)) + 1]);
+
+        // view_file 값에서 영문·숫자·언더스코어만 허용 (경로 탐색 방지)
+        $viewFile = preg_replace('/[^a-zA-Z0-9_]/', '', $event['view_file'] ?? '');
+
+        // 지정된 뷰 파일이 없거나 실제 파일이 없으면 404
+        $viewPath = APPPATH . 'Views/service/event/views/' . $viewFile . '.php';
+        if ($viewFile === '' || !is_file($viewPath)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        }
+
+        return view('service/event/views/' . $viewFile, [
+            'event'    => $event,
+            'saved_id' => $this->request->getCookie('saved_id') ?? '',
         ]);
     }
 

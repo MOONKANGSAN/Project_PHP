@@ -12,6 +12,7 @@
                     <li><a href="/restaurants"<?= ($activeNav ?? '') === 'restaurants' ? ' class="active"' : '' ?>>맛집</a></li>
                     <li><a href="/festivals"<?= ($activeNav ?? '') === 'festivals' ? ' class="active"' : '' ?>>축제</a></li>
                     <li><a href="/travel-courses"<?= ($activeNav ?? '') === 'travel-courses' ? ' class="active"' : '' ?>>여행코스</a></li>
+                    <li><a href="/events"<?= ($activeNav ?? '') === 'events' ? ' class="active"' : '' ?>>이벤트</a></li>
                 </ul>
             </nav>
             <div class="header-auth">

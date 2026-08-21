@@ -270,7 +270,7 @@
                         <span class="rv-address-text"><?= esc($spot['address1']) ?><?= !empty($spot['address2']) ? ' ' . esc($spot['address2']) : '' ?></span>
                         <button class="rv-copy-btn" id="btnCopyAddr">주소복사</button>
                     </div>
-                    <a class="rv-map-link" href="https://map.naver.com/search/<?= urlencode($spot['address1']) ?>" target="_blank" rel="noopener">네이버 지도에서 보기 →</a>
+                    <a class="rv-map-link" href="https://map.kakao.com/link/search/<?= urlencode($spot['address1']) ?>" target="_blank" rel="noopener">카카오맵에서 보기 →</a>
                 </div>
                 <?php endif; ?>
 
@@ -319,8 +319,8 @@
 <script src="/js/busan.js"></script>
 <script src="/js/modules/login.js"></script>
 <script src="/js/modules/signup.js"></script>
-<?php if (!empty($naverMapClientId) && !empty($spot['latitude']) && !empty($spot['longitude'])): ?>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=<?= esc($naverMapClientId) ?>"></script>
+<?php if (!empty($kakaoMapJsKey) && !empty($spot['latitude']) && !empty($spot['longitude'])): ?>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=<?= esc($kakaoMapJsKey) ?>"></script>
 <?php endif; ?>
 <script>
 /* 이미지 슬라이더 */
@@ -361,34 +361,35 @@ document.querySelectorAll('.rv-tab').forEach(function (tab) {
     });
 });
 
-/* 네이버 지도 초기화 */
-<?php if (!empty($naverMapClientId) && !empty($spot['latitude']) && !empty($spot['longitude'])): ?>
+/* 카카오맵 초기화 */
+<?php if (!empty($kakaoMapJsKey) && !empty($spot['latitude']) && !empty($spot['longitude'])): ?>
 (function () {
     var lat    = <?= (float)$spot['latitude'] ?>;
     var lng    = <?= (float)$spot['longitude'] ?>;
     var name   = <?= json_encode($spot['name'], JSON_UNESCAPED_UNICODE) ?>;
     var mapEl  = document.getElementById('naverMap');
-    if (!mapEl || typeof naver === 'undefined') return;
+    if (!mapEl || typeof kakao === 'undefined' || !kakao.maps) return;
 
-    var center = new naver.maps.LatLng(lat, lng);
-    var map    = new naver.maps.Map(mapEl, {
-        center: center, zoom: 16,
-        mapTypeControl: false, scaleControl: false,
-        logoControl: true, mapDataControl: false,
+    var center = new kakao.maps.LatLng(lat, lng);
+    var map    = new kakao.maps.Map(mapEl, {
+        center: center,
+        level: 3,
     });
-    var marker = new naver.maps.Marker({ position: center, map: map });
+    var marker = new kakao.maps.Marker({ position: center, map: map });
 
-    naver.maps.Event.addListener(marker, 'click', function () {
+    // 마커 클릭 시 카카오맵 앱/웹으로 연결
+    kakao.maps.event.addListener(marker, 'click', function () {
         window.open(
-            'https://map.naver.com/index.nhn?lat=' + lat + '&lng=' + lng + '&zoom=16&title=' + encodeURIComponent(name),
+            'https://map.kakao.com/link/map/' + encodeURIComponent(name) + ',' + lat + ',' + lng,
             '_blank'
         );
     });
 
+    // 탭 전환 후 지도 크기 재계산 (숨겨졌다 다시 보일 때 필요)
     document.querySelectorAll('.rv-tab').forEach(function (tab) {
         tab.addEventListener('click', function () {
             if (tab.dataset.tab === 'home') {
-                setTimeout(function () { naver.maps.Event.trigger(map, 'resize'); }, 50);
+                setTimeout(function () { map.relayout(); }, 50);
             }
         });
     });

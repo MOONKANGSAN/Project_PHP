@@ -109,7 +109,7 @@
 <script src="/js/service-common.js"></script>
 
 <?php if (!empty($mapItems)): ?>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=<?= esc($naverMapClientId) ?>"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=<?= esc($kakaoMapJsKey) ?>"></script>
 <script>
 (function () {
     // 좌표가 있는 항목만 추출
@@ -127,69 +127,65 @@
     if (!mapItems.length) return;
 
     // 첫 번째 항목을 지도 중심으로
-    var center = new naver.maps.LatLng(mapItems[0].lat, mapItems[0].lng);
-    var map = new naver.maps.Map('courseMap', {
+    var center = new kakao.maps.LatLng(mapItems[0].lat, mapItems[0].lng);
+    var map = new kakao.maps.Map(document.getElementById('courseMap'), {
         center: center,
-        zoom: 13,
+        level: 7,
     });
 
     // 전체 항목이 지도에 보이도록 bounds 조정
-    var bounds = new naver.maps.LatLngBounds();
+    var bounds = new kakao.maps.LatLngBounds();
     var infoWindows = [];
 
     mapItems.forEach(function (item) {
-        var pos = new naver.maps.LatLng(item.lat, item.lng);
+        var pos = new kakao.maps.LatLng(item.lat, item.lng);
         bounds.extend(pos);
 
-        // 커스텀 마커 (순서 번호 표시)
-        var marker = new naver.maps.Marker({
+        // 순서 번호가 표시되는 커스텀 마커 — 클릭 이벤트를 직접 붙이기 위해 실제 DOM 엘리먼트로 생성
+        var pinEl = document.createElement('div');
+        pinEl.style.cssText =
+            'width:32px;height:32px;border-radius:50%;' +
+            'background:#2563eb;color:#fff;' +
+            'font-size:14px;font-weight:800;' +
+            'display:flex;align-items:center;justify-content:center;' +
+            'box-shadow:0 2px 8px rgba(37,99,235,.45);' +
+            'border:2px solid #fff;cursor:pointer;';
+        pinEl.textContent = item.order;
+
+        new kakao.maps.CustomOverlay({
             position: pos,
+            content: pinEl,
             map: map,
-            icon: {
-                content: '<div style="' +
-                    'width:32px;height:32px;border-radius:50%;' +
-                    'background:#2563eb;color:#fff;' +
-                    'font-size:14px;font-weight:800;' +
-                    'display:flex;align-items:center;justify-content:center;' +
-                    'box-shadow:0 2px 8px rgba(37,99,235,.45);' +
-                    'border:2px solid #fff;' +
-                    '">' + item.order + '</div>',
-                anchor: new naver.maps.Point(16, 16),
-            },
+            yAnchor: 0.5,
         });
 
-        // 정보창
-        var iw = new naver.maps.InfoWindow({
+        // 정보창 — CustomOverlay는 marker가 아니므로 position을 직접 지정해서 연다
+        var iw = new kakao.maps.InfoWindow({
+            position: pos,
             content: '<div style="padding:10px 14px;min-width:160px;">' +
                      '<strong style="font-size:14px;color:#1e293b;">' + item.name + '</strong>' +
                      (item.address ? '<p style="font-size:12px;color:#64748b;margin:4px 0 0;">' + item.address + '</p>' : '') +
                      '</div>',
-            borderWidth: 0,
-            borderRadius: '8px',
-            backgroundColor: '#fff',
-            boxShadow: '0 4px 16px rgba(0,0,0,.15)',
-            disableAnchor: false,
+            removable: true,
         });
         infoWindows.push(iw);
 
-        (function (m, w) {
-            naver.maps.Event.addListener(m, 'click', function () {
-                infoWindows.forEach(function (x) { x.close(); });
-                w.open(map, m);
-            });
-        })(marker, iw);
+        pinEl.addEventListener('click', function () {
+            infoWindows.forEach(function (x) { x.close(); });
+            iw.open(map);
+        });
     });
 
     // 2개 이상일 때 전체 경로가 보이도록 맞춤
     if (mapItems.length > 1) {
-        map.fitBounds(bounds, { top: 60, right: 40, bottom: 60, left: 40 });
+        map.setBounds(bounds, 60, 40, 60, 40);
     }
 
     // 항목 간 폴리라인 연결
     var path = mapItems.map(function (i) {
-        return new naver.maps.LatLng(i.lat, i.lng);
+        return new kakao.maps.LatLng(i.lat, i.lng);
     });
-    new naver.maps.Polyline({
+    new kakao.maps.Polyline({
         path: path,
         map: map,
         strokeColor: '#2563eb',

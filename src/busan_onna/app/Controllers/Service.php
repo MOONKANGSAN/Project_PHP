@@ -169,7 +169,8 @@ class Service extends BaseController
             'categories'       => RestaurantModel::CATEGORIES,
             'priceRanges'      => RestaurantModel::PRICE_RANGES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
-            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            // 카카오맵 SDK 로드에 쓰는 JavaScript 키 (공개용, 도메인으로 보호됨)
+            'kakaoMapJsKey'    => env('KAKAO_MAP_JS_KEY', ''),
             'likeCount'        => $reactionCounts['like'],
             'dislikeCount'     => $reactionCounts['dislike'],
             'userReaction'     => $userReaction,
@@ -299,7 +300,8 @@ class Service extends BaseController
             'tags'             => $tags,
             'categories'       => PlaceModel::CATEGORIES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
-            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            // 카카오맵 SDK 로드에 쓰는 JavaScript 키 (공개용, 도메인으로 보호됨)
+            'kakaoMapJsKey'    => env('KAKAO_MAP_JS_KEY', ''),
             'likeCount'        => $reactionCounts['like'],
             'dislikeCount'     => $reactionCounts['dislike'],
             'userReaction'     => $userReaction,
@@ -515,7 +517,8 @@ class Service extends BaseController
             'tags'             => $tags,
             'categories'       => EventModel::CATEGORIES,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
-            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            // 카카오맵 SDK 로드에 쓰는 JavaScript 키 (공개용, 도메인으로 보호됨)
+            'kakaoMapJsKey'    => env('KAKAO_MAP_JS_KEY', ''),
             'likeCount'        => $reactionCounts['like'],
             'dislikeCount'     => $reactionCounts['dislike'],
             'userReaction'     => $userReaction,
@@ -922,7 +925,8 @@ class Service extends BaseController
             'course'           => $course,
             'items'            => $items,
             'saved_id'         => $this->request->getCookie('saved_id') ?? '',
-            'naverMapClientId' => env('NAVER_MAP_CLIENT_ID', ''),
+            // 카카오맵 SDK 로드에 쓰는 JavaScript 키 (공개용, 도메인으로 보호됨)
+            'kakaoMapJsKey'    => env('KAKAO_MAP_JS_KEY', ''),
         ]);
     }
 

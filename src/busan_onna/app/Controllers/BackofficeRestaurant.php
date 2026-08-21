@@ -49,7 +49,8 @@ class BackofficeRestaurant extends BaseController
             'current_uri'     => '/' . uri_string(),
             'categories'      => RestaurantModel::CATEGORIES,
             'price_ranges'    => RestaurantModel::PRICE_RANGES,
-            'naver_client_id' => env('NAVER_MAP_CLIENT_ID', ''),
+            // 카카오맵 SDK 로드 및 클라이언트 사이드 주소 검색(Geocoder)에 쓰는 JavaScript 키
+            'kakao_js_key'    => env('KAKAO_MAP_JS_KEY', ''),
         ], $extra);
     }
 

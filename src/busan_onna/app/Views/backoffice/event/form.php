@@ -519,27 +519,38 @@ $imageSlots     = 8 - count($existingImages);
 </script>
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-<script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=<?= esc($naver_client_id) ?>"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=<?= esc($kakao_js_key) ?>&libraries=services"></script>
 <script>
 (function () {
     var DEFAULT_LAT = 35.1631, DEFAULT_LNG = 129.1631;
     var initLat = parseFloat(document.getElementById('latitude').value)  || DEFAULT_LAT;
     var initLng = parseFloat(document.getElementById('longitude').value) || DEFAULT_LNG;
 
-    var map = new naver.maps.Map('naverMap', {
-        center: new naver.maps.LatLng(initLat, initLng), zoom: 15,
-    });
-    var marker = new naver.maps.Marker({
-        position: new naver.maps.LatLng(initLat, initLng), map: map,
-        draggable: true, visible: !!(document.getElementById('latitude').value),
+    // 지도 생성 — level은 숫자가 작을수록 확대(네이버 zoom과 반대 방향이므로 값이 다르다)
+    var map = new kakao.maps.Map(document.getElementById('naverMap'), {
+        center: new kakao.maps.LatLng(initLat, initLng),
+        level: 4,
     });
 
-    naver.maps.Event.addListener(marker, 'dragend', function (e) {
-        setCoords(e.coord.lat().toFixed(7), e.coord.lng().toFixed(7));
+    // 드래그 가능한 마커 — 기존 좌표가 있을 때만 지도에 표시
+    var marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(initLat, initLng),
+        draggable: true,
+        map: document.getElementById('latitude').value ? map : null,
     });
-    naver.maps.Event.addListener(map, 'click', function (e) {
-        marker.setPosition(e.coord); marker.setVisible(true);
-        setCoords(e.coord.lat().toFixed(7), e.coord.lng().toFixed(7));
+
+    // 마커를 드래그해서 위치를 미세 조정했을 때 위도/경도 입력값 갱신
+    kakao.maps.event.addListener(marker, 'dragend', function () {
+        var pos = marker.getPosition();
+        setCoords(pos.getLat().toFixed(7), pos.getLng().toFixed(7));
+    });
+
+    // 지도를 직접 클릭해서 위치를 지정했을 때
+    kakao.maps.event.addListener(map, 'click', function (mouseEvent) {
+        var latlng = mouseEvent.latLng;
+        marker.setPosition(latlng);
+        marker.setMap(map);
+        setCoords(latlng.getLat().toFixed(7), latlng.getLng().toFixed(7));
     });
 
     function setCoords(lat, lng) {
@@ -572,41 +583,42 @@ $imageSlots     = 8 - count($existingImages);
         }).open();
     };
 
+    // 도로명 → 지번 → 시/군/구 순으로 점점 넓은 검색어를 시도하는 폴백 전략
     function searchCoordsWithFallback(d) {
         var queries = [
-            { q: d.roadAddress,                                                   zoom: 17 },
-            { q: d.jibunAddress,                                                  zoom: 16 },
-            { q: [d.sido, d.sigungu, d.roadname || d.bname].filter(Boolean).join(' '), zoom: 15 },
-            { q: [d.sido, d.sigungu].filter(Boolean).join(' '),                   zoom: 14 },
+            { q: d.roadAddress,                                                   level: 3 },
+            { q: d.jibunAddress,                                                  level: 3 },
+            { q: [d.sido, d.sigungu, d.roadname || d.bname].filter(Boolean).join(' '), level: 4 },
+            { q: [d.sido, d.sigungu].filter(Boolean).join(' '),                   level: 6 },
         ].filter(function (item) { return item.q && item.q.trim(); });
         tryNextQuery(queries, 0);
     }
+
+    // 카카오 Geocoder는 브라우저에서 바로 호출 — 서버 프록시(fetch) 불필요
+    var geocoder = new kakao.maps.services.Geocoder();
 
     function tryNextQuery(queries, idx) {
         if (idx >= queries.length) {
             showMsg('위치를 찾지 못했습니다. 지도를 직접 클릭해 위치를 지정해주세요.', '#c2410c');
             return;
         }
-        fetch('/backoffice/geo/search?q=' + encodeURIComponent(queries[idx].q))
-            .then(function (r) { return r.json(); })
-            .then(function (res) {
-                if (!res.addresses || !res.addresses.length) {
-                    tryNextQuery(queries, idx + 1);
-                    return;
-                }
-                var a = res.addresses[0], lat = parseFloat(a.y), lng = parseFloat(a.x);
-                var coord = new naver.maps.LatLng(lat, lng);
-                map.setCenter(coord); map.setZoom(queries[idx].zoom);
-                marker.setPosition(coord); marker.setVisible(true);
-                setCoords(lat.toFixed(7), lng.toFixed(7));
-                showMsg(
-                    idx === 0
-                        ? '📍 위치가 지도에 표시되었습니다. 마커를 드래그하여 미세 조정할 수 있습니다.'
-                        : '📍 정확한 위치를 찾지 못해 근처 지역으로 표시했습니다. 마커를 드래그해 조정해주세요.',
-                    idx === 0 ? '#16a34a' : '#d97706'
-                );
-            })
-            .catch(function () { tryNextQuery(queries, idx + 1); });
+        geocoder.addressSearch(queries[idx].q, function (result, status) {
+            if (status !== kakao.maps.services.Status.OK || !result.length) {
+                tryNextQuery(queries, idx + 1);
+                return;
+            }
+            var lat = parseFloat(result[0].y), lng = parseFloat(result[0].x);
+            var coord = new kakao.maps.LatLng(lat, lng);
+            map.setCenter(coord); map.setLevel(queries[idx].level);
+            marker.setPosition(coord); marker.setMap(map);
+            setCoords(lat.toFixed(7), lng.toFixed(7));
+            showMsg(
+                idx === 0
+                    ? '📍 위치가 지도에 표시되었습니다. 마커를 드래그하여 미세 조정할 수 있습니다.'
+                    : '📍 정확한 위치를 찾지 못해 근처 지역으로 표시했습니다. 마커를 드래그해 조정해주세요.',
+                idx === 0 ? '#16a34a' : '#d97706'
+            );
+        });
     }
 
     document.getElementById('address1').addEventListener('keydown', function (e) {

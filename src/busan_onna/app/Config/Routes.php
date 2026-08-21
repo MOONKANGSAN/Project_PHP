@@ -147,8 +147,8 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     // 해시태그 API (자동완성)
     $routes->get('hashtags/search', 'BackofficeHashtag::search');
 
-    // 네이버 Geocoding 프록시 (주소 → 위도/경도)
-    $routes->get('geo/search', 'GeoController::search');
+    // 카카오맵 전환으로 서버 프록시가 더 이상 필요 없어 제거됨 (클라이언트에서 kakao.maps.services.Geocoder 직접 호출)
+    // 옛 GeoController.php는 더 이상 사용되지 않으므로 삭제해도 무방합니다.
 
     // 지역별 탐색 관리
     $routes->get('region-explore',                              'BackofficeRegionExplore::index');

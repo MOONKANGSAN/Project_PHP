@@ -1012,10 +1012,17 @@ class Service extends BaseController
         // 조회수 +1
         $siteEventModel->update($idx, ['view_cnt' => ((int)($event['view_cnt'] ?? 0)) + 1]);
 
-        // view_file 값에서 영문·숫자·언더스코어만 허용 (경로 탐색 방지)
+        // use_view_file=0이면 기본 뷰 렌더링
+        if (!(int)($event['use_view_file'] ?? 0)) {
+            return view('service/event/views/view_default', [
+                'event'    => $event,
+                'saved_id' => $this->request->getCookie('saved_id') ?? '',
+            ]);
+        }
+
+        // use_view_file=1: view_file 값으로 개별 뷰 파일 동적 호출 (경로 탐색 방지)
         $viewFile = preg_replace('/[^a-zA-Z0-9_]/', '', $event['view_file'] ?? '');
 
-        // 지정된 뷰 파일이 없거나 실제 파일이 없으면 404
         $viewPath = APPPATH . 'Views/service/event/views/' . $viewFile . '.php';
         if ($viewFile === '' || !is_file($viewPath)) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();

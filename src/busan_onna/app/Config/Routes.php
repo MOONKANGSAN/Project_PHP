@@ -166,4 +166,13 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('travel-courses/(:num)/edit',             'BackofficeTravelCourse::update/$1');
     $routes->post('travel-courses/(:num)/state',            'BackofficeTravelCourse::toggleState/$1');
     $routes->post('travel-courses/(:num)/delete',           'BackofficeTravelCourse::delete/$1');
+
+    // 사이트 이벤트 관리
+    $routes->get('site-events',                 'BackofficeSiteEvent::list');
+    $routes->get('site-events/register',        'BackofficeSiteEvent::register');
+    $routes->post('site-events/register',       'BackofficeSiteEvent::store');
+    $routes->get('site-events/(:num)/edit',     'BackofficeSiteEvent::edit/$1');
+    $routes->post('site-events/(:num)/edit',    'BackofficeSiteEvent::update/$1');
+    $routes->post('site-events/(:num)/state',   'BackofficeSiteEvent::toggleState/$1');
+    $routes->post('site-events/(:num)/delete',  'BackofficeSiteEvent::delete/$1');
 });

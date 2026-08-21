@@ -13,7 +13,9 @@ class SiteEventModel extends Model
     protected $primaryKey = 'idx';
 
     protected $allowedFields = [
-        'state', 'title', 'content', 'thumb_url', 'view_file',
+        'state', 'use_view_file',
+        'title', 'sub_title', 'content', 'cta_text', 'cta_url',
+        'thumb_url', 'view_file',
         'event_type', 'start_date', 'end_date',
         'reg_date', 'edit_date', 'view_cnt', 'like_cnt', 'reg_id',
     ];

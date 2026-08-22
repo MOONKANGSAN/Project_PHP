@@ -12,6 +12,8 @@ use App\Models\TravelCourseModel;
 use App\Models\TravelCourseItemModel;
 use App\Models\ReactionModel;
 use App\Models\SiteEventModel;
+use App\Models\EventReviewModel;
+use App\Models\EventLikeLogModel;
 
 /**
  * 서비스(프론트) 페이지 컨트롤러
@@ -1016,12 +1018,40 @@ class Service extends BaseController
         // 조회수 +1
         $siteEventModel->update($idx, ['view_cnt' => ((int)($event['view_cnt'] ?? 0)) + 1]);
 
+        // '숨은 명소' 태그 카드 (맛집·관광지 통합, 최대 10개 — '부산 골목 탐험단' 캐러셀용)
+        $hiddenSpotCards = $this->getHiddenSpotCards(10);
+
+        // 방문 후기 목록 (최신순) — 목록 노출용으로 작성자 아이디는 마스킹 처리
+        $eventReviewModel = new EventReviewModel();
+        $eventReviews     = $eventReviewModel->getByEvent($idx, 30);
+        foreach ($eventReviews as &$rv) {
+            $rv['user_id'] = $this->maskUserId($rv['user_id']);
+        }
+        unset($rv);
+
+        // '국밥' 맛집 목록 + 좋아요 투표 집계 ('마! 이게 진짜 국밥이다!' 이벤트용)
+        $gukbapCards       = $this->getGukbapCards();
+        $eventLikeLogModel = new EventLikeLogModel();
+        $gukbapVoteCounts  = $eventLikeLogModel->getVoteCountsByEvent($idx);
+
+        $voterIdx            = (int) session()->get('user.idx');
+        $myTodayVote         = $voterIdx ? $eventLikeLogModel->getTodayVote($idx, $voterIdx) : null;
+        $myParticipationDays = $voterIdx ? $eventLikeLogModel->getParticipationDays($idx, $voterIdx) : 0;
+
+        $viewData = [
+            'event'               => $event,
+            'saved_id'            => $this->request->getCookie('saved_id') ?? '',
+            'hiddenSpotCards'     => $hiddenSpotCards,
+            'eventReviews'        => $eventReviews,
+            'gukbapCards'         => $gukbapCards,
+            'gukbapVoteCounts'    => $gukbapVoteCounts,
+            'myTodayVote'         => $myTodayVote,
+            'myParticipationDays' => $myParticipationDays,
+        ];
+
         // use_view_file=0이면 기본 뷰 렌더링
         if (!(int)($event['use_view_file'] ?? 0)) {
-            return view('service/event/views/view_default', [
-                'event'    => $event,
-                'saved_id' => $this->request->getCookie('saved_id') ?? '',
-            ]);
+            return view('service/event/views/view_default', $viewData);
         }
 
         // use_view_file=1: view_file 값으로 개별 뷰 파일 동적 호출 (경로 탐색 방지)
@@ -1032,10 +1062,430 @@ class Service extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
-        return view('service/event/views/' . $viewFile, [
-            'event'    => $event,
-            'saved_id' => $this->request->getCookie('saved_id') ?? '',
+        return view('service/event/views/' . $viewFile, $viewData);
+    }
+
+    /**
+     * 이름에 '국밥'이 들어간 맛집 목록 카드로 변환
+     * ('마! 이게 진짜 국밥이다!' 이벤트 — 국밥 맛집 전체보기 캐러셀용)
+     */
+    private function getGukbapCards(): array
+    {
+        $restaurantModel = new RestaurantModel();
+        $thumbnailModel  = new ThumbnailModel();
+
+        $restaurants = $restaurantModel->where('state', 1)
+                                        ->like('name', '국밥')
+                                        ->orderBy('idx', 'DESC')
+                                        ->findAll();
+
+        $cards = [];
+        foreach ($restaurants as $r) {
+            $thumbs  = $thumbnailModel->getByRestaurant((int) $r['idx']);
+            $cards[] = [
+                'idx'       => (int) $r['idx'],
+                'name'      => $r['name'],
+                'category'  => RestaurantModel::CATEGORIES[(int) ($r['category_num'] ?? 0)] ?? '맛집',
+                'thumbnail' => !empty($thumbs) ? $thumbs[0]['img_url'] : null,
+                'link'      => '/restaurants/' . (int) $r['idx'],
+            ];
+        }
+
+        return $cards;
+    }
+
+    /**
+     * 국밥 맛집 좋아요 투표 등록 (AJAX POST → JSON 응답)
+     * POST /events/(:num)/gukbap-like
+     * 로그인 필요. 이벤트 단위로 1인 1일 1회만 가능(event_like_log 유니크 제약).
+     * 서로 다른 날짜로 3회 이상 참여하면 추첨 대상이 된다.
+     */
+    public function eventLikeStore(int $idx): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $siteEventModel = new SiteEventModel();
+        $event = $siteEventModel->where('state', 1)->find($idx);
+
+        if (!$event) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => '존재하지 않는 이벤트입니다.',
+            ]);
+        }
+
+        $userIdx = (int) session()->get('user.idx');
+        if (!$userIdx) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'success' => false,
+                'message' => '로그인이 필요합니다.',
+            ]);
+        }
+
+        $json          = $this->request->getJSON(true) ?? [];
+        $restaurantIdx = (int) ($json['restaurant_idx'] ?? $this->request->getPost('restaurant_idx') ?? 0);
+
+        if ($restaurantIdx <= 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => '잘못된 요청입니다.',
+            ]);
+        }
+
+        // 이름에 '국밥'이 들어간 노출 상태 맛집만 투표 대상으로 허용
+        $restaurantModel = new RestaurantModel();
+        $restaurant = $restaurantModel->where('state', 1)->find($restaurantIdx);
+        if (!$restaurant || mb_strpos($restaurant['name'], '국밥') === false) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => '참여 대상 맛집이 아닙니다.',
+            ]);
+        }
+
+        $eventLikeLogModel = new EventLikeLogModel();
+
+        if ($eventLikeLogModel->hasLikedToday($idx, $userIdx)) {
+            return $this->response->setJSON([
+                'success'       => false,
+                'already_voted' => true,
+                'message'       => '오늘은 이미 참여하셨어요. 내일 다시 참여해주세요!',
+            ]);
+        }
+
+        $eventLikeLogModel->tryLike($idx, $userIdx, $restaurantIdx);
+
+        $voteCounts         = $eventLikeLogModel->getVoteCountsByEvent($idx);
+        $participationDays  = $eventLikeLogModel->getParticipationDays($idx, $userIdx);
+
+        return $this->response->setJSON([
+            'success'            => true,
+            'message'            => $participationDays >= 3
+                ? "투표 완료! {$participationDays}일째 참여 중이에요 — 추첨 대상에 등록되었습니다 🎉"
+                : "투표 완료! {$participationDays}일째 참여 중이에요. 3일 이상 참여하면 추첨 대상이 됩니다.",
+            'restaurant_idx'     => $restaurantIdx,
+            'vote_count'         => (int) ($voteCounts[$restaurantIdx] ?? 0),
+            'participation_days' => $participationDays,
         ]);
+    }
+
+    /**
+     * '숨은 명소' 해시태그가 붙은 맛집·관광지를 통합해 카드 배열로 반환
+     * 맛집/관광지 구분 없이 무작위로 섞어 최대 $limit개를 돌려준다.
+     */
+    private function getHiddenSpotCards(int $limit = 10): array
+    {
+        $db = \Config\Database::connect();
+
+        // '숨은 명소' 태그와 연결된 맛집/관광지 idx 조회
+        $tagRows = $db->table('hashtag h')
+                      ->select('hn.restaurant_idx, hn.place_idx')
+                      ->join('hashtag_number hn', 'hn.hashtag_idx = h.idx')
+                      ->where('h.name', '숨은 명소')
+                      ->where('hn.state', 1)
+                      ->get()->getResultArray();
+
+        $restaurantIdxs = array_values(array_filter(array_map(
+            static fn ($r) => $r['restaurant_idx'] !== null ? (int) $r['restaurant_idx'] : null,
+            $tagRows
+        )));
+        $placeIdxs = array_values(array_filter(array_map(
+            static fn ($r) => $r['place_idx'] !== null ? (int) $r['place_idx'] : null,
+            $tagRows
+        )));
+
+        $cards = [];
+
+        if (!empty($restaurantIdxs)) {
+            $restaurantModel = new RestaurantModel();
+            $thumbnailModel  = new ThumbnailModel();
+
+            $restaurants = $restaurantModel->whereIn('idx', $restaurantIdxs)->where('state', 1)->findAll();
+            foreach ($restaurants as $r) {
+                $thumbs  = $thumbnailModel->getByRestaurant((int) $r['idx']);
+                $cards[] = [
+                    'type'      => 'restaurant',
+                    'type_label'=> '맛집',
+                    'idx'       => (int) $r['idx'],
+                    'name'      => $r['name'],
+                    'category'  => RestaurantModel::CATEGORIES[(int) ($r['category_num'] ?? 0)] ?? '맛집',
+                    'thumbnail' => !empty($thumbs) ? $thumbs[0]['img_url'] : null,
+                    'link'      => '/restaurants/' . (int) $r['idx'],
+                ];
+            }
+        }
+
+        if (!empty($placeIdxs)) {
+            $placeModel     = new PlaceModel();
+            $thumbnailModel = new ThumbnailModel();
+
+            $places = $placeModel->whereIn('idx', $placeIdxs)->where('state', 1)->findAll();
+            foreach ($places as $p) {
+                $thumbs  = $thumbnailModel->getByPlace((int) $p['idx']);
+                $cards[] = [
+                    'type'      => 'place',
+                    'type_label'=> '관광지',
+                    'idx'       => (int) $p['idx'],
+                    'name'      => $p['name'],
+                    'category'  => PlaceModel::CATEGORIES[(int) ($p['category_num'] ?? 0)] ?? '관광지',
+                    'thumbnail' => !empty($thumbs) ? $thumbs[0]['img_url'] : null,
+                    'link'      => '/spots/' . (int) $p['idx'],
+                ];
+            }
+        }
+
+        // 맛집·관광지 구분 없이 뒤섞은 뒤 최대 $limit개만 노출
+        shuffle($cards);
+
+        return array_slice($cards, 0, $limit);
+    }
+
+    /**
+     * 방문 후기 등록 처리 (AJAX POST → JSON 응답)
+     * POST /events/(:num)/reviews
+     * 로그인 필요. 사진은 선택 첨부(최대 5MB, 이미지 파일만 허용)
+     */
+    public function eventReviewStore(int $idx): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $siteEventModel = new SiteEventModel();
+        $event = $siteEventModel->where('state', 1)->find($idx);
+
+        if (!$event) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => '존재하지 않는 이벤트입니다.',
+            ]);
+        }
+
+        $userIdx = (int) session()->get('user.idx');
+        $userId  = (string) session()->get('user.id');
+
+        if (!$userIdx) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'success' => false,
+                'message' => '로그인이 필요합니다.',
+            ]);
+        }
+
+        $rules = [
+            'content'   => 'required|max_length[1000]',
+            'spot_name' => 'permit_empty|max_length[100]',
+            'photo'     => 'permit_empty|is_image[photo]|max_size[photo,5120]|mime_in[photo,image/jpg,image/jpeg,image/png,image/gif,image/webp]',
+        ];
+        $messages = [
+            'content' => [
+                'required'   => '후기 내용을 입력해주세요.',
+                'max_length' => '후기는 1,000자 이내로 입력해주세요.',
+            ],
+            'photo' => [
+                'is_image' => '이미지 파일만 첨부할 수 있습니다.',
+                'max_size' => '이미지 용량은 5MB 이하만 첨부할 수 있습니다.',
+                'mime_in'  => '이미지 파일만 첨부할 수 있습니다.',
+            ],
+        ];
+
+        if (!$this->validate($rules, $messages)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $this->validator->getErrors()['content']
+                    ?? $this->validator->getErrors()['photo']
+                    ?? '입력값을 확인해주세요.',
+            ]);
+        }
+
+        $photoUrl = $this->uploadReviewPhoto();
+
+        $eventReviewModel = new EventReviewModel();
+        $eventReviewModel->insert([
+            'event_idx' => $idx,
+            'user_idx'  => $userIdx,
+            'user_id'   => $userId,
+            'spot_name' => trim($this->request->getPost('spot_name') ?? '') ?: null,
+            'content'   => trim($this->request->getPost('content') ?? ''),
+            'photo_url' => $photoUrl,
+            'state'     => 1,
+            'reg_date'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $newIdx = $eventReviewModel->getInsertID();
+        $review = $eventReviewModel->find($newIdx);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => '후기가 등록되었습니다. 골목 탐험을 공유해주셔서 감사합니다!',
+            'review'  => [
+                'user_id'   => $this->maskUserId($review['user_id']),
+                'spot_name' => $review['spot_name'],
+                'content'   => $review['content'],
+                'photo_url' => $review['photo_url'],
+                'reg_date'  => date('Y.m.d', strtotime($review['reg_date'])),
+            ],
+        ]);
+    }
+
+    /**
+     * 후기 사진 업로드 처리 (선택 첨부)
+     */
+    private function uploadReviewPhoto(): ?string
+    {
+        $file = $this->request->getFile('photo');
+        if (!$file || !$file->isValid() || $file->hasMoved()) {
+            return null;
+        }
+
+        $uploadDir = FCPATH . 'uploads/event_reviews/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadDir, $newName);
+
+        return '/uploads/event_reviews/' . $newName;
+    }
+
+    /**
+     * 후기 목록에 표시할 아이디 마스킹 (예: hongkim → hon**m)
+     */
+    private function maskUserId(string $id): string
+    {
+        $len = mb_strlen($id);
+        if ($len <= 2) {
+            return mb_substr($id, 0, 1) . str_repeat('*', max(1, $len - 1));
+        }
+        return mb_substr($id, 0, $len - 2) . str_repeat('*', 2);
+    }
+
+    /**
+     * 나만의 부산 코스 공모전 — 뱓등 폼 항목 연결용 검색 API
+     * (백오피스 여행코스 검색과 동일한 방식이나, 서비스에 노출 중인 state=1 항목만 대상으로 제한)
+     * GET /events/course-content-search?type=restaurant|place|event&q=검색어
+     */
+    public function courseContentSearch(): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $type = $this->request->getGet('type');
+        $q    = trim((string) ($this->request->getGet('q') ?? ''));
+
+        if ($q === '' || !in_array($type, ['restaurant', 'place', 'event'], true)) {
+            return $this->response->setJSON([]);
+        }
+
+        $results = match ($type) {
+            'restaurant' => (new RestaurantModel())->where('state', 1)->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
+            'place'      => (new PlaceModel())->where('state', 1)->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
+            'event'      => (new EventModel())->where('state', 1)->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
+        };
+
+        return $this->response->setJSON($results);
+    }
+
+    /**
+     * 나만의 부산 코스 공모전 — 이용자 코스 등록
+     * 기존 travel_course / travel_course_item 테이블을 그대로 사용하도록,
+     * state=7("사용자 요청")로 저장해 백오피스 승인 전까지 일반 여행코스 목록과 구분한다.
+     * POST /events/{idx}/course-submit
+     */
+    public function courseSubmit(int $idx): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $siteEventModel = new SiteEventModel();
+        $event = $siteEventModel->where('state', 1)->find($idx);
+
+        if (!$event) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => '존재하지 않는 이벤트입니다.',
+            ]);
+        }
+
+        $userIdx = (int) session()->get('user.idx');
+        $userId  = (string) session()->get('user.id');
+
+        if (!$userIdx) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'success' => false,
+                'message' => '로그인이 필요합니다.',
+            ]);
+        }
+
+        $rules = [
+            'title'       => 'required|max_length[100]',
+            'description' => 'permit_empty|max_length[2000]',
+            'thumb_img'   => 'permit_empty|is_image[thumb_img]|max_size[thumb_img,5120]|mime_in[thumb_img,image/jpg,image/jpeg,image/png,image/gif,image/webp]',
+        ];
+        $messages = [
+            'title' => [
+                'required'   => '코스명을 입력해주세요.',
+                'max_length' => '코스명은 100자 이내로 입력해주세요.',
+            ],
+            'thumb_img' => [
+                'is_image' => '이미지 파일만 첨부할 수 있습니다.',
+                'max_size' => '이미지 용량은 5MB 이하만 첨부할 수 있습니다.',
+                'mime_in'  => '이미지 파일만 첨부할 수 있습니다.',
+            ],
+        ];
+
+        if (!$this->validate($rules, $messages)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => $this->validator->getErrors()['title']
+                    ?? $this->validator->getErrors()['thumb_img']
+                    ?? '입력값을 확인해주세요.',
+            ]);
+        }
+
+        // 장소 최소 3곳 검증 (서버측 재검증)
+        $rawItems   = $this->request->getPost('items') ?? [];
+        $rawItems   = is_array($rawItems) ? $rawItems : [];
+        $validItems = array_filter($rawItems, fn($i) => trim((string) ($i['name'] ?? '')) !== '');
+
+        if (count($validItems) < 3) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => '장소를 최소 3곳 이상 입력해주세요.',
+            ]);
+        }
+
+        $thumbUrl = $this->uploadCourseThumb();
+
+        $travelCourseModel = new TravelCourseModel();
+        $travelCourseModel->insert([
+            'state'       => 7, // 사용자 요청 (백오피스 승인 대기)
+            'title'       => trim($this->request->getPost('title')),
+            'description' => trim($this->request->getPost('description') ?? '') ?: null,
+            'sido'        => $this->request->getPost('sido') ?: null,
+            'thumb_url'   => $thumbUrl,
+            'reg_id'      => $userId,
+            'reg_date'    => date('Y-m-d H:i:s'),
+            'edit_date'   => date('Y-m-d H:i:s'),
+        ]);
+
+        $courseIdx = (int) $travelCourseModel->getInsertID();
+
+        $travelCourseItemModel = new TravelCourseItemModel();
+        $travelCourseItemModel->replaceByCourse($courseIdx, $rawItems);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => '코스가 접수되었습니다. 검토 후 채택 여부를 안내드릴게요. 소중한 코스를 공유해주셔서 감사합니다!',
+        ]);
+    }
+
+    /**
+     * 코스 대표 썸네일 업로드 처리 (선택 첨부)
+     */
+    private function uploadCourseThumb(): ?string
+    {
+        $file = $this->request->getFile('thumb_img');
+        if (!$file || !$file->isValid() || $file->hasMoved()) {
+            return null;
+        }
+
+        $uploadDir = FCPATH . 'uploads/thumbnails/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadDir, $newName);
+
+        return '/uploads/thumbnails/' . $newName;
     }
 
     /**

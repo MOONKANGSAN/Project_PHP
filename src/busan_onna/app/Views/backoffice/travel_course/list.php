@@ -26,6 +26,7 @@
                 <option value="">전체 상태</option>
                 <option value="1" <?= $state === '1' ? 'selected' : '' ?>>활성</option>
                 <option value="0" <?= $state === '0' ? 'selected' : '' ?>>비활성</option>
+                <option value="7" <?= $state === '7' ? 'selected' : '' ?>>사용자 요청</option>
             </select>
             <button type="submit" class="bo-btn bo-btn-primary">검색</button>
             <a href="/backoffice/travel-courses" class="bo-btn bo-btn-ghost">초기화</a>
@@ -53,9 +54,13 @@
                 <tr>
                     <td class="text-center text-muted"><?= $row['idx'] ?></td>
                     <td class="text-center">
-                        <span class="bo-badge <?= $row['state'] ? 'badge-active' : 'badge-inactive' ?>">
-                            <?= $row['state'] ? '활성' : '비활성' ?>
-                        </span>
+                        <?php if ((int) $row['state'] === 7): ?>
+                            <span class="bo-badge badge-pending">사용자 요청</span>
+                        <?php else: ?>
+                            <span class="bo-badge <?= $row['state'] ? 'badge-active' : 'badge-inactive' ?>">
+                                <?= $row['state'] ? '활성' : '비활성' ?>
+                            </span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <div style="display:flex;align-items:center;gap:10px;">
@@ -81,9 +86,13 @@
                             <a href="/backoffice/travel-courses/<?= $row['idx'] ?>/edit" class="bo-btn-action edit">수정</a>
                             <form method="post" action="/backoffice/travel-courses/<?= $row['idx'] ?>/state" style="display:inline">
                                 <?= csrf_field() ?>
-                                <button type="submit" class="bo-btn-action <?= $row['state'] ? 'deactivate' : 'activate' ?>">
-                                    <?= $row['state'] ? '비활성' : '활성화' ?>
-                                </button>
+                                <?php if ((int) $row['state'] === 7): ?>
+                                    <button type="submit" class="bo-btn-action activate">승인</button>
+                                <?php else: ?>
+                                    <button type="submit" class="bo-btn-action <?= $row['state'] ? 'deactivate' : 'activate' ?>">
+                                        <?= $row['state'] ? '비활성' : '활성화' ?>
+                                    </button>
+                                <?php endif; ?>
                             </form>
                             <form method="post" action="/backoffice/travel-courses/<?= $row['idx'] ?>/delete" style="display:inline"
                                   onsubmit="return confirm('정말 삭제하시겠습니까?')">

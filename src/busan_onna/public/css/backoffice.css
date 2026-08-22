@@ -505,6 +505,7 @@ ul { list-style: none; }
 }
 .badge-active   { background: #dcfce7; color: #16a34a; }
 .badge-inactive { background: #f1f5f9; color: #64748b; }
+.badge-pending  { background: #ffedd5; color: #c2410c; }
 .badge-free     { background: #dbeafe; color: #2563eb; }
 .badge-paid     { background: #fef3c7; color: #d97706; }
 

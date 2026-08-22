@@ -33,8 +33,12 @@ $routes->get('/travel-courses',        'Service::travelCourses');
 $routes->get('/travel-courses/(:num)', 'Service::travelCourseView/$1');
 
 // 이벤트
-$routes->get('/events',          'Service::events');
-$routes->get('/events/(:num)',   'Service::eventView/$1');
+$routes->get('/events',                  'Service::events');
+$routes->get('/events/(:num)',           'Service::eventView/$1');
+$routes->post('/events/(:num)/reviews',  'Service::eventReviewStore/$1');
+$routes->post('/events/(:num)/gukbap-like', 'Service::eventLikeStore/$1');
+$routes->get('/events/course-content-search', 'Service::courseContentSearch');
+$routes->post('/events/(:num)/course-submit', 'Service::courseSubmit/$1');
 
 // 고객센터
 $routes->get('/customer',                      'Customer::index');

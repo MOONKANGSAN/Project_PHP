@@ -19,332 +19,8 @@
     <link rel="stylesheet" href="/css/modules/login.css">
     <link rel="stylesheet" href="/css/modules/signup.css">
     <style>
-        /* ===================== 나만의 부산 코스 공모전 전용 스타일 ===================== */
-
-        /* 히어로 */
-        .c-hero {
-            background: linear-gradient(150deg, #0a3d2e 0%, #1b5e20 50%, #2e7d32 100%);
-            min-height: 500px;
-            display: flex;
-            align-items: center;
-            text-align: center;
-            padding: 80px 20px 80px;
-            position: relative;
-            overflow: hidden;
-        }
-        .c-hero-deco {
-            position: absolute;
-            inset: 0;
-            background:
-                radial-gradient(circle at 20% 50%, rgba(76,175,80,0.18) 0%, transparent 50%),
-                radial-gradient(circle at 80% 30%, rgba(139,195,74,0.12) 0%, transparent 40%);
-        }
-        .c-hero-inner { position: relative; z-index: 1; width: 100%; }
-        .c-hero-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: #a5d6a7;
-            border-radius: 24px;
-            padding: 5px 20px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            margin-bottom: 22px;
-        }
-        .c-hero h1 {
-            font-size: clamp(26px, 4.5vw, 50px);
-            font-weight: 900;
-            color: #fff;
-            line-height: 1.2;
-            margin: 0 0 16px;
-            text-shadow: 0 2px 14px rgba(0,0,0,0.3);
-        }
-        .c-hero h1 em { font-style: normal; color: #a5d6a7; }
-        .c-hero-sub {
-            color: rgba(255,255,255,0.82);
-            font-size: 16px;
-            margin-bottom: 32px;
-            line-height: 1.7;
-        }
-        .c-period-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .c-period-pill {
-            background: rgba(255,255,255,0.15);
-            border-radius: 8px;
-            padding: 9px 20px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .c-status-badge {
-            background: #00b894;
-            border-radius: 6px;
-            padding: 5px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        /* 공통 */
-        .c-section { padding: 72px 0; }
-        .c-section:nth-child(even) { background: #f1f8e9; }
-        .c-section-title {
-            text-align: center;
-            font-size: clamp(20px, 3vw, 28px);
-            font-weight: 900;
-            color: #1b3a1f;
-            margin-bottom: 10px;
-        }
-        .c-section-title span { color: #2e7d32; }
-        .c-section-desc {
-            text-align: center;
-            color: #666;
-            font-size: 15px;
-            margin-bottom: 48px;
-            line-height: 1.7;
-        }
-
-        /* 이벤트 소개 */
-        .c-intro {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 28px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        .c-intro-card {
-            background: #fff;
-            border-radius: 18px;
-            padding: 32px 28px;
-            box-shadow: 0 4px 20px rgba(46,125,50,0.1);
-        }
-        .c-intro-card .icon { font-size: 44px; margin-bottom: 14px; }
-        .c-intro-card h3 { font-size: 18px; font-weight: 800; color: #1b3a1f; margin-bottom: 10px; }
-        .c-intro-card p { font-size: 14px; color: #555; line-height: 1.7; }
-
-        /* 제출 조건 */
-        .c-conditions {
-            max-width: 720px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .c-cond-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            background: #fff;
-            border-radius: 14px;
-            padding: 22px 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border-left: 4px solid #4caf50;
-        }
-        .c-cond-item:nth-child(2) { border-left-color: #8bc34a; }
-        .c-cond-item:nth-child(3) { border-left-color: #cddc39; }
-        .c-cond-num {
-            width: 36px;
-            height: 36px;
-            background: #2e7d32;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: 900;
-            flex-shrink: 0;
-        }
-        .c-cond-body h4 { font-size: 16px; font-weight: 700; color: #1b3a1f; margin-bottom: 4px; }
-        .c-cond-body p  { font-size: 13px; color: #666; line-height: 1.6; }
-
-        /* 참여 방법 스텝 */
-        .c-steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            max-width: 960px;
-            margin: 0 auto;
-            position: relative;
-        }
-        .c-step {
-            background: #fff;
-            border-radius: 16px;
-            padding: 30px 22px;
-            text-align: center;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
-        }
-        .c-step-num {
-            width: 42px;
-            height: 42px;
-            background: linear-gradient(135deg, #2e7d32, #66bb6a);
-            color: #fff;
-            border-radius: 50%;
-            font-size: 16px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 14px;
-        }
-        .c-step-icon { font-size: 36px; margin-bottom: 12px; }
-        .c-step h3 { font-size: 15px; font-weight: 700; color: #1b3a1f; margin-bottom: 8px; }
-        .c-step p  { font-size: 13px; color: #666; line-height: 1.6; }
-
-        /* 심사 기준 */
-        .c-criteria {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 18px;
-            max-width: 860px;
-            margin: 0 auto;
-        }
-        .c-criterion {
-            text-align: center;
-            background: #fff;
-            border-radius: 14px;
-            padding: 26px 18px;
-            box-shadow: 0 3px 14px rgba(0,0,0,0.06);
-        }
-        .c-criterion .bar-wrap {
-            height: 6px;
-            background: #e8f5e9;
-            border-radius: 3px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        .c-criterion .bar { height: 100%; background: linear-gradient(90deg, #2e7d32, #81c784); border-radius: 3px; }
-        .c-criterion .icon { font-size: 32px; }
-        .c-criterion h4 { font-size: 14px; font-weight: 700; color: #1b3a1f; margin: 8px 0 2px; }
-        .c-criterion small { font-size: 12px; color: #888; }
-
-        /* 경품 */
-        .c-prizes {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 22px;
-            max-width: 840px;
-            margin: 0 auto;
-        }
-        .c-prize {
-            text-align: center;
-            border-radius: 20px;
-            padding: 36px 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        .c-prize:nth-child(1) {
-            background: linear-gradient(145deg, #f9a825, #f57f17);
-            color: #fff;
-            transform: scale(1.04);
-            box-shadow: 0 10px 36px rgba(245,127,23,0.35);
-        }
-        .c-prize:nth-child(2) {
-            background: linear-gradient(145deg, #78909c, #546e7a);
-            color: #fff;
-            box-shadow: 0 6px 24px rgba(84,110,122,0.25);
-        }
-        .c-prize:nth-child(3) {
-            background: linear-gradient(145deg, #a0522d, #8b4513);
-            color: #fff;
-            box-shadow: 0 6px 24px rgba(139,69,19,0.25);
-        }
-        .c-prize-crown { font-size: 40px; margin-bottom: 10px; }
-        .c-prize-rank { font-size: 13px; opacity: 0.85; margin-bottom: 6px; font-weight: 600; }
-        .c-prize-title { font-size: clamp(16px, 2.5vw, 22px); font-weight: 900; margin-bottom: 8px; }
-        .c-prize-desc { font-size: 13px; opacity: 0.85; line-height: 1.6; }
-
-        /* 일정 */
-        .c-timeline {
-            max-width: 680px;
-            margin: 0 auto;
-            position: relative;
-        }
-        .c-timeline::before {
-            content: '';
-            position: absolute;
-            left: 22px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #c8e6c9;
-        }
-        .c-tl-item {
-            display: flex;
-            gap: 20px;
-            padding-bottom: 32px;
-            position: relative;
-        }
-        .c-tl-item:last-child { padding-bottom: 0; }
-        .c-tl-dot {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: #2e7d32;
-            color: #fff;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 0 0 4px #e8f5e9;
-        }
-        .c-tl-body { padding-top: 8px; }
-        .c-tl-date { font-size: 13px; color: #4caf50; font-weight: 700; margin-bottom: 4px; }
-        .c-tl-title { font-size: 16px; font-weight: 800; color: #1b3a1f; margin-bottom: 4px; }
-        .c-tl-desc { font-size: 13px; color: #666; line-height: 1.6; }
-
-        /* 주의사항 */
-        .c-notes {
-            max-width: 720px;
-            margin: 0 auto;
-            background: #f1f8e9;
-            border-radius: 12px;
-            padding: 28px 32px;
-            border-left: 4px solid #4caf50;
-        }
-        .c-notes h4 { font-size: 15px; font-weight: 700; color: #2e7d32; margin-bottom: 12px; }
-        .c-notes ul { margin: 0; padding-left: 18px; }
-        .c-notes li  { font-size: 14px; color: #444; line-height: 1.9; }
-
-        /* CTA */
-        .c-cta {
-            background: linear-gradient(150deg, #1b5e20, #388e3c);
-            padding: 80px 20px;
-            text-align: center;
-        }
-        .c-cta h2 { font-size: clamp(20px, 3vw, 32px); font-weight: 900; color: #fff; margin-bottom: 12px; }
-        .c-cta p  { color: rgba(255,255,255,0.82); margin-bottom: 32px; font-size: 15px; line-height: 1.7; }
-        .c-cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .c-btn {
-            display: inline-block;
-            padding: 14px 32px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 15px;
-            text-decoration: none;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .c-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-        .c-btn-primary { background: #a5d6a7; color: #1b3a1f; }
-        .c-btn-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.55); }
-
-        @media (max-width: 680px) {
-            .c-intro { grid-template-columns: 1fr; }
-            .c-prizes { grid-template-columns: 1fr; }
-            .c-prize:nth-child(1) { transform: none; }
-        }
-    </style>
+<?php include APPPATH . 'Views/service/event/views/css/view_3.css'; ?>
+</style>
 </head>
 <body>
 
@@ -444,8 +120,8 @@
             <div class="c-step">
                 <div class="c-step-num">3</div>
                 <div class="c-step-icon">📤</div>
-                <h3>고객센터 제출</h3>
-                <p>부산온나 고객센터 문의 양식에 [코스 공모전] 제목으로 코스를 제출해주세요.</p>
+                <h3>온라인 제출</h3>
+                <p>아래 <a href="#courseSubmitSection">코스 등록 폼</a>에서 바로 작성해 제출하세요.</p>
             </div>
             <div class="c-step">
                 <div class="c-step-num">4</div>
@@ -453,6 +129,65 @@
                 <h3>심사 및 발표</h3>
                 <p>10월 중 심사 후 당선작 발표 및 공식 코스 등록이 진행됩니다.</p>
             </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== 코스 등록 (참여 방법 바로 아래) ===================== -->
+<section class="c-section" id="courseSubmitSection">
+    <div class="container">
+        <h2 class="c-section-title">✏️ 나만의 코스 <span>등록하기</span></h2>
+        <p class="c-section-desc">아래 폼에서 바로 코스를 작성해 제출할 수 있어요. 장소는 최소 3곳 이상 등록해주세요.</p>
+
+        <div class="c-submit-card">
+            <div class="c-form-msg" id="courseFormMsg" style="display:none"></div>
+
+            <form id="courseSubmitForm" enctype="multipart/form-data" novalidate>
+                <?= csrf_field() ?>
+
+                <div class="c-form-row">
+                    <div class="c-form-group c-form-group--wide">
+                        <label class="c-form-label">코스명 <span class="c-required">*</span></label>
+                        <input type="text" name="title" id="courseTitle" class="c-form-input" maxlength="100"
+                               placeholder="예) 해운대에서 즐기는 미식 반나절 코스">
+                        <span class="c-form-error" id="cerr-title"></span>
+                    </div>
+                    <div class="c-form-group">
+                        <label class="c-form-label">대표 지역</label>
+                        <select name="sido" class="c-form-select">
+                            <option value="">-- 지역 선택 --</option>
+                            <?php foreach (['강서구','금정구','기장군','남구','동구','동래구','부산진구','북구','사상구','사하구','서구','수영구','연제구','영도구','중구','해운대구'] as $gu): ?>
+                                <option value="<?= esc($gu) ?>"><?= esc($gu) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="c-form-group">
+                    <label class="c-form-label">코스 소개</label>
+                    <textarea name="description" class="c-form-textarea" rows="3"
+                              placeholder="이 코스를 한마디로 소개해주세요. 테마와 총 소요시간을 함께 적어주시면 좋아요."></textarea>
+                </div>
+
+                <div class="c-form-group">
+                    <label class="c-form-label">대표 이미지 (선택)</label>
+                    <input type="file" name="thumb_img" id="courseThumbInput" accept="image/jpeg,image/png,image/webp,image/gif">
+                    <div class="c-thumb-preview" id="courseThumbPreview"><img src="" alt="미리보기"></div>
+                </div>
+
+                <div class="c-items-head">
+                    <h3>코스 장소 <span class="c-required">*</span><span class="c-item-count-badge" id="courseItemBadge">3 / 8</span></h3>
+                    <p>방문 순서대로 등록해주세요. 최소 3곳 이상 필요합니다.</p>
+                </div>
+
+                <div id="courseItemList"></div>
+
+                <button type="button" id="btnAddCourseItem" class="c-btn-add-item">+ 장소 추가</button>
+
+                <div class="c-form-footer">
+                    <button type="submit" class="c-btn c-btn-submit" id="btnSubmitCourse">🚀 코스 제출하기</button>
+                </div>
+            </form>
         </div>
     </div>
 </section>
@@ -530,7 +265,7 @@
                 <div class="c-tl-body">
                     <div class="c-tl-date">2026.09.01</div>
                     <div class="c-tl-title">공모전 접수 시작</div>
-                    <div class="c-tl-desc">고객센터 문의를 통해 코스 제출이 가능합니다.</div>
+                    <div class="c-tl-desc">이벤트 페이지의 코스 등록 폼을 통해 코스 제출이 가능합니다.</div>
                 </div>
             </div>
             <div class="c-tl-item">
@@ -570,7 +305,7 @@
             <h4>📌 유의사항</h4>
             <ul>
                 <li>공모전은 부산온나 회원 누구나 참여 가능하며, 1인 최대 2편까지 제출 가능합니다.</li>
-                <li>부산온나에 등록되지 않은 장소는 코스에 포함할 수 없습니다.</li>
+                <li>장소는 부산온나에 등록된 관광지·맛집·축제를 검색해 연결하거나, 아직 등록되지 않은 장소는 직접 입력할 수 있습니다.</li>
                 <li>타인의 코스를 도용·표절한 경우 즉시 실격 처리됩니다.</li>
                 <li>당선작의 저작권은 부산온나에 귀속되며, 일부 수정 후 등록될 수 있습니다.</li>
                 <li>경품은 당선자 개인 정보 확인 후 30일 이내 지급됩니다.</li>
@@ -588,7 +323,7 @@
         부산온나가 더 많은 여행자에게 당신의 코스를 소개합니다.
     </p>
     <div class="c-cta-btns">
-        <a href="/customer" class="c-btn c-btn-primary">📤 고객센터에서 제출하기</a>
+        <a href="#courseSubmitSection" class="c-btn c-btn-primary">📤 코스 등록하러 가기</a>
         <a href="/travel-courses" class="c-btn c-btn-outline">🗺️ 기존 여행코스 보기</a>
     </div>
 </section>
@@ -599,5 +334,8 @@
 <script src="/js/busan.js"></script>
 <script src="/js/modules/login.js"></script>
 <script src="/js/modules/signup.js"></script>
+<script>
+<?php include APPPATH . 'Views/service/event/views/js/view_3.js'; ?>
+</script>
 </body>
 </html>

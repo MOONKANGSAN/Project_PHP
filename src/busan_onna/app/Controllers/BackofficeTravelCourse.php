@@ -227,8 +227,10 @@ class BackofficeTravelCourse extends BaseController
     {
         $course = $this->model->find($idx);
         if ($course) {
+            // state=7(사용자 요청) 행은 클릭 한 번에 승인(1)되도록, 그 외에는 토글
+            $newState = ($course['state'] == 1) ? 0 : 1;
             $this->model->update($idx, [
-                'state'     => $course['state'] ? 0 : 1,
+                'state'     => $newState,
                 'edit_date' => date('Y-m-d H:i:s'),
             ]);
         }

@@ -1407,7 +1407,7 @@ class Service extends BaseController
         $rules = [
             'title'       => 'required|max_length[100]',
             'description' => 'permit_empty|max_length[2000]',
-            'thumb_img'   => 'permit_empty|is_image[thumb_img]|max_size[thumb_img,5120]|mime_in[thumb_img,image/jpg,image/jpeg,image/png,image/gif,image/webp]',
+            'thumb_img'   => 'permit_empty|max_size[thumb_img,5120]|ext_in[thumb_img,jpg,jpeg,png,gif,webp]|mime_in[thumb_img,image/jpg,image/jpeg,image/png,image/gif,image/webp]',
         ];
         $messages = [
             'title' => [
@@ -1415,8 +1415,8 @@ class Service extends BaseController
                 'max_length' => '코스명은 100자 이내로 입력해주세요.',
             ],
             'thumb_img' => [
-                'is_image' => '이미지 파일만 첨부할 수 있습니다.',
                 'max_size' => '이미지 용량은 5MB 이하만 첨부할 수 있습니다.',
+                'ext_in'   => 'jpg, png, gif, webp 이미지 파일만 첨부할 수 있습니다.',
                 'mime_in'  => '이미지 파일만 첨부할 수 있습니다.',
             ],
         ];

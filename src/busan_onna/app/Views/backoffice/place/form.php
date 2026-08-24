@@ -22,6 +22,9 @@ for ($h = 0; $h < 24; $h++) {
 // 기존 이미지 & 남은 슬롯 수
 $existingImages = $existing_images ?? [];
 $imageSlots     = 8 - count($existingImages);
+
+// 좋아요 수치 (부가 정보에서 관리자가 직접 조정 가능, 맛집 수정 기능과 동일)
+$like_cnt = $item['like_cnt'] ?? 0;
 ?>
 
 <div class="bo-page-header">
@@ -253,6 +256,16 @@ $imageSlots     = 8 - count($existingImages);
                 <input type="text" name="admission_fee" class="bo-form-input"
                        value="<?= esc($oldVal('admission_fee')) ?>"
                        placeholder="예) 무료 / 성인 3,000원">
+            </div>
+
+            <!-- 좋아요 수치 직접 조정 (맛집 수정 기능과 동일) -->
+            <div class="bo-form-group">
+                <label class="bo-form-label">좋아요</label>
+                <div class="bo-phone-wrap">
+                    <input type="number" id="like_cnt" name="like_cnt"
+                           class="bo-form-input"
+                           value="<?=$like_cnt?>" maxlength="5">
+                </div>
             </div>
 
             <!-- 해시태그: 칩 방식 -->

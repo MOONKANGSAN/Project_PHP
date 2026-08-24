@@ -300,6 +300,7 @@ class BackofficeRestaurant extends BaseController
             'longitude'    => $this->request->getPost('longitude') ?: null,
             'open_time'    => $openTime,
             'parking'      => $this->request->getPost('parking') ?: 0,
+            'like_cnt'     => $this->request->getPost('like_cnt') ?: 0,
             'edit_date'    => date('Y-m-d H:i:s'),
         ]);
 

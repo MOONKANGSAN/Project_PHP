@@ -88,19 +88,29 @@ class LikeCountSync extends BaseCommand
      * 이 커맨드 전용 로그 파일에 한 줄 남긴다.
      * CodeIgniter 통합 로그(writable/logs/log-*.log)와는 별개로, 이 커맨드의 실행 이력만
      * app/Commands/logs/like_sync-YYYY-MM-DD.log 에서 바로 확인할 수 있도록 하기 위함.
+     *
+     * 어디까지나 부가 기능이라, 이 로그 기록이 실패하더라도(예: 배포 직후 이 디렉터리의
+     * 소유권/쓰기 권한이 cron 실행 계정과 안 맞는 경우) 절대 본 작업(좋아요 동기화)을
+     * 막으면 안 된다 — CI4는 file_put_contents의 PHP 경고까지 예외로 승격시키므로
+     * try/catch로 통째로 감싸서 무슨 일이 있어도 여기서 조용히 넘어가도록 한다.
      */
     private function writeCommandLog(string $message): void
     {
-        $dir = __DIR__ . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR;
+        try {
+            $dir = __DIR__ . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR;
 
-        if (! is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+            if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+                return;
+            }
+
+            $file = $dir . 'like_sync-' . date('Y-m-d') . '.log';
+            $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
+
+            @file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
+        } catch (\Throwable $e) {
+            // 부가 로그 기록 실패는 무시 — 실패 사실만 통합 로그에 한 번 남겨둔다.
+            log_message('warning', '[like:sync] 커맨드 전용 로그 기록 실패: {msg}', ['msg' => $e->getMessage()]);
         }
-
-        $file = $dir . 'like_sync-' . date('Y-m-d') . '.log';
-        $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
-
-        file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
     }
 
     /**

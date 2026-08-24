@@ -142,12 +142,26 @@ class Auth extends BaseController
 
     /**
      * 로그아웃: 세션 파기 + remember_me 쿠키 삭제 후 메인으로 이동
+     *
+     * [버그 수정] 기존 코드는 `$this->response->deleteCookie(...)`로 쿠키 삭제를
+     * 걸어둔 뒤 `redirect()->to('/')`를 반환했는데, `redirect()`가 만드는
+     * RedirectResponse는 $this->response와는 별개의 새 인스턴스라서 그 위에 걸어둔
+     * deleteCookie가 실제 응답에는 반영되지 않고 유실됐다(CI4의
+     * RedirectResponse::withCookies() 문서에 명시된 바로 그 문제).
+     * 그 결과 "상시 로그인"으로 로그인했던 사용자는 remember_me 쿠키가 브라우저에
+     * 그대로 남아있게 되고, 리다이렉트 목적지(/)로 이동하는 순간 전역 필터
+     * RememberMeFilter가 그 쿠키로 세션을 즉시 재복원시켜버려 로그아웃 버튼을
+     * 눌러도 로그아웃이 안 되는 것처럼 보였다.
+     * → 실제로 브라우저에 전송되는 RedirectResponse 객체에 직접 deleteCookie를
+     *   걸어서, 쿠키 삭제가 응답에 확실히 포함되도록 수정.
      */
     public function logout(): \CodeIgniter\HTTP\RedirectResponse
     {
         session()->destroy();
-        $this->response->deleteCookie('remember_me');
 
-        return redirect()->to('/');
+        $response = redirect()->to('/');
+        $response->deleteCookie('remember_me');
+
+        return $response;
     }
 }

@@ -17,7 +17,6 @@
             </nav>
             <div class="header-auth">
                 <?php if (session()->get('user.idx')): ?>
-                    <span class="user-greeting">안녕하세요, <?= esc(session()->get('user.id')) ?>님</span>
                     <a href="/auth/logout" class="btn-auth logout">로그아웃</a>
                 <?php else: ?>
                     <button type="button" class="btn-auth login" id="btnOpenLogin">로그인</button>

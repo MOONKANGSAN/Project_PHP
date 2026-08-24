@@ -64,6 +64,18 @@ Vagrantfile
 /writable/debugbar/*
 !/writable/debugbar/index.html
 
+#-------------------------
+# DB 백업 파일 (스케줄러2 산출물, 매일 생성 — git 제외)
+#-------------------------
+/writable/backup/*
+!/writable/backup/index.html
+
+#-------------------------
+# 스케줄러 전용 실행 로그 (like:sync / db:backup, 매일 생성 — git 제외)
+#-------------------------
+/app/Commands/logs/*
+!/app/Commands/logs/.gitkeep
+
 php_errors.log
 
 #-------------------------

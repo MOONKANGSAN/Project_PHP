@@ -29,12 +29,21 @@
     <link rel="canonical"    href="<?= $canonicalUrl ?>">
 
     <!-- Open Graph -->
-    <meta property="og:type"        content="website">
-    <meta property="og:title"       content="<?= $seoTitle ?>">
-    <meta property="og:description" content="<?= $seoDesc ?>">
-    <meta property="og:url"         content="<?= $canonicalUrl ?>">
-    <meta property="og:site_name"   content="부산온나">
-    <meta property="og:locale"      content="ko_KR">
+    <meta property="og:type"         content="website">
+    <meta property="og:title"        content="<?= $seoTitle ?>">
+    <meta property="og:description"  content="<?= $seoDesc ?>">
+    <meta property="og:url"          content="<?= $canonicalUrl ?>">
+    <meta property="og:image"        content="https://busanonna.com/img/og-event.jpg">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name"    content="부산온나">
+    <meta property="og:locale"       content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= $seoTitle ?>">
+    <meta name="twitter:description" content="<?= $seoDesc ?>">
+    <meta name="twitter:image"       content="https://busanonna.com/img/og-event.jpg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">

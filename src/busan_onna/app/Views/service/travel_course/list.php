@@ -3,7 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>여행코스 - 부산온나</title>
+
+    <?php
+    /* ---- SEO 변수 계산 ---- */
+    $currPage = (int)(service('request')->getGet('page') ?? 1);
+
+    if (!empty($activeSido)) {
+        $seoTitle = esc($activeSido) . ' 여행코스 | 부산온나';
+        $seoDesc  = '부산 ' . esc($activeSido) . ' 지역 맞춤 여행코스. 전문가가 큐레이션한 코스로 완벽한 여행을 계획하세요.';
+    } else {
+        $seoTitle = '부산 여행코스 | 부산온나 - 부산 여행의 시작';
+        $seoDesc  = '전문가가 큐레이션한 부산 맞춤 여행코스로 완벽한 여행을 계획하세요. 지역별·테마별 코스를 한눈에 탐색하세요.';
+    }
+    if ($currPage > 1) { $seoTitle .= ' - ' . $currPage . '페이지'; }
+
+    $canonParams = [];
+    if (!empty($activeSido))   $canonParams[] = 'sido=' . rawurlencode($activeSido);
+    if ($currPage > 1)         $canonParams[] = 'page=' . $currPage;
+    $canonicalUrl = 'https://busanonna.com/travel-courses' . (!empty($canonParams) ? '?' . implode('&', $canonParams) : '');
+
+    $metaRobots = !empty($activeSearch) ? 'noindex, follow' : 'index, follow';
+    ?>
+
+    <title><?= $seoTitle ?></title>
+    <meta name="description" content="<?= $seoDesc ?>">
+    <meta name="robots"      content="<?= $metaRobots ?>">
+    <link rel="canonical"    href="<?= $canonicalUrl ?>">
+
+    <!-- Open Graph -->
+    <meta property="og:type"         content="website">
+    <meta property="og:title"        content="<?= $seoTitle ?>">
+    <meta property="og:description"  content="<?= $seoDesc ?>">
+    <meta property="og:url"          content="<?= $canonicalUrl ?>">
+    <meta property="og:image"        content="https://busanonna.com/img/og-course.jpg">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name"    content="부산온나">
+    <meta property="og:locale"       content="ko_KR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<?= $seoTitle ?>">
+    <meta name="twitter:description" content="<?= $seoDesc ?>">
+    <meta name="twitter:image"       content="https://busanonna.com/img/og-course.jpg">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/busan.css">

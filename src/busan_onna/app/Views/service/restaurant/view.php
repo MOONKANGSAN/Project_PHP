@@ -159,7 +159,8 @@
                                          C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5
                                          c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                             </svg>
-                            <span class="rv-reaction-count" id="likeCount"><?= (int)$likeCount ?></span>
+                            <!-- 좋아요 수치는 화면에서만 숨김: id="likeCount"는 JS(toggle 응답 반영)에서 계속 사용하므로 DOM에서 제거하지 않고 display:none으로만 처리 -->
+                            <span class="rv-reaction-count" id="likeCount" style="display:none;"><?= (int)$likeCount ?></span>
                         </button>
 
                         <!-- 비추천 버튼: 엄지 내림 아이콘 + 숫자 -->

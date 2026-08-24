@@ -274,6 +274,8 @@ class BackofficePlace extends BaseController
             'admission_fee' => $this->request->getPost('admission_fee'),
             'parking'       => $this->request->getPost('parking') ?: 0,
             'category_num'  => $this->request->getPost('category_num') ?: 0,
+            // 관리자가 부가 정보에서 좋아요 수치를 직접 조정할 수 있게 반영 (맛집 수정 기능과 동일)
+            'like_cnt'      => $this->request->getPost('like_cnt') ?: 0,
             'edit_date'     => date('Y-m-d H:i:s'),
         ]);
 

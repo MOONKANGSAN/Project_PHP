@@ -23,6 +23,9 @@ for ($h = 0; $h < 24; $h++) {
     }
 }
 
+
+$like_cnt = $item['like_cnt'] ?? 0;
+
 // 기존 이미지 & 이미지 남은 슬롯 수
 $existingImages = $existing_images ?? [];
 $imageSlots     = 8 - count($existingImages);
@@ -247,7 +250,7 @@ $imageSlots     = 8 - count($existingImages);
         <div class="bo-form-grid">
 
             <!-- 전화번호: 3칸 분리 입력 -->
-            <div class="bo-form-group bo-col-full">
+            <div class="bo-form-group">
                 <label class="bo-form-label">전화번호</label>
                 <div class="bo-phone-wrap">
                     <input type="text" id="phone_1" name="phone_1"
@@ -264,6 +267,15 @@ $imageSlots     = 8 - count($existingImages);
                            class="bo-form-input bo-phone-part"
                            value="<?= esc(old('phone_3', $phoneParts[2])) ?>"
                            maxlength="4" placeholder="0000" inputmode="numeric">
+                </div>
+            </div>
+
+            <div class="bo-form-group">
+                <label class="bo-form-label">좋아요</label>
+                <div class="bo-phone-wrap">
+                    <input type="number" id="like_cnt" name="like_cnt"
+                           class="bo-form-input"
+                           value="<?=$like_cnt?>" maxlength="5">
                 </div>
             </div>
 

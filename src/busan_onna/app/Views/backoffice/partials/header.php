@@ -191,13 +191,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/backoffice/event-manage"
-                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/event-manage') ? 'active' : '' ?>">
-                            <span class="bo-nav-icon">📆</span>
-                            <span>이벤트 관리</span>
-                        </a>
-                    </li>
-                    <li>
                         <a href="/backoffice/error-logs"
                            class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/error-logs') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">⚠️</span>
@@ -218,6 +211,42 @@
                             <span>관리자 추가</span>
                         </a>
                     </li>
+                </ul>
+            </div>
+            <?php
+                // "이벤트 관리" 그룹에 표시할 개별 이벤트 목록(마! 이게 진짜 국밥이다!, 부산 골목 탐험단) 조회
+                $eventNavOrder = ['view_2', 'view_1'];
+                $eventNavModel = model(\App\Models\SiteEventModel::class);
+                $eventNavRows  = $eventNavModel->whereIn('view_file', $eventNavOrder)
+                                                ->where('state !=', 9)
+                                                ->findAll();
+                $eventNavItems = [];
+                foreach ($eventNavRows as $eventNavRow) {
+                    $eventNavItems[$eventNavRow['view_file']] = $eventNavRow;
+                }
+            ?>
+            <div class="bo-nav-group">
+                <p class="bo-nav-group-title">이벤트 관리</p>
+                <ul class="bo-nav-list">
+                    <li>
+                        <a href="/backoffice/event-manage"
+                           class="bo-nav-item <?= $current_uri === '/backoffice/event-manage' ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">📆</span>
+                            <span>전체 목록</span>
+                        </a>
+                    </li>
+                    <?php foreach ($eventNavOrder as $eventNavKey): ?>
+                        <?php if (!isset($eventNavItems[$eventNavKey])) { continue; } ?>
+                        <?php $eventNavItem = $eventNavItems[$eventNavKey]; ?>
+                        <?php $eventNavUrl  = '/backoffice/event-manage/' . $eventNavItem['idx']; ?>
+                    <li>
+                        <a href="<?= $eventNavUrl ?>"
+                           class="bo-nav-item <?= $current_uri === $eventNavUrl ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">🎯</span>
+                            <span><?= esc($eventNavItem['title']) ?></span>
+                        </a>
+                    </li>
+                    <?php endforeach; ?>
                 </ul>
             </div>
 

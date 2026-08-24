@@ -145,8 +145,9 @@ class BackofficeRestaurant extends BaseController
         $state    = (string) ($this->request->getGet('state') ?? '');
         $sido     = (string) ($this->request->getGet('sido') ?? '');
         $category = (string) ($this->request->getGet('category') ?? '');
+        $sort     = (string) ($this->request->getGet('sort') ?? '');
 
-        $items = $this->model->getList($q, $state, $sido, $category);
+        $items = $this->model->getList($q, $state, $sido, $category, $sort);
 
         return view('backoffice/restaurant/list', $this->base('맛집 관리', [
             'items'    => $items,
@@ -155,6 +156,7 @@ class BackofficeRestaurant extends BaseController
             'state'    => $state,
             'sido'     => $sido,
             'category' => $category,
+            'sort'     => $sort,
         ]));
     }
 

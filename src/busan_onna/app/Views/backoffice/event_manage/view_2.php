@@ -44,14 +44,134 @@
     </div>
 </div>
 
-<!-- ===== 운영 관리 (준비 중) ===== -->
-<div class="bo-card">
-    <h3 class="bo-form-section-title" style="margin-bottom:12px;">운영 관리</h3>
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-                padding:60px 20px;color:#9ca3af;text-align:center;">
-        <div style="font-size:40px;margin-bottom:14px;">🛠️</div>
-        <p style="font-size:14px;">이 이벤트의 운영 관리 기능은 준비 중입니다.</p>
+<!-- ===== 탭 영역 ===== -->
+<div class="bo-card" style="padding:0;overflow:hidden;">
+
+    <div class="bo-tab-nav">
+        <button type="button" class="bo-tab-btn active" data-tab="summary">
+            🍲 서비스 항목별 좋아요 집계 <span class="bo-tab-count"><?= count($gukbapItems) ?></span>
+        </button>
+        <button type="button" class="bo-tab-btn" data-tab="like-logs">
+            📝 좋아요 로그 <span class="bo-tab-count"><?= count($likeLogs) ?></span>
+        </button>
     </div>
+
+    <!-- ───────── 탭 1: 서비스 항목별 좋아요 집계 ───────── -->
+    <div class="bo-tab-panel" id="tabSummary">
+        <div class="bo-table-wrap">
+            <table class="bo-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">순위</th>
+                        <th>맛집명</th>
+                        <th style="width:140px">카테고리</th>
+                        <th style="width:120px">누적 좋아요</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($gukbapItems)): ?>
+                    <tr><td colspan="4" class="bo-table-empty">이름에 '국밥'이 포함된 노출 상태 맛집이 없습니다.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($gukbapItems as $i => $gi): ?>
+                    <tr>
+                        <td class="text-center text-muted"><?= $i + 1 ?></td>
+                        <td><?= esc($gi['name']) ?></td>
+                        <td class="text-center"><?= esc($gi['category']) ?></td>
+                        <td class="text-center">
+                            <strong style="color:#3b82f6;">❤️ <?= number_format($gi['like_count']) ?></strong>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ───────── 탭 2: 좋아요 로그 ───────── -->
+    <div class="bo-tab-panel" id="tabLikeLogs" style="display:none;">
+        <div class="bo-table-wrap">
+            <table class="bo-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">No.</th>
+                        <th style="width:160px">회원 아이디</th>
+                        <th>맛집명</th>
+                        <th style="width:120px">참여일자</th>
+                        <th style="width:150px">등록일시</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (empty($likeLogs)): ?>
+                    <tr><td colspan="5" class="bo-table-empty">등록된 좋아요 로그가 없습니다.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($likeLogs as $log): ?>
+                    <tr>
+                        <td class="text-center text-muted"><?= (int) $log['idx'] ?></td>
+                        <td><?= esc($log['user_id'] ?? '(탈퇴회원)') ?></td>
+                        <td><?= esc($log['restaurant_name'] ?? '(삭제된 맛집)') ?></td>
+                        <td class="text-center"><?= esc($log['like_date']) ?></td>
+                        <td class="text-center text-muted text-sm"><?= esc(substr($log['reg_date'], 0, 16)) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
+
+<style>
+/* 탭 UI */
+.bo-tab-nav { display: flex; border-bottom: 1px solid #e5e7eb; }
+.bo-tab-btn {
+    flex: 1;
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+}
+.bo-tab-btn:hover { color: #374151; }
+.bo-tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+.bo-tab-count {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-left: 4px;
+}
+.bo-tab-btn.active .bo-tab-count { background: #dbeafe; color: #3b82f6; }
+.bo-tab-panel { padding: 4px 0; }
+</style>
+
+<script>
+(function () {
+    // ── 탭 전환 ──
+    var tabBtns   = document.querySelectorAll('.bo-tab-btn');
+    var tabPanels = {
+        summary:     document.getElementById('tabSummary'),
+        'like-logs': document.getElementById('tabLikeLogs'),
+    };
+
+    tabBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            tabBtns.forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            Object.keys(tabPanels).forEach(function (key) {
+                tabPanels[key].style.display = (key === btn.dataset.tab) ? '' : 'none';
+            });
+        });
+    });
+}());
+</script>
 
 <?= view('backoffice/partials/footer') ?>

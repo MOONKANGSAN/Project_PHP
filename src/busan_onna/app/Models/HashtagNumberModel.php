@@ -89,4 +89,39 @@ class HashtagNumberModel extends Model
         $this->where('event_idx', $eventIdx)->delete();
         return array_column($rows, 'hashtag_idx');
     }
+
+    // ----------------------------------------------------------------
+    // 숨은 명소 (백오피스 이벤트 관리용)
+    // ----------------------------------------------------------------
+
+    /**
+     * '숨은 명소' 태그가 연결된 맛집·관광지 전체 목록
+     * (프로트와 달리 state 값과 무관하게 모두 반환 — 백오피스 관리 화면에서 활성/비활성 토글용)
+     */
+    public function getHiddenSpotList(): array
+    {
+        $restaurantRows = $this->db->table('hashtag_number hn')
+                        ->select('hn.idx AS hn_idx, hn.state, hn.hashtag_idx, hn.reg_date, hn.restaurant_idx AS content_idx, r.name, r.category_num')
+                        ->join('hashtag h', 'h.idx = hn.hashtag_idx')
+                        ->join('busan_restaurant r', 'r.idx = hn.restaurant_idx')
+                        ->where('h.name', '숨은 명소')
+                        ->get()->getResultArray();
+
+        $placeRows = $this->db->table('hashtag_number hn')
+                        ->select('hn.idx AS hn_idx, hn.state, hn.hashtag_idx, hn.reg_date, hn.place_idx AS content_idx, p.name, p.category_num')
+                        ->join('hashtag h', 'h.idx = hn.hashtag_idx')
+                        ->join('busan_place p', 'p.idx = hn.place_idx')
+                        ->where('h.name', '숨은 명소')
+                        ->get()->getResultArray();
+
+        foreach ($restaurantRows as &$r) { $r['type'] = 'restaurant'; $r['type_label'] = '맛집'; }
+        unset($r);
+        foreach ($placeRows as &$p) { $p['type'] = 'place'; $p['type_label'] = '관광지'; }
+        unset($p);
+
+        $rows = array_merge($restaurantRows, $placeRows);
+        usort($rows, static fn ($a, $b) => (int) $b['hn_idx'] <=> (int) $a['hn_idx']);
+
+        return $rows;
+    }
 }

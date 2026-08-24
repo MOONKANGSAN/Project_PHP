@@ -191,6 +191,13 @@
                         </a>
                     </li>
                     <li>
+                        <a href="/backoffice/event-manage"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/event-manage') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">📆</span>
+                            <span>이벤트 관리</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="/backoffice/error-logs"
                            class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/error-logs') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">⚠️</span>

@@ -142,6 +142,11 @@
                 <option value="1" <?= $activeIsFree === '1' ? 'selected' : '' ?>>무료</option>
                 <option value="0" <?= $activeIsFree === '0' ? 'selected' : '' ?>>유료</option>
             </select>
+            <select name="sort" class="filter-select" onchange="this.form.submit()">
+                <option value="" <?= $activeSort === '' ? 'selected' : '' ?>>🆕 최신순</option>
+                <option value="like" <?= $activeSort === 'like' ? 'selected' : '' ?>>❤️ 좋아요순</option>
+                <option value="name" <?= $activeSort === 'name' ? 'selected' : '' ?>>🔤 가나다순</option>
+            </select>
 
             <button type="submit" class="filter-submit-btn">검색</button>
 

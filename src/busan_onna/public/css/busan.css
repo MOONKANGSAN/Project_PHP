@@ -247,6 +247,53 @@ ul { list-style: none; }
 .banner-wave svg { width: 100%; height: 60px; display: block; }
 
 /* =============================================
+   이벤트 배너 (1905×600 비율, 텍스트 오버레이 없이 이미지 그대로 노출)
+   ============================================= */
+.evt-banner-section { padding: 40px 0 8px; }
+.evt-banner-slider {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1905 / 600;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+    background: #f1f5f9;
+}
+.evt-banner-slide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.85s ease;
+}
+.evt-banner-slide.active { opacity: 1; }
+.evt-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.evt-banner-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+.evt-banner-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.evt-banner-dot.active { width: 26px; border-radius: 4px; background: var(--primary); }
+
+@media (max-width: 768px) {
+    .evt-banner-slider { border-radius: 10px; }
+    .evt-banner-section { padding: 24px 0 4px; }
+}
+
+/* =============================================
    공통 섹션 스타일
    ============================================= */
 .section-header { text-align: center; margin-bottom: 52px; }
@@ -683,6 +730,7 @@ ul { list-style: none; }
 .filter-search {
     flex: 1;
     min-width: 200px;
+    max-width: 320px;
     position: relative;
 }
 .filter-search input {
@@ -1227,7 +1275,7 @@ ul { list-style: none; }
 @media (max-width: 720px) {
     .restaurant-grid { grid-template-columns: 1fr; }
     .filter-bar { flex-direction: column; align-items: stretch; }
-    .filter-search { min-width: 0; }
+    .filter-search { min-width: 0; max-width: none; }
     .filter-select  { width: 100%; }
     .r-list-item { padding: 14px 16px; }
     .page-hero { padding: 110px 0 44px; }

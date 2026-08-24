@@ -84,6 +84,10 @@
                 <option value="upcoming" <?= $activeStatus === 'upcoming' ? 'selected' : '' ?>>예정</option>
                 <option value="ended"    <?= $activeStatus === 'ended'    ? 'selected' : '' ?>>종료</option>
             </select>
+            <select name="sort" class="filter-select" onchange="this.form.submit()">
+                <option value="" <?= $activeSort === '' ? 'selected' : '' ?>>🆕 최신순</option>
+                <option value="name" <?= $activeSort === 'name' ? 'selected' : '' ?>>🔤 가나다순</option>
+            </select>
 
             <button type="submit" class="filter-submit-btn">검색</button>
 

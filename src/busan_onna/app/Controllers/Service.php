@@ -34,6 +34,7 @@ class Service extends BaseController
         $district = trim($this->request->getGet('district') ?? '');
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
+        $sort     = trim($this->request->getGet('sort')      ?? '');
 
         // 맛집 목록 (state=1, 필터 적용)
         $query = $restaurantModel->where('state', 1);
@@ -66,8 +67,23 @@ class Service extends BaseController
             }
         }
 
+        // 정렬: 좋아요순(reactions 집계) / 최신순(기본) / 가나다순
+        switch ($sort) {
+            case 'like':
+                $query->select("busan_restaurant.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'restaurant' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_restaurant.idx) AS like_count", false)
+                      ->orderBy('like_count', 'DESC');
+                break;
+            case 'name':
+                $query->orderBy('name', 'ASC');
+                break;
+            case 'new':
+            default:
+                $query->orderBy('idx', 'DESC');
+                break;
+        }
+
         // 한 페이지 9건 페이지네이션
-        $restaurants = $query->orderBy('idx', 'DESC')->paginate(9);
+        $restaurants = $query->paginate(9);
         $pager       = $restaurantModel->pager;
         $totalCount  = $pager->getTotal();
 
@@ -125,6 +141,7 @@ class Service extends BaseController
             'activeDistrict' => $district,
             'activeCategory' => $category,
             'activeSearch'   => $search,
+            'activeSort'     => $sort,
             'saved_id'       => $this->request->getCookie('saved_id') ?? '',
         ];
 
@@ -323,6 +340,7 @@ class Service extends BaseController
         $district = trim($this->request->getGet('district') ?? '');
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
+        $sort     = trim($this->request->getGet('sort')      ?? '');
 
         $query = $placeModel->where('state', 1);
 
@@ -353,7 +371,22 @@ class Service extends BaseController
             }
         }
 
-        $spots      = $query->orderBy('idx', 'DESC')->paginate(9);
+        // 정렬: 좋아요순(reactions 집계) / 최신순(기본) / 가나다순
+        switch ($sort) {
+            case 'like':
+                $query->select("busan_place.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'spot' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_place.idx) AS like_count", false)
+                      ->orderBy('like_count', 'DESC');
+                break;
+            case 'name':
+                $query->orderBy('name', 'ASC');
+                break;
+            case 'new':
+            default:
+                $query->orderBy('idx', 'DESC');
+                break;
+        }
+
+        $spots      = $query->paginate(9);
         $pager      = $placeModel->pager;
         $totalCount = $pager->getTotal();
 
@@ -407,6 +440,7 @@ class Service extends BaseController
             'activeDistrict' => $district,
             'activeCategory' => $category,
             'activeSearch'   => $search,
+            'activeSort'     => $sort,
             'saved_id'       => $this->request->getCookie('saved_id') ?? '',
         ]);
     }
@@ -541,6 +575,7 @@ class Service extends BaseController
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
         $isFree   = trim($this->request->getGet('is_free')  ?? '');
+        $sort     = trim($this->request->getGet('sort')      ?? '');
 
         $query = $eventModel->where('state', 1);
 
@@ -574,7 +609,22 @@ class Service extends BaseController
             }
         }
 
-        $festivals  = $query->orderBy('start_date', 'DESC')->paginate(9);
+        // 정렬: 좋아요순(reactions 집계) / 최신순(기본, 시작일 기준) / 가나다순
+        switch ($sort) {
+            case 'like':
+                $query->select("busan_event.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'festival' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_event.idx) AS like_count", false)
+                      ->orderBy('like_count', 'DESC');
+                break;
+            case 'name':
+                $query->orderBy('name', 'ASC');
+                break;
+            case 'new':
+            default:
+                $query->orderBy('start_date', 'DESC');
+                break;
+        }
+
+        $festivals  = $query->paginate(9);
         $pager      = $eventModel->pager;
         $totalCount = $pager->getTotal();
 
@@ -643,6 +693,7 @@ class Service extends BaseController
             'activeCategory' => $category,
             'activeSearch'   => $search,
             'activeIsFree'   => $isFree,
+            'activeSort'     => $sort,
             'saved_id'       => $this->request->getCookie('saved_id') ?? '',
         ]);
     }
@@ -853,6 +904,7 @@ class Service extends BaseController
 
         $sido   = trim($this->request->getGet('sido') ?? '');
         $search = trim($this->request->getGet('q')    ?? '');
+        $sort   = trim($this->request->getGet('sort')  ?? '');
 
         $query = $courseModel->where('state', 1);
 
@@ -863,7 +915,18 @@ class Service extends BaseController
             $query->like('title', $search, 'both');
         }
 
-        $courses    = $query->orderBy('idx', 'DESC')->paginate(9);
+        // 정렬: 최신순(기본) / 가나다순 — 여행코스는 좋아요 기능이 없어 좋아요순 미제공
+        switch ($sort) {
+            case 'name':
+                $query->orderBy('title', 'ASC');
+                break;
+            case 'new':
+            default:
+                $query->orderBy('idx', 'DESC');
+                break;
+        }
+
+        $courses    = $query->paginate(9);
         $pager      = $courseModel->pager;
         $totalCount = $pager->getTotal();
 
@@ -902,6 +965,7 @@ class Service extends BaseController
             'sidoList'     => array_column($sidoRows, 'sido'),
             'activeSido'   => $sido,
             'activeSearch' => $search,
+            'activeSort'   => $sort,
             'saved_id'     => $this->request->getCookie('saved_id') ?? '',
         ]);
     }
@@ -947,6 +1011,7 @@ class Service extends BaseController
         $type   = trim($this->request->getGet('type')   ?? '');
         $status = trim($this->request->getGet('status') ?? '');
         $search = trim($this->request->getGet('q')      ?? '');
+        $sort   = trim($this->request->getGet('sort')    ?? '');
 
         $query = $siteEventModel->where('state', 1);
 
@@ -957,8 +1022,19 @@ class Service extends BaseController
             $query->like('title', $search, 'both');
         }
 
+        // 정렬: 최신순(기본, 시작일 기준) / 가나다순 — 이벤트는 실사용 좋아요 집계가 없어 좋아요순 미제공
+        switch ($sort) {
+            case 'name':
+                $query->orderBy('title', 'ASC');
+                break;
+            case 'new':
+            default:
+                $query->orderBy('start_date', 'DESC');
+                break;
+        }
+
         // 진행 상태 필터: DB 연산 없이 날짜 비교로 PHP 레벨에서 처리
-        $events     = $query->orderBy('start_date', 'DESC')->paginate(9);
+        $events     = $query->paginate(9);
         $pager      = $siteEventModel->pager;
         $totalCount = $pager->getTotal();
 
@@ -986,6 +1062,7 @@ class Service extends BaseController
             'activeType'   => $type,
             'activeStatus' => $status,
             'activeSearch' => $search,
+            'activeSort'   => $sort,
             'saved_id'     => $this->request->getCookie('saved_id') ?? '',
         ]);
     }

@@ -134,6 +134,11 @@
                     </option>
                 <?php endforeach; ?>
             </select>
+            <select name="sort" class="filter-select" onchange="this.form.submit()">
+                <option value="" <?= $activeSort === '' ? 'selected' : '' ?>>🆕 최신순</option>
+                <option value="like" <?= $activeSort === 'like' ? 'selected' : '' ?>>❤️ 좋아요순</option>
+                <option value="name" <?= $activeSort === 'name' ? 'selected' : '' ?>>🔤 가나다순</option>
+            </select>
 
             <button type="submit" class="filter-submit-btn">검색</button>
 

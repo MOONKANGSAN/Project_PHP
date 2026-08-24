@@ -23,71 +23,43 @@ class Home extends BaseController
         $thumbnailModel     = new ThumbnailModel();
         $hashtagNumberModel = new HashtagNumberModel();
 
-        // DB에서 활성 관광지 최신 6개 조회
+        // DB에서 활성 관광지 좋아요 많은 순 6개 조회
+        // like_cnt는 스케줄러1(`php spark like:sync`, 매 정각 cron)이 reactions 테이블의
+        // 활성화된 좋아요(state != 9)를 집계해서 반영해주는 테이블 컬럼 — 메인 페이지는
+        // 실시간 집계 대신 이 컬럼 값을 그대로 정렬·표시 기준으로 사용한다.
         $spotsRaw = $placeModel->where('state', 1)
+                               ->orderBy('like_cnt', 'DESC')
                                ->orderBy('idx', 'DESC')
                                ->limit(6)
                                ->findAll();
 
-        // 각 관광지에 대표 썸네일·구(district) 추가
+        // 각 관광지에 대표 썸네일·구(district)·좋아요 수(뷰 표시용 like_count 키) 추가
         foreach ($spotsRaw as &$s) {
-            $thumbs         = $thumbnailModel->getByPlace((int) $s['idx']);
-            $s['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $thumbs          = $thumbnailModel->getByPlace((int) $s['idx']);
+            $s['thumbnail']  = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $s['like_count'] = (int) ($s['like_cnt'] ?? 0);
             preg_match('/부산광역시\s+(\S+(?:구|군))/', $s['address1'] ?? '', $m);
             $s['district'] = $m[1] ?? '';
         }
         unset($s);
 
-        // 관광지 like_count 일괄 조회 (단일 쿼리)
-        $db = \Config\Database::connect();
-        if (!empty($spotsRaw)) {
-            $rows = $db->table('reactions')
-                       ->select('target_idx, COUNT(*) as cnt')
-                       ->where('target_type', 'spot')
-                       ->where('type', 'like')
-                       ->where('state !=', 9)
-                       ->whereIn('target_idx', array_column($spotsRaw, 'idx'))
-                       ->groupBy('target_idx')
-                       ->get()->getResultArray();
-            $spotLikes = array_column($rows, 'cnt', 'target_idx');
-            foreach ($spotsRaw as &$s) {
-                $s['like_count'] = (int)($spotLikes[$s['idx']] ?? 0);
-            }
-            unset($s);
-        }
-
-        // DB에서 활성 맛집 최신 6개 조회
+        // DB에서 활성 맛집 좋아요 많은 순 6개 조회 (관광지와 동일하게 like_cnt 컬럼 기준)
         $restaurantsRaw = $restaurantModel->where('state', 1)
+                                          ->orderBy('like_cnt', 'DESC')
                                           ->orderBy('idx', 'DESC')
                                           ->limit(6)
                                           ->findAll();
 
-        // 각 맛집에 대표 썸네일·해시태그·구(district) 추가
+        // 각 맛집에 대표 썸네일·해시태그·구(district)·좋아요 수(뷰 표시용 like_count 키) 추가
         foreach ($restaurantsRaw as &$r) {
-            $thumbs         = $thumbnailModel->getByRestaurant((int) $r['idx']);
-            $r['thumbnail'] = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
-            $r['tags']      = $hashtagNumberModel->getTagsByRestaurant((int) $r['idx']);
+            $thumbs          = $thumbnailModel->getByRestaurant((int) $r['idx']);
+            $r['thumbnail']  = !empty($thumbs) ? $thumbs[0]['img_url'] : null;
+            $r['tags']       = $hashtagNumberModel->getTagsByRestaurant((int) $r['idx']);
+            $r['like_count'] = (int) ($r['like_cnt'] ?? 0);
             preg_match('/부산광역시\s+(\S+(?:구|군))/', $r['address1'] ?? '', $m);
             $r['district'] = $m[1] ?? '';
         }
         unset($r);
-
-        // 맛집 like_count 일괄 조회 (단일 쿼리)
-        if (!empty($restaurantsRaw)) {
-            $rows = $db->table('reactions')
-                       ->select('target_idx, COUNT(*) as cnt')
-                       ->where('target_type', 'restaurant')
-                       ->where('type', 'like')
-                       ->where('state !=', 9)
-                       ->whereIn('target_idx', array_column($restaurantsRaw, 'idx'))
-                       ->groupBy('target_idx')
-                       ->get()->getResultArray();
-            $restaurantLikes = array_column($rows, 'cnt', 'target_idx');
-            foreach ($restaurantsRaw as &$r) {
-                $r['like_count'] = (int)($restaurantLikes[$r['idx']] ?? 0);
-            }
-            unset($r);
-        }
 
         // 지역별 탐색: 활성 구·군 목록 + 각 지역 TOP5 (state=1만)
         $mapsModel    = new BusanMapsModel();

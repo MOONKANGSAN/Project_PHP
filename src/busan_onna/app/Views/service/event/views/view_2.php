@@ -36,7 +36,7 @@
             좋아요로 응원하고 추첨 이벤트에도 참여해보세요
         </p>
         <div class="m-period-row">
-            <span class="m-period-pill">📅 2026.09.01 ~ 2026.09.18 (18일간)</span>
+            <span class="m-period-pill">📅 2026.08.21 ~ 2026.09.18</span>
             <?php
             $status = $event['event_status'] ?? '';
             $statusLabel = ['ongoing' => '진행중', 'upcoming' => '예정', 'ended' => '종료'];

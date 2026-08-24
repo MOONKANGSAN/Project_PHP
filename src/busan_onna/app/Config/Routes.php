@@ -125,6 +125,8 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     // 이벤트 관리 (개별 사이트 이벤트의 운영 데이터 관리)
     $routes->get('event-manage',            'BackofficeEventManage::index');
     $routes->get('event-manage/(:num)',     'BackofficeEventManage::manage/$1');
+    $routes->get('event-manage/(:num)/reviews/(:num)',      'BackofficeEventManage::reviewDetail/$1/$2');
+    $routes->post('event-manage/hidden-spots/(:num)/state', 'BackofficeEventManage::toggleHiddenSpot/$1');
 
     $routes->get('site-config',           'Backoffice::siteConfig');
 

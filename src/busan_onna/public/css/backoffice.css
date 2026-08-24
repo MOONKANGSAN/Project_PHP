@@ -452,6 +452,8 @@ ul { list-style: none; }
 
 /* 검색/필터 툴바 */
 .bo-list-toolbar { margin-bottom: 16px; }
+/* 사이트 이벤트 관리 페이지 필터 바 (검색/필터 툴바와 별도 클래스명, 동일한 여백 적용) */
+.bo-filter-bar { margin-bottom: 16px; }
 .bo-search-wrap {
     display: flex;
     gap: 8px;

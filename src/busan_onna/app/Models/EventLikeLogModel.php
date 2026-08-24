@@ -95,4 +95,19 @@ class EventLikeLogModel extends Model
                     ->having('days >=', $minDays)
                     ->findAll();
     }
+
+    /**
+     * 백오피스 관리 화면용 좋아요 로그 목록
+     * 회원 아이디(user_info.id), 맛집명(busan_restaurant.name)을 조인해 최신순으로 반환
+     */
+    public function getLogsByEvent(int $eventIdx): array
+    {
+        return $this->db->table('event_like_log l')
+                        ->select('l.idx, l.user_idx, l.restaurant_idx, l.like_date, l.reg_date, u.id AS user_id, r.name AS restaurant_name')
+                        ->join('user_info u', 'u.idx = l.user_idx', 'left')
+                        ->join('busan_restaurant r', 'r.idx = l.restaurant_idx', 'left')
+                        ->where('l.event_idx', $eventIdx)
+                        ->orderBy('l.idx', 'DESC')
+                        ->get()->getResultArray();
+    }
 }

@@ -36,6 +36,11 @@
                 <option value="<?= $num ?>" <?= $category === (string)$num ? 'selected' : '' ?>><?= esc($label) ?></option>
                 <?php endforeach; ?>
             </select>
+            <select name="sort" class="bo-form-select bo-filter-select">
+                <option value="" <?= $sort === '' ? 'selected' : '' ?>>최신순</option>
+                <option value="like" <?= $sort === 'like' ? 'selected' : '' ?>>좋아요순</option>
+                <option value="name" <?= $sort === 'name' ? 'selected' : '' ?>>가나다순</option>
+            </select>
             <button type="submit" class="bo-btn bo-btn-primary">검색</button>
             <a href="/backoffice/spots" class="bo-btn bo-btn-ghost">초기화</a>
         </div>

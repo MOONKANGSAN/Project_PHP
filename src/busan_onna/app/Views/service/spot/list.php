@@ -232,7 +232,10 @@
                     </div>
                     <?php endif; ?>
                     */ ?>
-                    <!-- 좋아요 수치는 뷰페이지 정책상 더 이상 노출하지 않음 (정렬 기준으로는 계속 사용) -->
+                    <!-- 좋아요 카운트 (0이면 표시 안 함) -->
+                    <?php if (($s['like_count'] ?? 0) > 0): ?>
+                    <div class="r-card-likes">♥ <?= (int)$s['like_count'] ?></div>
+                    <?php endif; ?>
 
                     <!-- 입장료 -->
                     <?php if (!empty($s['admission_fee'])): ?>
@@ -286,6 +289,9 @@
                         <span style="font-size:13px; font-weight:700;"><?= number_format($starVal, 1) ?></span>
                         <?php endif; ?>
                         */ ?>
+                        <?php if (($s['like_count'] ?? 0) > 0): ?>
+                        <span class="r-list-likes">♥ <?= (int)$s['like_count'] ?></span>
+                        <?php endif; ?>
                     </div>
 
                     <div class="r-list-info">

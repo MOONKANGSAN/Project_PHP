@@ -34,7 +34,11 @@ class Service extends BaseController
         $district = trim($this->request->getGet('district') ?? '');
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
-        $sort     = trim($this->request->getGet('sort')      ?? '');
+        // sort 파라미터 자체가 없으면(최초 진입) 기본 정렬을 '좋아요순'으로 하되,
+        // "최신순"(value="") 옵션을 사용자가 명시적으로 선택한 경우(sort= 빈 값으로 전송)는
+        // 구분해서 최신순이 그대로 동작하도록 null과 빈 문자열을 다르게 취급한다.
+        $sortParam = $this->request->getGet('sort');
+        $sort      = $sortParam === null ? 'like' : trim($sortParam);
 
         // 맛집 목록 (state=1, 필터 적용)
         $query = $restaurantModel->where('state', 1);
@@ -340,7 +344,10 @@ class Service extends BaseController
         $district = trim($this->request->getGet('district') ?? '');
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
-        $sort     = trim($this->request->getGet('sort')      ?? '');
+        // sort 파라미터가 아예 없으면(최초 진입) 기본 정렬을 '좋아요순'으로,
+        // "최신순"을 명시적으로 선택한 경우(sort= 빈 값)는 구분해서 그대로 동작하게 한다.
+        $sortParam = $this->request->getGet('sort');
+        $sort      = $sortParam === null ? 'like' : trim($sortParam);
 
         $query = $placeModel->where('state', 1);
 
@@ -575,7 +582,10 @@ class Service extends BaseController
         $category = trim($this->request->getGet('category') ?? '');
         $search   = trim($this->request->getGet('q')        ?? '');
         $isFree   = trim($this->request->getGet('is_free')  ?? '');
-        $sort     = trim($this->request->getGet('sort')      ?? '');
+        // sort 파라미터가 아예 없으면(최초 진입) 기본 정렬을 '좋아요순'으로,
+        // "최신순"을 명시적으로 선택한 경우(sort= 빈 값)는 구분해서 그대로 동작하게 한다.
+        $sortParam = $this->request->getGet('sort');
+        $sort      = $sortParam === null ? 'like' : trim($sortParam);
 
         $query = $eventModel->where('state', 1);
 

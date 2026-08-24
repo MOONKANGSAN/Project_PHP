@@ -37,7 +37,7 @@
             선정된 코스는 부산온나 <strong>공식 여행코스</strong>로 등록됩니다
         </p>
         <div class="c-period-row">
-            <span class="c-period-pill">📅 2026.09.01 ~ 2026.09.30</span>
+            <span class="c-period-pill">📅 2026.08.01 ~ 2026.09.30</span>
             <?php
             $status = $event['event_status'] ?? '';
             $statusLabel = ['ongoing' => '진행중', 'upcoming' => '예정', 'ended' => '종료'];

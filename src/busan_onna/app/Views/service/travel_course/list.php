@@ -27,6 +27,9 @@
 <div class="filter-section">
     <div class="container">
         <form class="filter-bar" method="get" action="/travel-courses" id="filterForm">
+            <?php if ($activeSido !== ''): ?>
+            <input type="hidden" name="sido" value="<?= esc($activeSido) ?>">
+            <?php endif; ?>
             <div class="filter-search">
                 <span class="search-icon">🔍</span>
                 <input type="text" name="q"
@@ -34,6 +37,10 @@
                        value="<?= esc($activeSearch) ?>"
                        autocomplete="off">
             </div>
+            <select name="sort" class="filter-select" onchange="this.form.submit()">
+                <option value="" <?= $activeSort === '' ? 'selected' : '' ?>>🆕 최신순</option>
+                <option value="name" <?= $activeSort === 'name' ? 'selected' : '' ?>>🔤 가나다순</option>
+            </select>
             <button type="submit" class="filter-submit-btn">검색</button>
             <?php if ($activeSearch || $activeSido): ?>
             <a href="/travel-courses" class="filter-reset-btn">초기화</a>

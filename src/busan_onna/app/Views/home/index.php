@@ -252,9 +252,7 @@
                     </div>
                     <?php endif; ?>
                     */ ?>
-                    <?php if (($s['like_count'] ?? 0) > 0): ?>
-                    <div class="r-card-likes">♥ <?= (int)$s['like_count'] ?></div>
-                    <?php endif; ?>
+                    <!-- 좋아요 수치는 뷰페이지 정책상 더 이상 노출하지 않음 (정렬 기준으로는 계속 사용) -->
                     <?php if (!empty($s['admission_fee'])): ?>
                     <span class="price-badge">🎫 <?= esc($s['admission_fee']) ?></span>
                     <?php else: ?>
@@ -340,9 +338,7 @@
                     </div>
                     <?php endif; ?>
                     */ ?>
-                    <?php if (($r['like_count'] ?? 0) > 0): ?>
-                    <div class="r-card-likes">♥ <?= (int)$r['like_count'] ?></div>
-                    <?php endif; ?>
+                    <!-- 좋아요 수치는 뷰페이지 정책상 더 이상 노출하지 않음 (정렬 기준으로는 계속 사용) -->
                     <span class="price-badge"><?= esc($restaurantPrices[$priceNum] ?? '') ?></span>
                     <?php if (!empty($r['tags'])): ?>
                     <div class="r-card-tags">

@@ -256,10 +256,7 @@
                     </div>
                     <?php endif; ?>
                     */ ?>
-                    <!-- 좋아요 카운트 (0이면 표시 안 함) -->
-                    <?php if (($f['like_count'] ?? 0) > 0): ?>
-                    <div class="r-card-likes">♥ <?= (int)$f['like_count'] ?></div>
-                    <?php endif; ?>
+                    <!-- 좋아요 수치는 뷰페이지 정책상 더 이상 노출하지 않음 (정렬 기준으로는 계속 사용) -->
 
                     <!-- 무료/유료 배지 -->
                     <?php if (!empty($f['is_free'])): ?>
@@ -324,9 +321,6 @@
                         <span style="font-size:13px; font-weight:700;"><?= number_format($starVal, 1) ?></span>
                         <?php endif; ?>
                         */ ?>
-                        <?php if (($f['like_count'] ?? 0) > 0): ?>
-                        <span class="r-list-likes">♥ <?= (int)$f['like_count'] ?></span>
-                        <?php endif; ?>
                     </div>
 
                     <div class="r-list-info">

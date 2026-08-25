@@ -233,8 +233,8 @@
                     <?php endif; ?>
                     */ ?>
                     <!-- 좋아요 카운트 (0이면 표시 안 함) -->
-                    <?php if (($s['like_count'] ?? 0) > 0): ?>
-                    <div class="r-card-likes">♥ <?= (int)$s['like_count'] ?></div>
+                    <?php if (($s['like_cnt'] ?? 0) > 0): ?>
+                    <div class="r-card-likes">♥ <?= (int)$s['like_cnt'] ?></div>
                     <?php endif; ?>
 
                     <!-- 입장료 -->
@@ -289,8 +289,8 @@
                         <span style="font-size:13px; font-weight:700;"><?= number_format($starVal, 1) ?></span>
                         <?php endif; ?>
                         */ ?>
-                        <?php if (($s['like_count'] ?? 0) > 0): ?>
-                        <span class="r-list-likes">♥ <?= (int)$s['like_count'] ?></span>
+                        <?php if (($s['like_cnt'] ?? 0) > 0): ?>
+                        <span class="r-list-likes">♥ <?= (int)$s['like_cnt'] ?></span>
                         <?php endif; ?>
                     </div>
 

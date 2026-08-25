@@ -74,8 +74,7 @@ class Service extends BaseController
         // 정렬: 좋아요순(reactions 집계) / 최신순(기본) / 가나다순
         switch ($sort) {
             case 'like':
-                $query->select("busan_restaurant.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'restaurant' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_restaurant.idx) AS like_count", false)
-                      ->orderBy('like_count', 'DESC');
+                $query->orderBy('like_cnt', 'DESC');
                 break;
             case 'name':
                 $query->orderBy('name', 'ASC');
@@ -381,8 +380,7 @@ class Service extends BaseController
         // 정렬: 좋아요순(reactions 집계) / 최신순(기본) / 가나다순
         switch ($sort) {
             case 'like':
-                $query->select("busan_place.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'spot' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_place.idx) AS like_count", false)
-                      ->orderBy('like_count', 'DESC');
+                $query->orderBy('like_cnt', 'DESC');
                 break;
             case 'name':
                 $query->orderBy('name', 'ASC');
@@ -622,8 +620,7 @@ class Service extends BaseController
         // 정렬: 좋아요순(reactions 집계) / 최신순(기본, 시작일 기준) / 가나다순
         switch ($sort) {
             case 'like':
-                $query->select("busan_event.*, (SELECT COUNT(*) FROM reactions WHERE reactions.target_type = 'festival' AND reactions.type = 'like' AND reactions.state != 9 AND reactions.target_idx = busan_event.idx) AS like_count", false)
-                      ->orderBy('like_count', 'DESC');
+                $query->orderBy('like_cnt', 'DESC');
                 break;
             case 'name':
                 $query->orderBy('name', 'ASC');

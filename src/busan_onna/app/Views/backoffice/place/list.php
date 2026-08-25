@@ -40,6 +40,7 @@
                 <option value="" <?= $sort === '' ? 'selected' : '' ?>>최신순</option>
                 <option value="like" <?= $sort === 'like' ? 'selected' : '' ?>>좋아요순</option>
                 <option value="name" <?= $sort === 'name' ? 'selected' : '' ?>>가나다순</option>
+                <option value="edit_date" <?= $sort === 'edit_date' ? 'selected' : '' ?>>수정일</option>
             </select>
             <button type="submit" class="bo-btn bo-btn-primary">검색</button>
             <a href="/backoffice/spots" class="bo-btn bo-btn-ghost">초기화</a>

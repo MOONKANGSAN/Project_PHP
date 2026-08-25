@@ -61,6 +61,9 @@ class RestaurantModel extends Model
             case 'name':
                 $this->orderBy('name', 'ASC');
                 break;
+            case 'edit_date':
+                $this->orderBy('edit_date', 'DESC');
+                break;
             case 'new':
             default:
                 $this->orderBy('reg_date', 'DESC')->orderBy('idx', 'DESC');

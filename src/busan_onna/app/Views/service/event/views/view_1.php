@@ -55,7 +55,7 @@
         <p class="g-section-desc">부산에는 아직 알려지지 않은 보석 같은 골목이 가득합니다</p>
         <div class="g-intro-box">
             부산온나에 등록된 관광지·맛집 중 <strong>'숨은 명소'</strong> 태그가 붙은 장소를 직접 방문하고,
-            진솔한 후기와 함께 지정 해시태그를 달아 좋아요를 5개 이상 받으면 자동으로 경품 추첨에 응모됩니다.<br><br>
+            진솔한 후기를 작성하시면 자동으로 경품 추첨에 응모됩니다.<br><br>
             부산의 좁은 골목, 오래된 계단, 동네 카페… 당신만이 아는 부산의 이야기를 부산온나와 함께 기록해보세요.
             <br>
             <span class="g-hashtag">#부산골목탐험</span>
@@ -79,14 +79,14 @@
                 <div class="g-step-num">2</div>
                 <div class="g-step-icon">📸</div>
                 <h3>방문 후 후기 작성</h3>
-                <p>직접 방문하고 사진과 함께 솔직한 후기를 남겨주세요. 반드시 <strong>#부산골목탐험</strong> 포함!</p>
+                <p>직접 방문하고 사진과 함께 솔직한 후기를 남겨주세요!</p>
             </div>
-            <div class="g-step">
+            <!-- <div class="g-step">
                 <div class="g-step-num">3</div>
                 <div class="g-step-icon">❤️</div>
                 <h3>좋아요 5개 달성</h3>
                 <p>작성한 후기에 좋아요가 5개 이상 쌓이면 자동으로 추첨 명단에 등록됩니다.</p>
-            </div>
+            </div> -->
         </div>
     </div>
 </section>

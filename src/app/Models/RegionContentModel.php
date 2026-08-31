@@ -7,11 +7,12 @@ use CodeIgniter\Model;
 /**
  * v_region_content View 전용 읽기 모델
  * busan_restaurant · busan_place · busan_event UNION View를 단일 인터페이스로 조회한다.
+ *
+ * View이므로 primaryKey 미사용 — idx가 content_type별로 독립적으로 존재하여 단독으로는 유일하지 않음
  */
 class RegionContentModel extends Model
 {
     protected $table         = 'v_region_content';
-    protected $primaryKey    = 'idx';
     protected $allowedFields = [];   // View는 쓰기 불가
     protected $useTimestamps = false;
 
@@ -25,8 +26,13 @@ class RegionContentModel extends Model
      */
     public function searchByRegion(string $q, string $regionName, string $type): array
     {
-        $this->where('state', 1)
-             ->like('name', $q, 'both');
+        // 상태 필터는 항상 적용
+        $this->where('state', 1);
+
+        // 검색어가 비어있지 않을 때만 LIKE 조건 추가 (full table scan 방지)
+        if ($q !== '') {
+            $this->like('name', $q, 'both');
+        }
 
         if ($regionName !== '') {
             $this->like('address1', $regionName, 'both');

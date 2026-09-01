@@ -4,9 +4,7 @@ namespace App\Controllers;
 
 use App\Models\BusanMapsModel;
 use App\Models\BusanMapsTop5Model;
-use App\Models\RestaurantModel;
-use App\Models\PlaceModel;
-use App\Models\EventModel;
+use App\Models\RegionContentModel;
 
 /**
  * 백오피스 — 지역별 탐색 관리 컨트롤러
@@ -14,16 +12,18 @@ use App\Models\EventModel;
  */
 class BackofficeRegionExplore extends BaseController
 {
-    private BusanMapsModel    $mapsModel;
+    private BusanMapsModel     $mapsModel;
     private BusanMapsTop5Model $top5Model;
+    private RegionContentModel $contentModel;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request,
                                    \CodeIgniter\HTTP\ResponseInterface $response,
                                    \Psr\Log\LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
-        $this->mapsModel = new BusanMapsModel();
-        $this->top5Model = new BusanMapsTop5Model();
+        $this->mapsModel    = new BusanMapsModel();
+        $this->top5Model    = new BusanMapsTop5Model();
+        $this->contentModel = new RegionContentModel();
     }
 
     /**
@@ -82,7 +82,7 @@ class BackofficeRegionExplore extends BaseController
             return $this->json(['success' => false, 'message' => '존재하지 않는 지역입니다.'], 404);
         }
 
-        $items = $this->top5Model->getTop5ByRegion($regionIdx);
+        $items = $this->top5Model->getTop5WithContent($regionIdx);
 
         return $this->json([
             'success' => true,
@@ -151,88 +151,22 @@ class BackofficeRegionExplore extends BaseController
         // 선택된 지역명 조회 (region_idx가 있을 때만)
         $regionName = '';
         if ($regionIdx > 0) {
-            $region = $this->mapsModel->find($regionIdx);
+            $region     = $this->mapsModel->find($regionIdx);
             $regionName = $region['name'] ?? '';
         }
 
-        $db      = \Config\Database::connect();
+        // v_region_content View 단일 쿼리로 통합 검색
+        $rows    = $this->contentModel->searchByRegion($q, $regionName, $type);
+        $grouped = [];
         $results = [];
-        $queries = [];  // 실행 쿼리 수집
-
-        // ── 맛집 검색 ─────────────────────────────────────────────
-        if ($type === '' || $type === 'restaurant') {
-            $model = new RestaurantModel();
-            $qb    = $model->where('state', 1)->like('name', $q);
-
-            // 지역구 필터: address1에 지역명이 포함된 항목만
-            if ($regionName !== '') {
-                $qb->like('address1', $regionName, 'both');
+        foreach ($rows as $row) {
+            $t = $row['content_type'];
+            if (!isset($grouped[$t])) {
+                $grouped[$t] = 0;
             }
-
-            $rows = $qb->orderBy('name', 'ASC')->findAll(10);
-
-            // 실행된 SQL 수집
-            $queries['restaurant'] = (string) $db->getLastQuery();
-
-            foreach ($rows as $row) {
-                $results[] = [
-                    'content_type' => 'restaurant',
-                    'content_idx'  => (int) $row['idx'],
-                    'type_name'    => '맛집',
-                    'title'        => $row['name'],
-                    'link_url'     => '/restaurants/' . $row['idx'],
-                    'address'      => trim(($row['address1'] ?? '') . ' ' . ($row['address2'] ?? '')),
-                ];
-            }
-        }
-
-        // ── 관광지 검색 ────────────────────────────────────────────
-        if ($type === '' || $type === 'place') {
-            $model = new PlaceModel();
-            $qb    = $model->where('state', 1)->like('name', $q);
-
-            if ($regionName !== '') {
-                $qb->like('address1', $regionName, 'both');
-            }
-
-            $rows = $qb->orderBy('name', 'ASC')->findAll(10);
-
-            $queries['place'] = (string) $db->getLastQuery();
-
-            foreach ($rows as $row) {
-                $results[] = [
-                    'content_type' => 'place',
-                    'content_idx'  => (int) $row['idx'],
-                    'type_name'    => '관광지',
-                    'title'        => $row['name'],
-                    'link_url'     => '/spots/' . $row['idx'],
-                    'address'      => trim(($row['address1'] ?? '') . ' ' . ($row['address2'] ?? '')),
-                ];
-            }
-        }
-
-        // ── 행사·축제 검색 ─────────────────────────────────────────
-        if ($type === '' || $type === 'event') {
-            $model = new EventModel();
-            $qb    = $model->where('state', 1)->like('name', $q);
-
-            if ($regionName !== '') {
-                $qb->like('address1', $regionName, 'both');
-            }
-
-            $rows = $qb->orderBy('name', 'ASC')->findAll(10);
-
-            $queries['event'] = (string) $db->getLastQuery();
-
-            foreach ($rows as $row) {
-                $results[] = [
-                    'content_type' => 'event',
-                    'content_idx'  => (int) $row['idx'],
-                    'type_name'    => '행사/축제',
-                    'title'        => $row['name'],
-                    'link_url'     => '/festivals/' . $row['idx'],
-                    'address'      => trim(($row['address1'] ?? '') . ' ' . ($row['address2'] ?? '')),
-                ];
+            if ($grouped[$t] < 10) {
+                $grouped[$t]++;
+                $results[] = $this->formatSearchResult($row);
             }
         }
 
@@ -241,8 +175,27 @@ class BackofficeRegionExplore extends BaseController
             'region_name' => $regionName ?: null,
             'results'     => $results,
             'total'       => count($results),
-            'debug_sql'   => $queries,   // 실행된 쿼리 (백오피스 전용 디버그)
         ]);
+    }
+
+    /**
+     * v_region_content 행을 검색 결과 응답 형식으로 변환
+     */
+    private function formatSearchResult(array $row): array
+    {
+        static $urlMap  = ['restaurant' => '/restaurants/', 'place' => '/spots/', 'event' => '/festivals/'];
+        static $nameMap = ['restaurant' => '맛집',         'place' => '관광지',  'event' => '행사/축제'];
+
+        $type = $row['content_type'];
+
+        return [
+            'content_type' => $type,
+            'content_idx'  => (int) $row['idx'],
+            'type_name'    => $nameMap[$type] ?? $type,
+            'title'        => $row['name'],
+            'link_url'     => ($urlMap[$type] ?? '/') . $row['idx'],
+            'address'      => trim(($row['address1'] ?? '') . ' ' . ($row['address2'] ?? '')),
+        ];
     }
 
     // ----------------------------------------------------------------
@@ -270,7 +223,7 @@ class BackofficeRegionExplore extends BaseController
             return $this->json(['success' => false, 'message' => '존재하지 않는 지역입니다.'], 404);
         }
 
-        $items = $this->top5Model->getActiveByRegion($regionIdx);
+        $items = $this->top5Model->getTop5WithContent($regionIdx);
 
         return $this->json([
             'success' => true,

@@ -83,4 +83,27 @@ class BusanMapsTop5Model extends Model
                     ->orderBy('sort_order', 'ASC')
                     ->findAll();
     }
+
+    /**
+     * 특정 지역의 TOP5와 연결 콘텐츠 상세를 JOIN하여 반환
+     * busan_maps_top5 LEFT JOIN v_region_content
+     * content_name, content_address1 컬럼이 추가된다 (콘텐츠가 삭제된 경우 NULL).
+     */
+    public function getTop5WithContent(int $mainIdx): array
+    {
+        return \Config\Database::connect()
+            ->table('busan_maps_top5 t')
+            ->select('t.*, v.name AS content_name, v.address1 AS content_address1')
+            ->join(
+                'v_region_content v',
+                'v.content_type = t.content_type AND v.idx = t.content_idx',
+                'left'
+            )
+            ->where('t.main_idx', $mainIdx)
+            ->where('t.state', 1)
+            ->orderBy('t.sort_order', 'ASC')
+            ->orderBy('t.idx', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
 }

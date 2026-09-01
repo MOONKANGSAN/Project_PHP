@@ -40,6 +40,26 @@ $routes->post('/events/(:num)/gukbap-like', 'Service::eventLikeStore/$1');
 $routes->get('/events/course-content-search', 'Service::courseContentSearch');
 $routes->post('/events/(:num)/course-submit', 'Service::courseSubmit/$1');
 
+// 굿즈샵 — 상품 목록/상세
+$routes->get('/goods',        'Goods::index');
+$routes->get('/goods/(:num)', 'Goods::detail/$1');
+
+// 장바구니 (로그인 필요)
+$routes->get('/cart',          'Cart::index');
+$routes->post('/cart/add',     'Cart::add');
+$routes->post('/cart/update',  'Cart::update');
+$routes->post('/cart/remove',  'Cart::remove');
+
+// 주문·결제 (로그인 필요)
+$routes->get('/order',                    'Order::form');
+$routes->post('/order/store',             'Order::store');
+$routes->post('/order/verify',            'Order::verify');
+$routes->get('/order/complete/(:num)',    'Order::complete/$1');
+
+// 마이페이지 — 주문내역
+$routes->get('/mypage/orders',         'Order::myOrders');
+$routes->get('/mypage/orders/(:num)',  'Order::myOrderDetail/$1');
+
 // 고객센터
 $routes->get('/customer',                      'Customer::index');
 $routes->get('/customer/ajax/notice',          'Customer::ajaxNotice');
@@ -185,4 +205,30 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->post('site-events/(:num)/edit',    'BackofficeSiteEvent::update/$1');
     $routes->post('site-events/(:num)/state',   'BackofficeSiteEvent::toggleState/$1');
     $routes->post('site-events/(:num)/delete',  'BackofficeSiteEvent::delete/$1');
+
+    // 굿즈 상품 관리
+    $routes->get('goods',                     'BackofficeGoods::list');
+    $routes->get('goods/register',            'BackofficeGoods::register');
+    $routes->post('goods/register',           'BackofficeGoods::store');
+    $routes->get('goods/(:num)/edit',         'BackofficeGoods::edit/$1');
+    $routes->post('goods/(:num)/edit',        'BackofficeGoods::update/$1');
+    $routes->post('goods/(:num)/state',       'BackofficeGoods::toggleState/$1');
+    $routes->post('goods/(:num)/delete',      'BackofficeGoods::delete/$1');
+
+    // 픽업 장소 관리
+    $routes->get('pickup-locations',               'BackofficeGoods::pickupList');
+    $routes->post('pickup-locations/store',        'BackofficeGoods::pickupStore');
+    $routes->post('pickup-locations/(:num)/state', 'BackofficeGoods::pickupToggle/$1');
+
+    // 주문 관리
+    $routes->get('orders',                    'BackofficeOrders::list');
+    $routes->get('orders/(:num)',             'BackofficeOrders::detail/$1');
+    $routes->post('orders/(:num)/status',    'BackofficeOrders::updateStatus/$1');
+    $routes->post('orders/(:num)/delivery',  'BackofficeOrders::saveDelivery/$1');
+
+    // 판매자 관리
+    $routes->get('vendors',                   'BackofficeVendors::list');
+    $routes->get('vendors/(:num)',            'BackofficeVendors::detail/$1');
+    $routes->post('vendors/(:num)/approve',  'BackofficeVendors::approve/$1');
+    $routes->post('vendors/(:num)/reject',   'BackofficeVendors::reject/$1');
 });

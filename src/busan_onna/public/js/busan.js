@@ -59,6 +59,7 @@ document.addEventListener('error', function (e) {
     if (!svg || !infoContent) return;
 
     // 구별 데이터: 좌표는 실제 busan_map.svg 의 1254×1254 viewBox 기준 (구 중심점)
+    // svg 위에 올라갈 좌표를 지정함
     const districts = [
         {
             id: 'gijang',    name: '기장군',   cx: 992, cy: 341, color: '#6c5ce7',

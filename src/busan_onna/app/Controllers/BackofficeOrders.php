@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\OrderModel;
+use App\Models\OrderItemModel;
+use App\Models\DeliveryModel;
+
+/**
+ * 백오피스 — 주문 관리 컨트롤러
+ * /backoffice/orders/* 요청을 처리한다.
+ */
+class BackofficeOrders extends BaseController
+{
+    // 주문 모델 인스턴스
+    private OrderModel $model;
+
+    /**
+     * 컨트롤러 초기화 — 부모 initController 호출 후 모델 바인딩
+     */
+    public function initController(
+        \CodeIgniter\HTTP\RequestInterface  $req,
+        \CodeIgniter\HTTP\ResponseInterface $res,
+        \Psr\Log\LoggerInterface            $logger
+    ): void {
+        parent::initController($req, $res, $logger);
+        $this->model = new OrderModel();
+    }
+
+    /**
+     * 공통 뷰 데이터 구성
+     * 페이지 제목·관리자 세션 정보·현재 URI를 배열로 반환
+     */
+    private function base(string $title, array $extra = []): array
+    {
+        return array_merge([
+            'page_title'  => $title,
+            'admin'       => [
+                'idx'   => session()->get('backoffice.idx'),
+                'id'    => session()->get('backoffice.id'),
+                'level' => session()->get('backoffice.level'),
+            ],
+            'current_uri' => '/' . uri_string(),
+        ], $extra);
+    }
+
+    /**
+     * GET /backoffice/orders
+     * 주문 목록 — status·q(주문번호) 필터 지원
+     */
+    public function list(): string
+    {
+        // 상태 필터 및 검색어 수신
+        $status = trim($this->request->getGet('status') ?? '');
+        $q      = trim($this->request->getGet('q')      ?? '');
+
+        // 모델에서 페이지네이션 적용 목록 조회
+        $orders = $this->model->getAdminList($status, $q);
+
+        return view('backoffice/orders/list', $this->base('주문 관리', [
+            'orders'  => $orders,
+            'pager'   => $this->model->pager,
+            'status'  => $status,
+            'q'       => $q,
+            'labels'  => OrderModel::STATUS_LABELS,
+        ]));
+    }
+
+    /**
+     * GET /backoffice/orders/{idx}
+     * 주문 상세 — 주문·상품·배송 정보 일괄 조회
+     */
+    public function detail(int $idx): string
+    {
+        // 주문 기본 정보
+        $order    = $this->model->find($idx);
+        // 주문 상품 목록
+        $items    = (new OrderItemModel())->getByOrder($idx);
+        // 배송(송장) 정보
+        $delivery = (new DeliveryModel())->getByOrder($idx);
+
+        return view('backoffice/orders/detail', $this->base('주문 상세', [
+            'order'    => $order,
+            'items'    => $items,
+            'delivery' => $delivery,
+            'labels'   => OrderModel::STATUS_LABELS,
+            'couriers' => DeliveryModel::COURIERS,
+        ]));
+    }
+
+    /**
+     * POST /backoffice/orders/{idx}/status
+     * 주문 상태 변경 — STATUS_LABELS에 없는 값은 무시
+     */
+    public function updateStatus(int $idx)
+    {
+        // 전송된 상태값이 유효한 경우에만 업데이트
+        $status = trim($this->request->getPost('status') ?? '');
+        if (array_key_exists($status, OrderModel::STATUS_LABELS)) {
+            $this->model->update($idx, ['status' => $status]);
+        }
+        return redirect()->to("/backoffice/orders/{$idx}")->with('success', '상태가 변경되었습니다.');
+    }
+
+    /**
+     * POST /backoffice/orders/{idx}/delivery
+     * 송장번호 저장 — 저장 후 주문 상태를 shipped로 자동 변경
+     */
+    public function saveDelivery(int $idx)
+    {
+        // 택배사 코드 및 송장번호 수신
+        $courier    = trim($this->request->getPost('courier')     ?? '');
+        $trackingNo = trim($this->request->getPost('tracking_no') ?? '');
+
+        // 배송 정보 upsert (없으면 insert, 있으면 update)
+        (new DeliveryModel())->upsert($idx, $courier, $trackingNo);
+        // 주문 상태를 배송중으로 자동 전환
+        $this->model->update($idx, ['status' => 'shipped']);
+
+        return redirect()->to("/backoffice/orders/{$idx}")->with('success', '송장번호가 저장되었습니다.');
+    }
+}

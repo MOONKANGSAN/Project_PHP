@@ -18,7 +18,7 @@
     <style>
         /* ---- 주문 완료 페이지 전용 스타일 ---- */
         .complete-section {
-            padding: 60px 0 100px;
+            padding: 128px 0 100px; /* 68px 고정 네비바 + 60px 여백 */
             text-align: center;
         }
 

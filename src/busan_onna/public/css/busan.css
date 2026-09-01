@@ -110,6 +110,19 @@ ul { list-style: none; }
 .btn-auth.login:hover  { background: rgba(255,255,255,0.1); color: #fff; }
 .btn-auth.signup { background: var(--accent); color: #fff; }
 .btn-auth.signup:hover { background: var(--accent-hover); }
+.btn-auth.logout { color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.25); }
+.btn-auth.logout:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+/* 장바구니 아이콘 버튼 */
+.btn-cart-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.85);
+    transition: var(--transition);
+    padding: 4px;
+}
+.btn-cart-icon:hover { color: #fff; }
 
 /* =============================================
    메인 배너 슬라이더

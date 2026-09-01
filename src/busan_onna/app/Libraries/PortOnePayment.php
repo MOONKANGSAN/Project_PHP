@@ -34,6 +34,13 @@ class PortOnePayment
             $token    = $this->getToken();
             $response = $this->request('GET', "/payments/{$impUid}", [], $token);
 
+            // 디버그: PortOne 응답 전체를 CI4 로그에 기록 (확인 후 제거)
+            log_message('debug', '[PortOne verify] imp_uid=' . $impUid
+                . ' | code=' . ($response['code'] ?? 'N/A')
+                . ' | message=' . ($response['message'] ?? '')
+                . ' | status=' . ($response['response']['status'] ?? 'N/A')
+                . ' | amount=' . ($response['response']['amount'] ?? 'N/A'));
+
             if ($response['code'] !== 0) {
                 return ['valid' => false, 'data' => null, 'error' => $response['message']];
             }
@@ -51,6 +58,7 @@ class PortOnePayment
             return ['valid' => true, 'data' => $payment, 'error' => ''];
 
         } catch (\Throwable $e) {
+            log_message('error', '[PortOne verify] exception: ' . $e->getMessage());
             return ['valid' => false, 'data' => null, 'error' => $e->getMessage()];
         }
     }
@@ -85,12 +93,16 @@ class PortOnePayment
             $headers[] = "Authorization: Bearer {$token}";
         }
 
+        // 운영 환경에서만 SSL 인증서 검증 — 로컬 Windows 개발 환경은 CA 번들 미설정으로 검증 실패
+        $sslVerify = (ENVIRONMENT === 'production');
+
         $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => $headers,
             CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_TIMEOUT        => 10,
-            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYPEER => $sslVerify,
+            CURLOPT_SSL_VERIFYHOST => $sslVerify ? 2 : 0,
         ];
 
         if ($method !== 'GET' && !empty($body)) {

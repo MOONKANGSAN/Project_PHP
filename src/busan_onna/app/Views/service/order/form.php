@@ -21,7 +21,7 @@
     <style>
         /* ---- 주문서 페이지 전용 스타일 ---- */
         .order-section {
-            padding: 48px 0 80px;
+            padding: 116px 0 80px; /* 68px 고정 네비바 + 48px 여백 */
         }
         .order-section h2 {
             font-size: 24px;
@@ -165,12 +165,46 @@
             border-color: #e55039;
         }
 
+        /* 결제 수단 선택 */
+        .pay-method-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .pay-method-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            background: #fff;
+            transition: border-color .15s, background .15s, color .15s;
+            user-select: none;
+        }
+        .pay-method-btn img {
+            height: 24px;
+            object-fit: contain;
+        }
+        .pay-method-btn.active {
+            border-color: #e55039;
+            background: #fff5f3;
+            color: #e55039;
+        }
+
         /* 결제 버튼 */
         .btn-pay {
             display: block;
             width: 100%;
             padding: 16px;
-            margin-top: 24px;
+            margin-top: 4px;
             background: #e55039;
             color: #fff;
             font-size: 17px;
@@ -308,6 +342,28 @@
                         </div>
                     </div>
 
+                </div>
+
+                <!-- 결제 수단 선택 -->
+                <div class="order-card" style="margin-top:16px;">
+                    <h3>결제 수단</h3>
+                    <div class="pay-method-group">
+                        <button type="button" class="pay-method-btn active" data-method="inicis">
+                            <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
+                                <rect width="28" height="20" rx="4" fill="#1a4fd8"/>
+                                <text x="14" y="14" text-anchor="middle" fill="#fff" font-size="8" font-weight="700" font-family="sans-serif">CARD</text>
+                            </svg>
+                            신용카드
+                        </button>
+                        <button type="button" class="pay-method-btn" data-method="kakao">
+                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                                <circle cx="14" cy="14" r="14" fill="#FEE500"/>
+                                <path d="M14 6.5C9.306 6.5 5.5 9.48 5.5 13.15c0 2.35 1.56 4.41 3.91 5.6l-.98 3.64c-.08.3.27.54.54.37L13.3 20.4c.23.02.46.03.7.03 4.694 0 8.5-2.98 8.5-6.65C22.5 9.48 18.694 6.5 14 6.5z" fill="#3C1E1E"/>
+                            </svg>
+                            카카오페이
+                        </button>
+                    </div>
+
                     <!-- 결제하기 버튼 -->
                     <button type="button" id="btnPay" class="btn-pay">
                         결제하기 (<?= number_format($total) ?>원)
@@ -336,14 +392,38 @@
     /* PortOne IMP 초기화 */
     IMP.init('<?= esc($impCode) ?>');
 
+    /* 채널키를 pg 파라미터에 직접 사용 — 가맹점 등록 채널로 처리되어 REST API 조회 가능 */
+    const PG_MAP = {
+        inicis : '<?= esc($inicisChannelKey) ?>',
+        kakao  : '<?= esc($kakaoChannelKey) ?>',
+    };
+
+    /* 카카오페이는 pay_method를 PG사가 자체 처리 */
+    const METHOD_MAP = {
+        inicis : 'card',
+        kakao  : 'card',
+    };
+
+    /* 현재 선택된 결제 수단 */
+    let selectedMethod = 'inicis';
+
+    /* 결제 수단 버튼 클릭 */
+    document.querySelectorAll('.pay-method-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.pay-method-btn').forEach(function (b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            selectedMethod = btn.dataset.method;
+        });
+    });
+
     const btnPay       = document.getElementById('btnPay');
     const radios       = document.querySelectorAll('input[name="delivery_type"]');
     const fieldsParcel = document.getElementById('fieldsParcel');
     const fieldsPickup = document.getElementById('fieldsPickup');
 
-    /**
-     * 배송 방법 라디오 변경 시 해당 입력 폼 토글
-     */
+    /* 배송 방법 라디오 변경 시 입력 폼 토글 */
     radios.forEach(function (radio) {
         radio.addEventListener('change', function () {
             if (radio.value === '1') {
@@ -356,10 +436,6 @@
         });
     });
 
-    /**
-     * 현재 선택된 배송 유형 반환
-     * @returns {string} '1' = 택배, '2' = 픽업
-     */
     function getDeliveryType() {
         const checked = document.querySelector('input[name="delivery_type"]:checked');
         return checked ? checked.value : '1';
@@ -367,10 +443,10 @@
 
     /**
      * 결제하기 버튼 클릭 처리
-     * 1단계: POST /order/store 로 주문 레코드 생성 (pending)
-     * 2단계: PortOne IMP.request_pay 로 결제창 호출
-     * 3단계: POST /order/verify 로 서버 검증 후 주문 확정
-     * 4단계: 성공 시 주문 완료 페이지로 이동
+     * 1단계: POST /order/store — 주문 레코드 생성 (pending)
+     * 2단계: IMP.request_pay  — 선택한 PG 결제창 호출
+     * 3단계: POST /order/verify — 서버 금액 검증 + 주문 확정
+     * 4단계: /order/complete/{idx} 이동
      */
     btnPay.addEventListener('click', function () {
         const deliveryType = getDeliveryType();
@@ -385,8 +461,7 @@
                 return;
             }
         } else {
-            const pickup = document.getElementById('pickupLocation').value;
-            if (!pickup) {
+            if (!document.getElementById('pickupLocation').value) {
                 alert('픽업 장소를 선택해주세요.');
                 return;
             }
@@ -395,7 +470,7 @@
         btnPay.disabled    = true;
         btnPay.textContent = '처리 중...';
 
-        /* 1단계: 주문 레코드 생성 (pending) */
+        /* 1단계: 주문 레코드 생성 */
         const formData = new URLSearchParams();
         formData.append('delivery_type', deliveryType);
 
@@ -423,14 +498,14 @@
                 return;
             }
 
-            const orderIdx  = data.order_idx;
-            const orderNo   = data.order_no;
+            const orderIdx   = data.order_idx;
+            const orderNo    = data.order_no;
             const totalPrice = data.total_price;
 
-            /* 2단계: PortOne 결제창 호출 */
+            /* 2단계: 선택한 결제 수단으로 결제창 호출 */
             IMP.request_pay({
-                pg          : 'html5_inicis',
-                pay_method  : 'card',
+                pg          : PG_MAP[selectedMethod],
+                pay_method  : METHOD_MAP[selectedMethod],
                 merchant_uid: orderNo,
                 name        : '부산온나 굿즈 주문',
                 amount      : totalPrice,
@@ -444,7 +519,6 @@
                                 ? document.getElementById('deliveryAddress').value.trim()
                                 : '',
             }, function (rsp) {
-                /* 결제창 콜백 */
                 if (!rsp.success) {
                     alert(rsp.error_msg || '결제에 실패했습니다.');
                     resetBtn();
@@ -466,7 +540,7 @@
                 .then(function (res) { return res.json(); })
                 .then(function (vData) {
                     if (vData.success) {
-                        /* 4단계: 주문 완료 페이지로 이동 */
+                        /* 4단계: 주문 완료 페이지 이동 */
                         location.href = '/order/complete/' + vData.order_idx;
                     } else {
                         alert(vData.message || '결제 검증에 실패했습니다.');
@@ -485,9 +559,6 @@
         });
     });
 
-    /**
-     * 결제 버튼 상태 초기화
-     */
     function resetBtn() {
         btnPay.disabled    = false;
         btnPay.textContent = '결제하기 (<?= number_format($total) ?>원)';

@@ -57,10 +57,12 @@ class Order extends BaseController
         $pickups = (new PickupLocationModel())->getActive();
 
         return view('service/order/form', [
-            'cartItems' => $items,
-            'total'     => $total,
-            'pickups'   => $pickups,
-            'impCode'   => env('PORTONE_IMP_CODE', 'imp00000000'),
+            'cartItems'        => $items,
+            'total'            => $total,
+            'pickups'          => $pickups,
+            'impCode'          => env('PORTONE_IMP_CODE', ''),
+            'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
+            'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
         ]);
     }
 

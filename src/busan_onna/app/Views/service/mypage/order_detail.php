@@ -18,7 +18,7 @@
     <style>
         /* ---- 주문 상세 페이지 전용 스타일 ---- */
         .order-detail-section {
-            padding: 48px 0 80px;
+            padding: 116px 0 80px; /* 68px 고정 네비바 + 48px 여백 */
         }
 
         /* 뒤로 가기 링크 */

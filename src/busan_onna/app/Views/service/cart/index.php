@@ -18,7 +18,7 @@
     <style>
         /* ---- 장바구니 페이지 전용 스타일 ---- */
         .cart-section {
-            padding: 48px 0 80px;
+            padding: 116px 0 80px; /* 68px 고정 네비바 + 48px 여백 */
         }
         .cart-section h2 {
             font-size: 24px;

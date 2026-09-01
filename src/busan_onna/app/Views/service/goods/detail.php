@@ -38,7 +38,7 @@
     <style>
         /* ---- 굿즈 상세 전용 스타일 ---- */
         .goods-detail-section {
-            padding: 48px 0 80px;
+            padding: 116px 0 80px; /* 68px 고정 네비바 + 48px 여백 */
         }
         .goods-detail-wrap {
             display: grid;

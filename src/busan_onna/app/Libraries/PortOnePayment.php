@@ -31,18 +31,20 @@ class PortOnePayment
     public function verify(string $impUid, int $expectedAmount): array
     {
         try {
-            $token    = $this->getToken();
-            $response = $this->request('GET', "/payments/{$impUid}", [], $token);
+            /* [DEBUG] 토큰 발급에 사용 중인 키 앞 8자 확인 */
+            log_message('debug', '[PortOne] impKey=' . substr($this->impKey, 0, 8) . '...');
 
-            // 디버그: PortOne 응답 전체를 CI4 로그에 기록 (확인 후 제거)
-            log_message('debug', '[PortOne verify] imp_uid=' . $impUid
-                . ' | code=' . ($response['code'] ?? 'N/A')
-                . ' | message=' . ($response['message'] ?? '')
-                . ' | status=' . ($response['response']['status'] ?? 'N/A')
-                . ' | amount=' . ($response['response']['amount'] ?? 'N/A'));
+            $token    = $this->getToken();
+            log_message('debug', '[PortOne] token 발급 성공 (앞 20자): ' . substr($token, 0, 20));
+
+            [$response, $raw] = $this->requestWithRaw('GET', "/payments/{$impUid}", [], $token);
+
+            /* [DEBUG] PortOne raw 응답 전체 로그 */
+            log_message('debug', '[PortOne verify] raw=' . $raw);
 
             if ($response['code'] !== 0) {
-                return ['valid' => false, 'data' => null, 'error' => $response['message']];
+                return ['valid' => false, 'data' => null, 'error' => $response['message'],
+                        '_raw' => $raw];
             }
 
             $payment = $response['response'];
@@ -68,22 +70,23 @@ class PortOnePayment
      */
     private function getToken(): string
     {
-        $response = $this->request('POST', '/users/getToken', [
+        [$response, $raw] = $this->requestWithRaw('POST', '/users/getToken', [
             'imp_key'    => $this->impKey,
             'imp_secret' => $this->impSecret,
         ]);
 
         if ($response['code'] !== 0) {
-            throw new \RuntimeException('PortOne 토큰 발급 실패: ' . $response['message']);
+            throw new \RuntimeException('PortOne 토큰 발급 실패: ' . $response['message'] . ' | raw=' . $raw);
         }
 
         return $response['response']['access_token'];
     }
 
     /**
-     * PortOne REST API HTTP 요청
+     * PortOne REST API HTTP 요청 — 응답 원본(raw)도 함께 반환
+     * @return array{0: array, 1: string}
      */
-    private function request(string $method, string $path, array $body = [], string $token = ''): array
+    private function requestWithRaw(string $method, string $path, array $body = [], string $token = ''): array
     {
         $url  = $this->baseUrl . $path;
         $curl = curl_init($url);
@@ -111,19 +114,22 @@ class PortOnePayment
 
         curl_setopt_array($curl, $options);
 
-        $result = curl_exec($curl);
-        $error  = curl_error($curl);
+        $raw   = curl_exec($curl);
+        $error = curl_error($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
-        if ($result === false) {
+        log_message('debug', '[PortOne cURL] ' . $method . ' ' . $url . ' → HTTP ' . $httpCode);
+
+        if ($raw === false) {
             throw new \RuntimeException('cURL 오류: ' . $error);
         }
 
-        $decoded = json_decode($result, true);
+        $decoded = json_decode($raw, true);
         if ($decoded === null) {
-            throw new \RuntimeException('PortOne 응답 파싱 실패');
+            throw new \RuntimeException('PortOne 응답 파싱 실패 | raw=' . $raw);
         }
 
-        return $decoded;
+        return [$decoded, $raw];
     }
 }

@@ -159,6 +159,21 @@ class Order extends BaseController
         $orderIdx = (int) ($body['order_idx'] ?? 0);
         $userIdx  = $this->userIdx();
 
+        /* [DEBUG] 런타임에서 실제 읽히는 PortOne 키 앞자리 확인 — 문제 해결 후 제거 */
+        $debugKey    = env('PORTONE_IMP_KEY', '');
+        $debugSecret = env('PORTONE_IMP_SECRET', '');
+        log_message('debug', '[Order::verify] impKey=' . $debugKey . ' | impSecret(앞20)=' . substr($debugSecret, 0, 20));
+
+        /* 브라우저에서 바로 확인할 수 있도록 임시 조기 반환 — 키 확인 후 제거 */
+        if ($this->request->getGet('debug_key') === '1') {
+            echo json_encode([
+                'imp_key_read'    => $debugKey,
+                'imp_secret_head' => substr($debugSecret, 0, 20) . '...',
+                'imp_code_read'   => env('PORTONE_IMP_CODE', 'NOT_FOUND'),
+            ]);
+            return;
+        }
+
         $orderModel = new OrderModel();
         $order      = $orderModel->where('idx', $orderIdx)
                                  ->where('user_idx', $userIdx)
@@ -166,7 +181,12 @@ class Order extends BaseController
 
         /* 주문이 존재하지 않거나 이미 처리된 경우 */
         if (!$order || $order['status'] !== 'pending') {
-            echo json_encode(['success' => false, 'message' => '유효하지 않은 주문입니다.']);
+            /* [DEBUG] 주문 조회 실패 원인 출력 */
+            echo json_encode([
+                'success'    => false,
+                'message'    => '유효하지 않은 주문입니다.',
+                '_debug'     => ['order_found' => !empty($order), 'status' => $order['status'] ?? 'N/A'],
+            ]);
             return;
         }
 
@@ -175,7 +195,17 @@ class Order extends BaseController
         $result  = $portone->verify($impUid, (int) $order['total_price']);
 
         if (!$result['valid']) {
-            echo json_encode(['success' => false, 'message' => $result['error']]);
+            /* [DEBUG] PortOne API 오류 원인 상세 출력 */
+            echo json_encode([
+                'success' => false,
+                'message' => $result['error'],
+                '_debug'  => [
+                    'imp_uid'          => $impUid,
+                    'expected_amount'  => (int) $order['total_price'],
+                    'portone_response' => $result['data'],
+                    'portone_raw'      => $result['_raw'] ?? null,
+                ],
+            ]);
             return;
         }
 

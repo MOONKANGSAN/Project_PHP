@@ -310,17 +310,17 @@
                         <div class="form-group">
                             <label for="recipientName">수령인 이름</label>
                             <input type="text" id="recipientName" name="recipient_name"
-                                   class="form-control" placeholder="홍길동">
+                                   class="form-control" placeholder="홍길동" value="문강산">
                         </div>
                         <div class="form-group">
                             <label for="recipientPhone">수령인 연락처</label>
                             <input type="tel" id="recipientPhone" name="recipient_phone"
-                                   class="form-control" placeholder="010-0000-0000">
+                                   class="form-control" placeholder="010-0000-0000" value="01012345678">
                         </div>
                         <div class="form-group">
                             <label for="deliveryAddress">배송지 주소</label>
                             <input type="text" id="deliveryAddress" name="delivery_address"
-                                   class="form-control" placeholder="도로명 주소를 입력하세요">
+                                   class="form-control" placeholder="도로명 주소를 입력하세요" value="부산광역시 부산진구 부전동 123-45">
                         </div>
                     </div>
 
@@ -392,13 +392,13 @@
     /* PortOne IMP 초기화 */
     IMP.init('<?= esc($impCode) ?>');
 
-    /* 채널키를 pg 파라미터에 직접 사용 — 가맹점 등록 채널로 처리되어 REST API 조회 가능 */
+    /* V1 REST API 조회를 위해 pg 파라미터에 PG사코드.MID 형식 사용 */
     const PG_MAP = {
-        inicis : '<?= esc($inicisChannelKey) ?>',
-        kakao  : '<?= esc($kakaoChannelKey) ?>',
+        inicis : 'html5_inicis.INIBillTst',
+        kakao  : 'kakaopay.TC0ONETIME',
     };
 
-    /* 카카오페이는 pay_method를 PG사가 자체 처리 */
+    /* 결제 수단 */
     const METHOD_MAP = {
         inicis : 'card',
         kakao  : 'card',
@@ -503,7 +503,7 @@
             const totalPrice = data.total_price;
 
             /* 2단계: 선택한 결제 수단으로 결제창 호출 */
-            IMP.request_pay({
+            const payParams = {
                 pg          : PG_MAP[selectedMethod],
                 pay_method  : METHOD_MAP[selectedMethod],
                 merchant_uid: orderNo,
@@ -518,7 +518,14 @@
                 buyer_addr  : deliveryType === '1'
                                 ? document.getElementById('deliveryAddress').value.trim()
                                 : '',
-            }, function (rsp) {
+            };
+
+            console.log('[결제요청 파라미터]', JSON.stringify(payParams));
+
+            IMP.request_pay(payParams, function (rsp) {
+                /* 디버그: 콜백 전체 확인 (문제 해결 후 제거) */
+                console.log('[IMP 콜백 rsp]', JSON.stringify(rsp));
+
                 if (!rsp.success) {
                     alert(rsp.error_msg || '결제에 실패했습니다.');
                     resetBtn();
@@ -526,19 +533,20 @@
                 }
 
                 /* 3단계: 서버 결제 검증 */
+                const verifyBody = { imp_uid: rsp.imp_uid, order_idx: orderIdx };
+                console.log('[verify 요청 body]', JSON.stringify(verifyBody));
+
                 fetch('/order/verify', {
                     method  : 'POST',
                     headers : {
                         'Content-Type'     : 'application/json',
                         'X-Requested-With' : 'XMLHttpRequest',
                     },
-                    body    : JSON.stringify({
-                        imp_uid   : rsp.imp_uid,
-                        order_idx : orderIdx,
-                    }),
+                    body    : JSON.stringify(verifyBody),
                 })
                 .then(function (res) { return res.json(); })
                 .then(function (vData) {
+                    console.log('[verify 응답]', JSON.stringify(vData));
                     if (vData.success) {
                         /* 4단계: 주문 완료 페이지 이동 */
                         location.href = '/order/complete/' + vData.order_idx;

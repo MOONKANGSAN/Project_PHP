@@ -393,6 +393,7 @@
     const V2_STORE_ID        = '<?= esc($v2StoreId) ?>';
     const INICIS_CHANNEL_KEY = '<?= esc($inicisChannelKey) ?>';
     const KAKAO_CHANNEL_KEY  = '<?= esc($kakaoChannelKey) ?>';
+    const USER_EMAIL         = '<?= esc($userEmail) ?>';
 
     /* 현재 선택된 결제 수단 */
     let selectedMethod = 'inicis';
@@ -529,7 +530,7 @@
                 orderName  : '부산온나 굿즈 주문',
                 totalAmount: totalPrice,
                 currency   : 'KRW',
-                customer   : { fullName: buyerName, phoneNumber: buyerTel },
+                customer   : { fullName: buyerName, phoneNumber: buyerTel, email: USER_EMAIL },
             };
 
             if (selectedMethod === 'kakao') {
@@ -544,15 +545,21 @@
                 .then(function (rsp) {
                     /* rsp.code 존재 시 오류 또는 사용자 취소 */
                     if (rsp && rsp.code !== undefined) {
-                        alert(rsp.message || '결제가 취소되었습니다.');
+                        console.error('[PortOne] then 오류 rsp:', JSON.stringify(rsp));
+                        alert('[' + rsp.code + '] ' + (rsp.message || '결제가 취소되었습니다.'));
                         resetBtn();
                         return;
                     }
                     /* 3단계: 서버 검증 */
                     callVerify(orderNo, orderIdx);
                 })
-                .catch(function () {
-                    alert('결제 처리 중 오류가 발생했습니다.');
+                .catch(function (err) {
+                    /* SDK가 Promise reject 시 — 400 Bad Request 등 준비 단계 오류 */
+                    console.error('[PortOne] catch 오류 err:', err);
+                    var msg = (err && err.message)
+                        ? err.message
+                        : (err && err.code ? err.code : JSON.stringify(err));
+                    alert('[결제 준비 오류] ' + (msg || '알 수 없는 오류'));
                     resetBtn();
                 });
         })

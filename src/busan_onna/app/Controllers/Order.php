@@ -8,6 +8,7 @@ use App\Models\OrderItemModel;
 use App\Models\PickupLocationModel;
 use App\Models\GoodsModel;
 use App\Models\GoodsOptionValueModel;
+use App\Models\UserInfoModel;
 use App\Libraries\PortOnePayment;
 
 /**
@@ -56,6 +57,10 @@ class Order extends BaseController
         ));
         $pickups = (new PickupLocationModel())->getActive();
 
+        // PortOne V2 customer.email 필수값 — user_info 에서 조회
+        $userInfo  = (new UserInfoModel())->find($userIdx);
+        $userEmail = $userInfo['email'] ?? '';
+
         return view('service/order/form', [
             'cartItems'        => $items,
             'total'            => $total,
@@ -63,6 +68,7 @@ class Order extends BaseController
             'v2StoreId'        => env('PORTONE_V2_STORE_ID', ''),
             'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
             'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
+            'userEmail'        => $userEmail,
         ]);
     }
 

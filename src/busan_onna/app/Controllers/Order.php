@@ -38,7 +38,7 @@ class Order extends BaseController
 
     /**
      * GET /order — 주문서 폼
-     * 장바구니 항목을 가져와 주문서 화면에 표시
+     * cart_ids 쿼리스트링이 있으면 해당 항목만, 없으면 전체 장바구니를 표시
      */
     public function form(): string
     {
@@ -48,6 +48,21 @@ class Order extends BaseController
 
         if (empty($items)) {
             return redirect()->to('/cart')->with('error', '장바구니가 비어있습니다.');
+        }
+
+        /* cart_ids 쿼리스트링으로 선택 항목 필터링 (ex: ?cart_ids=1,2,3) */
+        $cartIdsParam = trim($this->request->getGet('cart_ids') ?? '');
+        if ($cartIdsParam !== '') {
+            $allowedIds = array_map('intval', explode(',', $cartIdsParam));
+            /* 본인 장바구니 항목 중에서만 필터 — 타인 idx 주입 방지 */
+            $items = array_values(array_filter(
+                $items,
+                fn($i) => in_array((int)$i['idx'], $allowedIds, true)
+            ));
+        }
+
+        if (empty($items)) {
+            return redirect()->to('/cart')->with('error', '선택된 상품이 없습니다.');
         }
 
         /* 장바구니 항목의 총액 계산 (단가 + 옵션 추가금액) × 수량 */
@@ -61,10 +76,16 @@ class Order extends BaseController
         $userInfo  = (new UserInfoModel())->find($userIdx);
         $userEmail = $userInfo['email'] ?? '';
 
+        /* 실제 렌더링될 항목의 idx를 콤마 구분 문자열로 store()에 전달 */
+        $cartIdsStr = implode(',', array_column($items, 'idx'));
+
         return view('service/order/form', [
             'cartItems'        => $items,
             'total'            => $total,
             'pickups'          => $pickups,
+            'cartIds'          => $cartIdsStr,
+            'userName'         => $userInfo['name']  ?? $userInfo['id'] ?? '',
+            'userPhone'        => $userInfo['phone'] ?? '',
             'v2StoreId'        => env('PORTONE_V2_STORE_ID', ''),
             'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
             'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
@@ -91,6 +112,21 @@ class Order extends BaseController
             return;
         }
 
+        /* 주문서 폼에서 전달된 cart_ids로 선택 항목만 필터링 */
+        $cartIdsParam = trim($post['cart_ids'] ?? '');
+        if ($cartIdsParam !== '') {
+            $allowedIds = array_map('intval', explode(',', $cartIdsParam));
+            $items = array_values(array_filter(
+                $items,
+                fn($i) => in_array((int)$i['idx'], $allowedIds, true)
+            ));
+        }
+
+        if (empty($items)) {
+            echo json_encode(['success' => false, 'message' => '선택된 상품이 없습니다.']);
+            return;
+        }
+
         /* 총 결제금액 계산 */
         $total        = array_sum(array_map(
             fn($i) => ($i['price'] + ($i['additional_price'] ?? 0)) * $i['quantity'],
@@ -113,10 +149,11 @@ class Order extends BaseController
 
         /* 배송 유형에 따라 추가 필드 분기 */
         if ($deliveryType === 1) {
-            /* 택배: 수령인 정보 + 배송지 */
-            $orderData['recipient_name']   = trim($post['recipient_name']   ?? '');
-            $orderData['recipient_phone']  = trim($post['recipient_phone']  ?? '');
-            $orderData['delivery_address'] = trim($post['delivery_address'] ?? '');
+            /* 택배: 수령인 정보 + 배송지 + 상세주소 */
+            $orderData['recipient_name']    = trim($post['recipient_name']    ?? '');
+            $orderData['recipient_phone']   = trim($post['recipient_phone']   ?? '');
+            $orderData['delivery_address']  = trim($post['delivery_address']  ?? '');
+            $orderData['delivery_address2'] = trim($post['delivery_address2'] ?? '');
         } else {
             /* 픽업: 픽업 장소 idx */
             $orderData['pickup_location_idx'] = (int) ($post['pickup_location_idx'] ?? 0);
@@ -197,9 +234,13 @@ class Order extends BaseController
             default   => strtolower($methodType),
         };
 
+        // 결제 분류: EasyPay+KAKAOPAY → kakao, 그 외(이니시스 카드) → inicis
+        $easyPayProvider = strtolower($result['data']['method']['easyPay']['provider'] ?? '');
+        $payKind = ($methodType === 'EasyPay' && $easyPayProvider === 'kakaopay') ? 'kakao' : 'inicis';
+
         // 주문 상태 paid 처리 — pgTxId(PG 트랜잭션 ID) 우선, 없으면 paymentId 저장
         $pgTxId = $result['data']['pgTxId'] ?? $paymentId;
-        $orderModel->markPaid($orderIdx, $pgTxId, $payMethod);
+        $orderModel->markPaid($orderIdx, $pgTxId, $payMethod, $payKind);
 
         // 재고 차감
         $goodsModel       = new GoodsModel();

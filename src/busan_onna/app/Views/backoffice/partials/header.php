@@ -123,11 +123,24 @@
                             <span>사이트 이벤트</span>
                         </a>
                     </li>
+                </ul>
+            </div>
+
+            <div class="bo-nav-group">
+                <p class="bo-nav-group-title">상품 관리</p>
+                <ul class="bo-nav-list">
                     <li>
                         <a href="/backoffice/goods"
                            class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/goods') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">🚢</span>
                             <span>굿즈 관리</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/backoffice/payments"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/payments') ? 'active' : '' ?>">
+                            <span class="bo-nav-icon">💳</span>
+                            <span>결제내역</span>
                         </a>
                     </li>
                 </ul>

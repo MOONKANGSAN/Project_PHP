@@ -103,6 +103,38 @@ class BackofficeOrders extends BaseController
     }
 
     /**
+     * GET /backoffice/payments
+     * 결제내역 목록 — 주문자·상품명·배송지 포함, 상태·주문번호 필터 지원
+     */
+    public function payments(): string
+    {
+        $status = trim($this->request->getGet('status') ?? '');
+        $q      = trim($this->request->getGet('q')      ?? '');
+
+        $orders = $this->model->getPaymentList($status, $q);
+
+        return view('backoffice/payments/list', $this->base('결제내역', [
+            'orders'        => $orders,
+            'pager'         => $this->model->pager,
+            'status'        => $status,
+            'q'             => $q,
+            'statusLabels'  => OrderModel::STATUS_LABELS,
+            'filterLabels'  => OrderModel::PAYMENT_STATUS_FILTER,
+            'payKindLabels' => OrderModel::PAY_KIND_LABELS,
+        ]));
+    }
+
+    /**
+     * POST /backoffice/payments/{idx}/cancel
+     * 주문 취소 — orders.status를 cancelled로 업데이트
+     */
+    public function cancelOrder(int $idx)
+    {
+        $this->model->update($idx, ['status' => 'cancelled']);
+        return redirect()->to('/backoffice/payments')->with('success', '주문이 취소되었습니다.');
+    }
+
+    /**
      * POST /backoffice/orders/{idx}/delivery
      * 송장번호 저장 — 저장 후 주문 상태를 shipped로 자동 변경
      */

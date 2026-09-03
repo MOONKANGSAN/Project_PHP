@@ -224,6 +224,40 @@
         /* 배송 섹션 토글 */
         .delivery-fields { display: none; }
         .delivery-fields.active { display: block; }
+
+        /* 주문자 readonly 필드 */
+        .form-control[readonly] {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: default;
+        }
+
+        /* 주소 검색 버튼 */
+        .addr-search-wrap {
+            display: flex;
+            gap: 8px;
+        }
+        .addr-search-wrap .form-control {
+            flex: 1;
+        }
+        .btn-addr-search {
+            flex-shrink: 0;
+            padding: 0 16px;
+            height: 42px;
+            background: #03c75a;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background .15s;
+        }
+        .btn-addr-search:hover { background: #02a44c; }
     </style>
 </head>
 <body>
@@ -307,21 +341,54 @@
 
                     <!-- 택배 입력 폼 -->
                     <div class="delivery-fields active" id="fieldsParcel">
+
+                        <!-- 주문자: 로그인 유저 닉네임 (읽기 전용) -->
                         <div class="form-group">
-                            <label for="recipientName">수령인 이름</label>
+                            <label for="ordererName">주문자</label>
+                            <input type="text" id="ordererName" class="form-control"
+                                   value="<?= esc($userName ?? '') ?>" readonly>
+                        </div>
+
+                        <!-- 수령인 이름 -->
+                        <div class="form-group">
+                            <label for="recipientName">수령인 이름 <span style="color:#e55039">*</span></label>
                             <input type="text" id="recipientName" name="recipient_name"
-                                   class="form-control" placeholder="홍길동" value="문강산">
+                                   class="form-control" placeholder="홍길동">
                         </div>
+
+                        <!-- 수령인 연락처: 숫자만, 3-4-4 자동 하이픈 -->
                         <div class="form-group">
-                            <label for="recipientPhone">수령인 연락처</label>
+                            <label for="recipientPhone">수령인 연락처 <span style="color:#e55039">*</span></label>
                             <input type="tel" id="recipientPhone" name="recipient_phone"
-                                   class="form-control" placeholder="010-0000-0000" value="01012345678">
+                                   class="form-control" placeholder="010-0000-0000" maxlength="13"
+                                   value="<?= esc(preg_replace('/(\d{3})(\d{3,4})(\d{4})/', '$1-$2-$3', preg_replace('/[^0-9]/', '', $userPhone ?? ''))) ?>">
                         </div>
+
+                        <!-- 배송지 주소: 다음 우편번호 API -->
                         <div class="form-group">
-                            <label for="deliveryAddress">배송지 주소</label>
-                            <input type="text" id="deliveryAddress" name="delivery_address"
-                                   class="form-control" placeholder="도로명 주소를 입력하세요" value="부산광역시 부산진구 부전동 123-45">
+                            <label>배송지 주소 <span style="color:#e55039">*</span></label>
+                            <div class="addr-search-wrap">
+                                <input type="text" id="deliveryAddress" name="delivery_address"
+                                       class="form-control" placeholder="주소 검색 버튼을 눌러주세요" readonly>
+                                <button type="button" id="btnAddrSearch" class="btn-addr-search">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2.5"
+                                         stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                    </svg>
+                                    주소 검색
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- 배송지 상세 주소 -->
+                        <div class="form-group">
+                            <label for="deliveryAddress2">배송지 상세 주소</label>
+                            <input type="text" id="deliveryAddress2" name="delivery_address2"
+                                   class="form-control" placeholder="건물명, 동, 호수 등">
+                        </div>
+
                     </div>
 
                     <!-- 픽업 선택 폼 -->
@@ -380,12 +447,77 @@
 <?= view('modules/auth/login_modal') ?>
 <?= view('modules/auth/signup_modal') ?>
 
+<!-- 다음 우편번호 API -->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
 <script src="/js/busan.js"></script>
 <script src="/js/modules/login.js"></script>
 <script src="/js/modules/signup.js"></script>
 <script src="/js/service-common.js"></script>
 
 <script>
+/* ===== 수령인 연락처 자동 하이픈 (3-4-4) ===== */
+(function () {
+    var phoneInput = document.getElementById('recipientPhone');
+    if (!phoneInput) return;
+
+    /* 초기값이 숫자로만 돼 있으면 하이픈 형식으로 변환 */
+    phoneInput.value = formatPhone(phoneInput.value);
+
+    phoneInput.addEventListener('input', function () {
+        /* 숫자 외 문자 제거 후 최대 11자리 */
+        var digits = this.value.replace(/\D/g, '').slice(0, 11);
+        this.value = formatPhone(digits);
+    });
+
+    /* keydown: 숫자·제어키만 허용 */
+    phoneInput.addEventListener('keydown', function (e) {
+        var allowed = [
+            'Backspace','Delete','Tab','Enter','Escape','ArrowLeft','ArrowRight',
+            'Home','End',
+        ];
+        if (allowed.indexOf(e.key) !== -1) return;
+        if (e.ctrlKey || e.metaKey) return;  /* Ctrl+C, Ctrl+V 등 */
+        if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+
+    function formatPhone(val) {
+        var d = val.replace(/\D/g, '').slice(0, 11);
+        if (d.length <= 3)  return d;
+        if (d.length <= 7)  return d.slice(0, 3) + '-' + d.slice(3);
+        return d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    }
+}());
+
+/* ===== 다음 우편번호 API — 배송지 주소 검색 ===== */
+(function () {
+    var btnSearch = document.getElementById('btnAddrSearch');
+    if (!btnSearch) return;
+
+    function openPostcode() {
+        new daum.Postcode({
+            oncomplete: function (data) {
+                /* 도로명 주소 우선, 없으면 지번 */
+                var addr = data.roadAddress || data.jibunAddress;
+                var addrInput = document.getElementById('deliveryAddress');
+                addrInput.value = addr;
+
+                /* 검색 후 상세주소 input에 포커스 */
+                var addr2Input = document.getElementById('deliveryAddress2');
+                if (addr2Input) addr2Input.focus();
+            },
+        }).open();
+    }
+
+    btnSearch.addEventListener('click', openPostcode);
+
+    /* readonly 주소 input 클릭 시에도 팝업 오픈 */
+    var addrInput = document.getElementById('deliveryAddress');
+    if (addrInput) {
+        addrInput.addEventListener('click', openPostcode);
+    }
+}());
+
 /* ===== 주문서 페이지 스크립트 (PortOne V2 전용) ===== */
 (function () {
 
@@ -474,10 +606,11 @@
             const name    = document.getElementById('recipientName').value.trim();
             const phone   = document.getElementById('recipientPhone').value.trim();
             const address = document.getElementById('deliveryAddress').value.trim();
-            if (!name || !phone || !address) {
-                alert('수령인 이름, 연락처, 배송지를 모두 입력해주세요.');
-                return;
+            if (!name) { alert('수령인 이름을 입력해주세요.'); return; }
+            if (!phone || phone.replace(/-/g, '').length < 9) {
+                alert('올바른 연락처를 입력해주세요.'); return;
             }
+            if (!address) { alert('배송지 주소를 검색해주세요.'); return; }
         } else {
             if (!document.getElementById('pickupLocation').value) {
                 alert('픽업 장소를 선택해주세요.');
@@ -491,11 +624,14 @@
         /* 1단계: pending 주문 레코드 생성 */
         const formData = new URLSearchParams();
         formData.append('delivery_type', deliveryType);
+        /* 장바구니에서 선택된 항목 IDs 전달 */
+        formData.append('cart_ids', '<?= esc($cartIds ?? '') ?>');
 
         if (deliveryType === '1') {
-            formData.append('recipient_name',   document.getElementById('recipientName').value.trim());
-            formData.append('recipient_phone',  document.getElementById('recipientPhone').value.trim());
-            formData.append('delivery_address', document.getElementById('deliveryAddress').value.trim());
+            formData.append('recipient_name',    document.getElementById('recipientName').value.trim());
+            formData.append('recipient_phone',   document.getElementById('recipientPhone').value.trim());
+            formData.append('delivery_address',  document.getElementById('deliveryAddress').value.trim());
+            formData.append('delivery_address2', document.getElementById('deliveryAddress2').value.trim());
         } else {
             formData.append('pickup_location_idx', document.getElementById('pickupLocation').value);
         }

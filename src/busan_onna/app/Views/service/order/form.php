@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="/css/modules/login.css">
     <link rel="stylesheet" href="/css/modules/signup.css">
 
-    <!-- PortOne 결제 SDK -->
-    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <!-- PortOne V2 SDK (이니시스 카드 + 카카오페이 공통) -->
+    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
 
     <style>
         /* ---- 주문서 페이지 전용 스타일 ---- */
@@ -386,23 +386,13 @@
 <script src="/js/service-common.js"></script>
 
 <script>
-/* ===== 주문서 페이지 스크립트 ===== */
+/* ===== 주문서 페이지 스크립트 (PortOne V2 전용) ===== */
 (function () {
 
-    /* PortOne IMP 초기화 */
-    IMP.init('<?= esc($impCode) ?>');
-
-    /* V1 REST API 조회를 위해 pg 파라미터에 PG사코드.MID 형식 사용 */
-    const PG_MAP = {
-        inicis : 'html5_inicis.INIBillTst',
-        kakao  : 'kakaopay.TC0ONETIME',
-    };
-
-    /* 결제 수단 */
-    const METHOD_MAP = {
-        inicis : 'card',
-        kakao  : 'card',
-    };
+    /* V2 설정값 (PHP → JS) */
+    const V2_STORE_ID        = '<?= esc($v2StoreId) ?>';
+    const INICIS_CHANNEL_KEY = '<?= esc($inicisChannelKey) ?>';
+    const KAKAO_CHANNEL_KEY  = '<?= esc($kakaoChannelKey) ?>';
 
     /* 현재 선택된 결제 수단 */
     let selectedMethod = 'inicis';
@@ -441,10 +431,37 @@
         return checked ? checked.value : '1';
     }
 
+    function resetBtn() {
+        btnPay.disabled    = false;
+        btnPay.textContent = '결제하기 (<?= number_format($total) ?>원)';
+    }
+
+    /* 3단계: 서버 결제 검증 — payment_id(=주문번호)를 서버로 전송 */
+    function callVerify(paymentId, orderIdx) {
+        fetch('/order/verify', {
+            method  : 'POST',
+            headers : { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body    : JSON.stringify({ payment_id: paymentId, order_idx: orderIdx }),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                location.href = '/order/complete/' + data.order_idx;
+            } else {
+                alert(data.message || '결제 검증에 실패했습니다.');
+                resetBtn();
+            }
+        })
+        .catch(function () {
+            alert('네트워크 오류가 발생했습니다.');
+            resetBtn();
+        });
+    }
+
     /**
      * 결제하기 버튼 클릭 처리
-     * 1단계: POST /order/store — 주문 레코드 생성 (pending)
-     * 2단계: IMP.request_pay  — 선택한 PG 결제창 호출
+     * 1단계: POST /order/store  — pending 주문 생성
+     * 2단계: PortOne.requestPayment — V2 결제창 호출 (이니시스·카카오페이 공통)
      * 3단계: POST /order/verify — 서버 금액 검증 + 주문 확정
      * 4단계: /order/complete/{idx} 이동
      */
@@ -470,7 +487,7 @@
         btnPay.disabled    = true;
         btnPay.textContent = '처리 중...';
 
-        /* 1단계: 주문 레코드 생성 */
+        /* 1단계: pending 주문 레코드 생성 */
         const formData = new URLSearchParams();
         formData.append('delivery_type', deliveryType);
 
@@ -484,10 +501,7 @@
 
         fetch('/order/store', {
             method  : 'POST',
-            headers : {
-                'Content-Type'     : 'application/x-www-form-urlencoded',
-                'X-Requested-With' : 'XMLHttpRequest',
-            },
+            headers : { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
             body    : formData.toString(),
         })
         .then(function (res) { return res.json(); })
@@ -499,78 +513,54 @@
             }
 
             const orderIdx   = data.order_idx;
-            const orderNo    = data.order_no;
+            const orderNo    = data.order_no;    // PortOne paymentId로 사용
             const totalPrice = data.total_price;
 
-            /* 2단계: 선택한 결제 수단으로 결제창 호출 */
+            const buyerName = deliveryType === '1'
+                ? document.getElementById('recipientName').value.trim() : '픽업';
+            const buyerTel  = deliveryType === '1'
+                ? document.getElementById('recipientPhone').value.trim() : '';
+
+            /* 2단계: V2 결제 파라미터 구성 — 결제 수단별 channelKey·payMethod 분기 */
             const payParams = {
-                pg          : PG_MAP[selectedMethod],
-                pay_method  : METHOD_MAP[selectedMethod],
-                merchant_uid: orderNo,
-                name        : '부산온나 굿즈 주문',
-                amount      : totalPrice,
-                buyer_name  : deliveryType === '1'
-                                ? document.getElementById('recipientName').value.trim()
-                                : '픽업',
-                buyer_tel   : deliveryType === '1'
-                                ? document.getElementById('recipientPhone').value.trim()
-                                : '',
-                buyer_addr  : deliveryType === '1'
-                                ? document.getElementById('deliveryAddress').value.trim()
-                                : '',
+                storeId    : V2_STORE_ID,
+                channelKey : selectedMethod === 'kakao' ? KAKAO_CHANNEL_KEY : INICIS_CHANNEL_KEY,
+                paymentId  : orderNo,
+                orderName  : '부산온나 굿즈 주문',
+                totalAmount: totalPrice,
+                currency   : 'KRW',
+                customer   : { fullName: buyerName, phoneNumber: buyerTel },
             };
 
-            console.log('[결제요청 파라미터]', JSON.stringify(payParams));
+            if (selectedMethod === 'kakao') {
+                payParams.payMethod = 'EASY_PAY';
+                payParams.easyPay  = { easyPayProvider: 'KAKAOPAY' };
+            } else {
+                payParams.payMethod = 'CARD';
+            }
 
-            IMP.request_pay(payParams, function (rsp) {
-                /* 디버그: 콜백 전체 확인 (문제 해결 후 제거) */
-                console.log('[IMP 콜백 rsp]', JSON.stringify(rsp));
-
-                if (!rsp.success) {
-                    alert(rsp.error_msg || '결제에 실패했습니다.');
-                    resetBtn();
-                    return;
-                }
-
-                /* 3단계: 서버 결제 검증 */
-                const verifyBody = { imp_uid: rsp.imp_uid, order_idx: orderIdx };
-                console.log('[verify 요청 body]', JSON.stringify(verifyBody));
-
-                fetch('/order/verify', {
-                    method  : 'POST',
-                    headers : {
-                        'Content-Type'     : 'application/json',
-                        'X-Requested-With' : 'XMLHttpRequest',
-                    },
-                    body    : JSON.stringify(verifyBody),
-                })
-                .then(function (res) { return res.json(); })
-                .then(function (vData) {
-                    console.log('[verify 응답]', JSON.stringify(vData));
-                    if (vData.success) {
-                        /* 4단계: 주문 완료 페이지 이동 */
-                        location.href = '/order/complete/' + vData.order_idx;
-                    } else {
-                        alert(vData.message || '결제 검증에 실패했습니다.');
+            /* 2단계: PortOne V2 결제창 호출 */
+            PortOne.requestPayment(payParams)
+                .then(function (rsp) {
+                    /* rsp.code 존재 시 오류 또는 사용자 취소 */
+                    if (rsp && rsp.code !== undefined) {
+                        alert(rsp.message || '결제가 취소되었습니다.');
                         resetBtn();
+                        return;
                     }
+                    /* 3단계: 서버 검증 */
+                    callVerify(orderNo, orderIdx);
                 })
                 .catch(function () {
-                    alert('네트워크 오류가 발생했습니다.');
+                    alert('결제 처리 중 오류가 발생했습니다.');
                     resetBtn();
                 });
-            });
         })
         .catch(function () {
             alert('네트워크 오류가 발생했습니다.');
             resetBtn();
         });
     });
-
-    function resetBtn() {
-        btnPay.disabled    = false;
-        btnPay.textContent = '결제하기 (<?= number_format($total) ?>원)';
-    }
 
 })();
 </script>

@@ -60,7 +60,7 @@ class Order extends BaseController
             'cartItems'        => $items,
             'total'            => $total,
             'pickups'          => $pickups,
-            'impCode'          => env('PORTONE_IMP_CODE', ''),
+            'v2StoreId'        => env('PORTONE_V2_STORE_ID', ''),
             'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
             'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
         ]);
@@ -148,29 +148,19 @@ class Order extends BaseController
     }
 
     /**
-     * POST /order/verify — PortOne 결제 검증 후 주문 확정
-     * body JSON: { imp_uid, order_idx }
-     * 검증 성공 시 재고 차감 + 장바구니 비우기
+     * POST /order/verify — PortOne V2 결제 검증 후 주문 확정
+     * body JSON: { payment_id, order_idx }
+     * payment_id = 결제 시 전달한 orderNo (PortOne paymentId)
      */
     public function verify(): void
     {
-        $body     = $this->request->getJSON(true) ?? [];
-        $impUid   = trim($body['imp_uid']   ?? '');
-        $orderIdx = (int) ($body['order_idx'] ?? 0);
-        $userIdx  = $this->userIdx();
+        $body      = $this->request->getJSON(true) ?? [];
+        $paymentId = trim($body['payment_id'] ?? '');
+        $orderIdx  = (int)($body['order_idx'] ?? 0);
+        $userIdx   = $this->userIdx();
 
-        /* [DEBUG] 런타임에서 실제 읽히는 PortOne 키 앞자리 확인 — 문제 해결 후 제거 */
-        $debugKey    = env('PORTONE_IMP_KEY', '');
-        $debugSecret = env('PORTONE_IMP_SECRET', '');
-        log_message('debug', '[Order::verify] impKey=' . $debugKey . ' | impSecret(앞20)=' . substr($debugSecret, 0, 20));
-
-        /* 브라우저에서 바로 확인할 수 있도록 임시 조기 반환 — 키 확인 후 제거 */
-        if ($this->request->getGet('debug_key') === '1') {
-            echo json_encode([
-                'imp_key_read'    => $debugKey,
-                'imp_secret_head' => substr($debugSecret, 0, 20) . '...',
-                'imp_code_read'   => env('PORTONE_IMP_CODE', 'NOT_FOUND'),
-            ]);
+        if ($paymentId === '' || $orderIdx === 0) {
+            echo json_encode(['success' => false, 'message' => '잘못된 요청입니다.']);
             return;
         }
 
@@ -179,52 +169,44 @@ class Order extends BaseController
                                  ->where('user_idx', $userIdx)
                                  ->first();
 
-        /* 주문이 존재하지 않거나 이미 처리된 경우 */
         if (!$order || $order['status'] !== 'pending') {
-            /* [DEBUG] 주문 조회 실패 원인 출력 */
-            echo json_encode([
-                'success'    => false,
-                'message'    => '유효하지 않은 주문입니다.',
-                '_debug'     => ['order_found' => !empty($order), 'status' => $order['status'] ?? 'N/A'],
-            ]);
+            echo json_encode(['success' => false, 'message' => '유효하지 않은 주문입니다.']);
             return;
         }
 
-        /* PortOne 결제 금액 검증 */
-        $portone = new PortOnePayment();
-        $result  = $portone->verify($impUid, (int) $order['total_price']);
+        // PortOne V2 결제 검증
+        $result = (new PortOnePayment())->verify($paymentId, (int)$order['total_price']);
 
         if (!$result['valid']) {
-            /* [DEBUG] PortOne API 오류 원인 상세 출력 */
-            echo json_encode([
-                'success' => false,
-                'message' => $result['error'],
-                '_debug'  => [
-                    'imp_uid'          => $impUid,
-                    'expected_amount'  => (int) $order['total_price'],
-                    'portone_response' => $result['data'],
-                    'portone_raw'      => $result['_raw'] ?? null,
-                ],
-            ]);
+            log_message('error', '[Order::verify] 검증 실패: ' . $result['error']);
+            echo json_encode(['success' => false, 'message' => $result['error']]);
             return;
         }
 
-        /* 주문 상태를 paid로 변경 */
-        $orderModel->markPaid($orderIdx, $impUid, $result['data']['pay_method'] ?? 'card');
+        // V2 응답 method.type 으로 결제 수단 추출 (Card | EasyPay)
+        $methodType = $result['data']['method']['type'] ?? 'card';
+        $payMethod  = match ($methodType) {
+            'Card'    => 'card',
+            'EasyPay' => strtolower($result['data']['method']['easyPay']['provider'] ?? 'easypay'),
+            default   => strtolower($methodType),
+        };
 
-        /* 재고 차감: 상품 및 옵션값 재고 감소 */
+        // 주문 상태 paid 처리 — pgTxId(PG 트랜잭션 ID) 우선, 없으면 paymentId 저장
+        $pgTxId = $result['data']['pgTxId'] ?? $paymentId;
+        $orderModel->markPaid($orderIdx, $pgTxId, $payMethod);
+
+        // 재고 차감
         $goodsModel       = new GoodsModel();
         $optionValueModel = new GoodsOptionValueModel();
         $itemModel        = new OrderItemModel();
 
         foreach ($itemModel->getByOrder($orderIdx) as $item) {
-            $goodsModel->decreaseStock((int) $item['goods_idx'], (int) $item['quantity']);
+            $goodsModel->decreaseStock((int)$item['goods_idx'], (int)$item['quantity']);
             if ($item['option_value_idx']) {
-                $optionValueModel->decreaseStock((int) $item['option_value_idx'], (int) $item['quantity']);
+                $optionValueModel->decreaseStock((int)$item['option_value_idx'], (int)$item['quantity']);
             }
         }
 
-        /* 결제 완료 후 해당 사용자의 장바구니 전체 삭제 */
         (new CartModel())->clearByUser($userIdx);
 
         echo json_encode(['success' => true, 'order_idx' => $orderIdx]);

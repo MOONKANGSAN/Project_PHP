@@ -17,6 +17,8 @@ class UserInfoModel extends Model
     protected $allowedFields = [
         'state',
         'id',
+        'name',
+        'profile_image',
         'password',
         'email',
         'phone',

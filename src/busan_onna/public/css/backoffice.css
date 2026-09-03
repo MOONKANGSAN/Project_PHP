@@ -386,6 +386,15 @@ ul { list-style: none; }
     border-color: var(--bo-accent);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
+/* div 요소에서 bo-form-input 사용 시: 고정 height 해제, 상하 padding으로 균일한 간격 확보 */
+div.bo-form-input {
+    height: auto;
+    padding: 9px 12px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
 
 .bo-form-actions {
     display: flex;
@@ -509,6 +518,8 @@ ul { list-style: none; }
 .badge-inactive { background: #f1f5f9; color: #64748b; }
 .badge-pending  { background: #ffedd5; color: #c2410c; }
 .badge-free     { background: #dbeafe; color: #2563eb; }
+.badge-kakao    { background: #fef08a; color: #713f12; }
+.badge-inicis   { background: #dbeafe; color: #1d4ed8; }
 .badge-paid     { background: #fef3c7; color: #d97706; }
 
 /* 액션 버튼 */

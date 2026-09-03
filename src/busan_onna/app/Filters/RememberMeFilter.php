@@ -59,9 +59,11 @@ class RememberMeFilter implements FilterInterface
         }
 
         session()->set([
-            'user.idx'   => $user['idx'],
-            'user.id'    => $user['id'],
-            'user.email' => $user['email'],
+            'user.idx'           => $user['idx'],
+            'user.id'            => $user['id'],
+            'user.email'         => $user['email'],
+            'user.name'          => $user['name']          ?? null,
+            'user.profile_image' => $user['profile_image'] ?? null,
         ]);
     }
 

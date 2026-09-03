@@ -204,7 +204,12 @@
                 <?php if ((int)$order['delivery_type'] === 1 && !empty($order['delivery_address'])): ?>
                 <li>
                     <span class="info-label">배송지</span>
-                    <span class="info-value"><?= esc($order['delivery_address']) ?></span>
+                    <span class="info-value">
+                        <?= esc($order['delivery_address']) ?>
+                        <?php if (!empty($order['delivery_address2'])): ?>
+                        <br><span style="color:#868e96;font-weight:400;"><?= esc($order['delivery_address2']) ?></span>
+                        <?php endif; ?>
+                    </span>
                 </li>
                 <?php endif; ?>
                 <?php if ((int)$order['delivery_type'] === 1 && !empty($order['recipient_name'])): ?>

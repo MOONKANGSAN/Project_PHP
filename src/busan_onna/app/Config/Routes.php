@@ -56,6 +56,15 @@ $routes->post('/order/store',             'Order::store');
 $routes->post('/order/verify',            'Order::verify');
 $routes->get('/order/complete/(:num)',    'Order::complete/$1');
 
+// 마이페이지 메인
+$routes->get('/mypage', 'Mypage::index');
+
+// 마이페이지 — 프로필 수정
+$routes->get('/mypage/profile',              'Mypage::profileEdit');
+$routes->post('/mypage/profile',             'Mypage::profileUpdate');
+$routes->post('/mypage/password/verify',     'Mypage::passwordVerify');
+$routes->post('/mypage/password',            'Mypage::passwordChange');
+
 // 마이페이지 — 주문내역
 $routes->get('/mypage/orders',         'Order::myOrders');
 $routes->get('/mypage/orders/(:num)',  'Order::myOrderDetail/$1');
@@ -225,6 +234,10 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->get('orders/(:num)',             'BackofficeOrders::detail/$1');
     $routes->post('orders/(:num)/status',    'BackofficeOrders::updateStatus/$1');
     $routes->post('orders/(:num)/delivery',  'BackofficeOrders::saveDelivery/$1');
+
+    // 결제내역 관리
+    $routes->get('payments',                         'BackofficeOrders::payments');
+    $routes->post('payments/(:num)/cancel',          'BackofficeOrders::cancelOrder/$1');
 
     // 판매자 관리
     $routes->get('vendors',                   'BackofficeVendors::list');

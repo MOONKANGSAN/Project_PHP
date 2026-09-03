@@ -101,9 +101,11 @@ class Auth extends BaseController
         // 세션 고정 공격 방지: 로그인 시 세션 ID 재발급
         session()->regenerate();
         session()->set([
-            'user.idx'   => $user['idx'],
-            'user.id'    => $user['id'],
-            'user.email' => $user['email'],
+            'user.idx'           => $user['idx'],
+            'user.id'            => $user['id'],
+            'user.email'         => $user['email'],
+            'user.name'          => $user['name']          ?? null,
+            'user.profile_image' => $user['profile_image'] ?? null,
         ]);
 
         // 아이디 저장: save_id 체크 시 쿠키에 아이디만 보관 (비밀번호 X)

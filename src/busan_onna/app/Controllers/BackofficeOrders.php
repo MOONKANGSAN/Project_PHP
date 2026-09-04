@@ -104,20 +104,24 @@ class BackofficeOrders extends BaseController
 
     /**
      * GET /backoffice/payments
-     * 결제내역 목록 — 주문자·상품명·배송지 포함, 상태·주문번호 필터 지원
+     * 결제내역 목록 — 상태·주문번호·날짜 범위 필터 지원
      */
     public function payments(): string
     {
-        $status = trim($this->request->getGet('status') ?? '');
-        $q      = trim($this->request->getGet('q')      ?? '');
+        $status   = trim($this->request->getGet('status')    ?? '');
+        $q        = trim($this->request->getGet('q')         ?? '');
+        $dateFrom = trim($this->request->getGet('date_from') ?? '');
+        $dateTo   = trim($this->request->getGet('date_to')   ?? '');
 
-        $orders = $this->model->getPaymentList($status, $q);
+        $orders = $this->model->getPaymentList($status, $q, $dateFrom, $dateTo);
 
         return view('backoffice/payments/list', $this->base('결제내역', [
             'orders'        => $orders,
             'pager'         => $this->model->pager,
             'status'        => $status,
             'q'             => $q,
+            'dateFrom'      => $dateFrom,
+            'dateTo'        => $dateTo,
             'statusLabels'  => OrderModel::STATUS_LABELS,
             'filterLabels'  => OrderModel::PAYMENT_STATUS_FILTER,
             'payKindLabels' => OrderModel::PAY_KIND_LABELS,
@@ -132,6 +136,37 @@ class BackofficeOrders extends BaseController
     {
         $this->model->update($idx, ['status' => 'cancelled']);
         return redirect()->to('/backoffice/payments')->with('success', '주문이 취소되었습니다.');
+    }
+
+    /**
+     * POST /backoffice/payments/{idx}/status  (AJAX JSON)
+     * 결제내역 상태 순환 변경 — paid→preparing→shipped→delivered→paid
+     */
+    public function updatePaymentStatus(int $idx): void
+    {
+        /* 순환 순서 정의 */
+        $cycle = ['paid' => 'preparing', 'preparing' => 'shipped', 'shipped' => 'delivered', 'delivered' => 'paid'];
+
+        $order = $this->model->find($idx);
+        if (!$order) {
+            echo json_encode(['success' => false, 'message' => '주문을 찾을 수 없습니다.']);
+            return;
+        }
+
+        $current = $order['status'];
+        if (!array_key_exists($current, $cycle)) {
+            echo json_encode(['success' => false, 'message' => '변경할 수 없는 상태입니다.']);
+            return;
+        }
+
+        $next = $cycle[$current];
+        $this->model->update($idx, ['status' => $next]);
+
+        echo json_encode([
+            'success'    => true,
+            'nextStatus' => $next,
+            'nextLabel'  => OrderModel::STATUS_LABELS[$next] ?? $next,
+        ]);
     }
 
     /**

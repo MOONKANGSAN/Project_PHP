@@ -81,23 +81,26 @@ class OrderModel extends Model
     }
 
     /**
-     * 결제내역 관리자 목록 — user_info JOIN + order_items 서브쿼리(상품명), 페이지네이션
-     * 상태·주문번호 필터 지원
+     * 결제내역 관리자 목록 — user_info JOIN, 상태·주문번호·날짜 범위 필터, 페이지네이션
      */
-    public function getPaymentList(string $status = '', string $q = ''): array
-    {
-        // 주문자 이름/아이디는 user_info LEFT JOIN, 상품명은 서브쿼리로 합산
+    public function getPaymentList(
+        string $status  = '',
+        string $q       = '',
+        string $dateFrom = '',
+        string $dateTo   = ''
+    ): array {
         $this->select("orders.idx, orders.order_no, orders.status, orders.total_price,
                         orders.delivery_type, orders.recipient_name, orders.recipient_phone,
                         orders.delivery_address, orders.delivery_address2, orders.reg_date,
                         orders.paid_at, orders.pay_kind,
-                        ui.name AS orderer_name, ui.id AS orderer_id,
-                        (SELECT GROUP_CONCAT(goods_name ORDER BY idx SEPARATOR ', ')
-                         FROM order_items WHERE order_idx = orders.idx) AS goods_names");
+                        ui.name AS orderer_name, ui.id AS orderer_id");
         $this->join('user_info ui', 'orders.user_idx = ui.idx', 'left');
 
-        if ($status !== '') $this->where('orders.status', $status);
-        if ($q !== '')      $this->like('orders.order_no', $q);
+        if ($status   !== '') $this->where('orders.status', $status);
+        if ($q        !== '') $this->like('orders.order_no', $q);
+        /* paid_at 기준 날짜 범위 필터 — 시작일 00:00:00 ~ 종료일 23:59:59 */
+        if ($dateFrom !== '') $this->where('orders.paid_at >=', $dateFrom . ' 00:00:00');
+        if ($dateTo   !== '') $this->where('orders.paid_at <=', $dateTo   . ' 23:59:59');
 
         return $this->orderBy('orders.idx', 'DESC')->paginate(20) ?? [];
     }

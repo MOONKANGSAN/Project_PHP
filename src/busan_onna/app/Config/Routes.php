@@ -238,6 +238,7 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     // 결제내역 관리
     $routes->get('payments',                         'BackofficeOrders::payments');
     $routes->post('payments/(:num)/cancel',          'BackofficeOrders::cancelOrder/$1');
+    $routes->post('payments/(:num)/status',          'BackofficeOrders::updatePaymentStatus/$1');
 
     // 판매자 관리
     $routes->get('vendors',                   'BackofficeVendors::list');

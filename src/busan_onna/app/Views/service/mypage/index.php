@@ -253,8 +253,10 @@
         .badge-preparing { background: #fef3c7; color: #92400e; }
         .badge-shipped   { background: #ede9fe; color: #6d28d9; }
         .badge-delivered { background: #d1fae5; color: #065f46; }
-        .badge-cancelled { background: #fee2e2; color: #991b1b; }
-        .badge-pending   { background: #f1f3f5; color: #868e96; }
+        .badge-cancelled  { background: #fee2e2; color: #991b1b; }
+        .badge-pending    { background: #f1f3f5; color: #868e96; }
+        .badge-refunding  { background: #fff3e0; color: #e65100; }
+        .badge-refunded   { background: #e8f5e9; color: #2e7d32; }
 
         .order-list-empty {
             text-align: center;
@@ -484,6 +486,12 @@
                             <div class="order-list-right">
                                 <span class="order-list-price"><?= number_format((int)$ord['total_price']) ?>원</span>
                                 <span class="order-status-badge <?= esc($sBadge) ?>"><?= esc($sLabel) ?></span>
+                                <?php $rSt = ($recentRefundStatusMap ?? [])[(int)$ord['idx']] ?? null; ?>
+                                <?php if ($rSt === 'pending'): ?>
+                                <span class="order-status-badge badge-refunding">환불진행중</span>
+                                <?php elseif ($rSt === 'approved'): ?>
+                                <span class="order-status-badge badge-refunded">환불완료</span>
+                                <?php endif; ?>
                             </div>
 
                             <!-- 우측 화살표 -->

@@ -95,12 +95,19 @@ class Mypage extends BaseController
             LIMIT  5
         ", [$userIdx])->getResultArray();
 
+        // 최근 주문의 환불 상태 맵 조회
+        $recentOrderIdxList    = array_map('intval', array_column($recentOrders, 'idx'));
+        $recentRefundStatusMap = !empty($recentOrderIdxList)
+            ? (new \App\Models\RefundRequestModel())->getRefundStatusMap($recentOrderIdxList)
+            : [];
+
         return view('service/mypage/index', [
-            'activeNav'    => 'mypage',
-            'user'         => $user,
-            'likedPlaces'  => $likedPlaces,
-            'orderCounts'  => $orderCounts,
-            'recentOrders' => $recentOrders,
+            'activeNav'            => 'mypage',
+            'user'                 => $user,
+            'likedPlaces'          => $likedPlaces,
+            'orderCounts'          => $orderCounts,
+            'recentOrders'         => $recentOrders,
+            'recentRefundStatusMap'=> $recentRefundStatusMap,
         ]);
     }
 

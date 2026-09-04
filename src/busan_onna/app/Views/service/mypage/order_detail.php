@@ -102,8 +102,10 @@
         .status-paid     { background: #d1ecf1; color: #0c5460; }
         .status-shipping { background: #d4edda; color: #155724; }
         .status-done     { background: #e2e3e5; color: #383d41; }
-        .status-cancel   { background: #f8d7da; color: #721c24; }
-        .status-default  { background: #f8f9fa; color: #495057; }
+        .status-cancel     { background: #f8d7da; color: #721c24; }
+        .status-default    { background: #f8f9fa; color: #495057; }
+        .status-refunding  { background: #fff3e0; color: #e65100; }
+        .status-refunded   { background: #e8f5e9; color: #2e7d32; }
 
         /* 주문 상품 테이블 */
         .items-table {
@@ -308,8 +310,10 @@
 
         <?php
         /* 환불 요청 가능 여부 계산 */
-        // 상품 목록이 없으면 환불 버튼·모달 표시 불필요
-        $canRefund  = !empty($items) && in_array($order['status'] ?? '', ['paid', 'preparing', 'delivered']);
+        // 상품이 있고, 환불 가능 상태이며, 기존 환불 요청(진행중·완료)이 없어야 버튼 표시
+        $canRefund  = !empty($items)
+                   && in_array($order['status'] ?? '', ['paid', 'preparing', 'delivered'])
+                   && ($refundStatus ?? null) === null;
         $isShipped  = ($order['status'] ?? '') === 'shipped';
         $isOver7Days = false;
         if (($order['status'] ?? '') === 'delivered' && !empty($order['delivered_at'])) {
@@ -340,6 +344,11 @@
                         <span class="status-badge <?= $statusClass ?>">
                             <?= $statusLabel ?>
                         </span>
+                        <?php if (($refundStatus ?? null) === 'pending'): ?>
+                        <span class="status-badge status-refunding">환불진행중</span>
+                        <?php elseif (($refundStatus ?? null) === 'approved'): ?>
+                        <span class="status-badge status-refunded">환불완료</span>
+                        <?php endif; ?>
                     </span>
                 </li>
                 <li>
@@ -570,6 +579,10 @@
     }
     if (selReason.value === 'direct' && !txtReason.value.trim()) {
       alert('직접 입력 사유를 작성해주세요.');
+      return;
+    }
+
+    if (!confirm('환불 요청이 접수된 이후에는 취소가 불가능합니다.\n환불을 진행하시겠습니까?')) {
       return;
     }
 

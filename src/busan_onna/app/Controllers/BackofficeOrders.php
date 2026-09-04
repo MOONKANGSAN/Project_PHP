@@ -195,18 +195,27 @@ class BackofficeOrders extends BaseController
     }
 
     /**
-     * GET /backoffice/refunds — 환불 요청 목록 (status 필터, 페이지네이션)
+     * GET /backoffice/refunds — 환불 요청 목록 (status·주문번호·주문자·날짜 필터, 페이지네이션)
      */
     public function refundList(): string
     {
-        $status      = trim($this->request->getGet('status') ?? '');
+        $status   = trim($this->request->getGet('status')    ?? '');
+        $orderNo  = trim($this->request->getGet('order_no')  ?? '');
+        $userName = trim($this->request->getGet('user_name') ?? '');
+        $dateFrom = trim($this->request->getGet('date_from') ?? '');
+        $dateTo   = trim($this->request->getGet('date_to')   ?? '');
+
         $refundModel = new RefundRequestModel();
-        $refunds     = $refundModel->getAdminList($status);
+        $refunds     = $refundModel->getAdminList($status, $orderNo, $userName, $dateFrom, $dateTo);
 
         return view('backoffice/refunds/list', $this->base('환불 요청 관리', [
             'refunds'      => $refunds,
             'pager'        => $refundModel->pager,
             'status'       => $status,
+            'orderNo'      => $orderNo,
+            'userName'     => $userName,
+            'dateFrom'     => $dateFrom,
+            'dateTo'       => $dateTo,
             'statusLabels' => RefundRequestModel::STATUS_LABELS,
         ]));
     }
@@ -216,6 +225,7 @@ class BackofficeOrders extends BaseController
      */
     public function refundDetail(int $idx): void
     {
+        $this->response->setContentType('application/json');
         $refund = (new RefundRequestModel())->getDetail($idx);
         if (!$refund) {
             echo json_encode(['success' => false, 'message' => '환불 요청을 찾을 수 없습니다.']);
@@ -239,6 +249,7 @@ class BackofficeOrders extends BaseController
      */
     public function approveRefund(int $idx): void
     {
+        $this->response->setContentType('application/json');
         $adminMemo   = trim($this->request->getPost('admin_memo') ?? '');
         $refundModel = new RefundRequestModel();
         $refund      = $refundModel->getDetail($idx);
@@ -259,6 +270,7 @@ class BackofficeOrders extends BaseController
      */
     public function rejectRefund(int $idx): void
     {
+        $this->response->setContentType('application/json');
         $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
         if ($adminMemo === '') {
             echo json_encode(['success' => false, 'message' => '반려 사유를 입력해주세요.']);

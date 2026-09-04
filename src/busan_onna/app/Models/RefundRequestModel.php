@@ -33,16 +33,38 @@ class RefundRequestModel extends Model
     ];
 
     /**
-     * 백오피스 목록 — orders·user_info JOIN, status 필터, 페이지네이션
+     * 백오피스 목록 — orders·user_info JOIN, status·주문번호·주문자·날짜 필터, 페이지네이션
      */
-    public function getAdminList(string $status = ''): array
-    {
+    public function getAdminList(
+        string $status   = '',
+        string $orderNo  = '',
+        string $userName = '',
+        string $dateFrom = '',
+        string $dateTo   = ''
+    ): array {
         $this->select('refund_requests.*, orders.order_no, orders.status AS order_status, ui.name AS user_name, ui.id AS user_id')
              ->join('orders', 'orders.idx = refund_requests.order_idx', 'left')
              ->join('user_info ui', 'ui.idx = refund_requests.user_idx', 'left');
+
         if ($status !== '') {
             $this->where('refund_requests.status', $status);
         }
+        if ($orderNo !== '') {
+            $this->like('orders.order_no', $orderNo);
+        }
+        if ($userName !== '') {
+            $this->groupStart()
+                 ->like('ui.name', $userName)
+                 ->orLike('ui.id', $userName)
+                 ->groupEnd();
+        }
+        if ($dateFrom !== '') {
+            $this->where('DATE(refund_requests.created_at) >=', $dateFrom);
+        }
+        if ($dateTo !== '') {
+            $this->where('DATE(refund_requests.created_at) <=', $dateTo);
+        }
+
         return $this->orderBy('refund_requests.idx', 'DESC')->paginate(20) ?? [];
     }
 
@@ -56,6 +78,31 @@ class RefundRequestModel extends Model
                     ->join('user_info ui', 'ui.idx = refund_requests.user_idx', 'left')
                     ->where('refund_requests.idx', $idx)
                     ->first();
+    }
+
+    /**
+     * 주문 목록의 환불 상태 맵 반환 — [order_idx => 'pending'|'approved']
+     * pending 우선, 없으면 approved, 둘 다 없으면 맵에 미포함
+     */
+    public function getRefundStatusMap(array $orderIdxList): array
+    {
+        if (empty($orderIdxList)) return [];
+        $rows = \Config\Database::connect()
+            ->table('refund_requests')
+            ->select("order_idx,
+                CASE WHEN SUM(status='pending')  > 0 THEN 'pending'
+                     WHEN SUM(status='approved') > 0 THEN 'approved'
+                ELSE NULL END AS refund_status")
+            ->whereIn('order_idx', $orderIdxList)
+            ->groupBy('order_idx')
+            ->get()->getResultArray();
+        $map = [];
+        foreach ($rows as $row) {
+            if ($row['refund_status'] !== null) {
+                $map[(int) $row['order_idx']] = $row['refund_status'];
+            }
+        }
+        return $map;
     }
 
     /**

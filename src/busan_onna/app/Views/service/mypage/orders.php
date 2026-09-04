@@ -114,8 +114,10 @@
         .status-paid     { background: #d1ecf1; color: #0c5460; }
         .status-shipping { background: #d4edda; color: #155724; }
         .status-done     { background: #e2e3e5; color: #383d41; }
-        .status-cancel   { background: #f8d7da; color: #721c24; }
-        .status-default  { background: #f8f9fa; color: #495057; }
+        .status-cancel     { background: #f8d7da; color: #721c24; }
+        .status-default    { background: #f8f9fa; color: #495057; }
+        .status-refunding  { background: #fff3e0; color: #e65100; }
+        .status-refunded   { background: #e8f5e9; color: #2e7d32; }
 
         /* 상세 보기 버튼 */
         .btn-detail {
@@ -262,6 +264,12 @@
                         <span class="status-badge <?= $statusClass ?>">
                             <?= $statusLabel ?>
                         </span>
+                        <?php $refundSt = ($refundStatusMap ?? [])[(int)$order['idx']] ?? null; ?>
+                        <?php if ($refundSt === 'pending'): ?>
+                        <br><span class="status-badge status-refunding">환불진행중</span>
+                        <?php elseif ($refundSt === 'approved'): ?>
+                        <br><span class="status-badge status-refunded">환불완료</span>
+                        <?php endif; ?>
                     </td>
 
                     <!-- 상세 보기 -->

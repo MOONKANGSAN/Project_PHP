@@ -168,6 +168,106 @@
             border-color: #e55039;
             color: #e55039;
         }
+
+        /* 환불 요청 버튼 */
+        .btn-refund-request {
+            display: inline-block;
+            padding: 12px 28px;
+            background: #fff;
+            color: #e55039;
+            font-size: 15px;
+            font-weight: 700;
+            border: 2px solid #e55039;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+        .btn-refund-request:hover { background: #e55039; color: #fff; }
+
+        /* 배송중 안내 텍스트 */
+        .refund-ship-notice {
+            font-size: 14px;
+            color: #868e96;
+            padding: 10px 0;
+        }
+
+        /* 환불 모달 */
+        .refund-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+        }
+        .refund-overlay.active { display: flex; }
+        .refund-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 88vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            margin: 16px;
+        }
+        .refund-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky; top: 0;
+            background: #fff; z-index: 1;
+        }
+        .refund-modal-header h3 { margin: 0; font-size: 17px; font-weight: 700; }
+        .refund-modal-close { font-size: 24px; color: #adb5bd; cursor: pointer; background: none; border: none; line-height: 1; }
+        .refund-modal-body { padding: 22px 24px; }
+        .refund-modal-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 14px 24px; border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+            position: sticky; bottom: 0;
+        }
+        .rm-section { margin-bottom: 20px; }
+        .rm-section h4 {
+            font-size: 12px; font-weight: 700; color: #868e96;
+            text-transform: uppercase; letter-spacing: .5px;
+            margin: 0 0 10px; padding-bottom: 6px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .rm-item-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px;
+            border: 1.5px solid #dee2e6; border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .rm-item-row label { display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1; }
+        .rm-item-row input[type=checkbox] { width: 16px; height: 16px; accent-color: #e55039; flex-shrink: 0; }
+        .rm-item-name { font-size: 14px; font-weight: 600; }
+        .rm-item-opt  { font-size: 12px; color: #868e96; }
+        .rm-item-price { font-size: 14px; font-weight: 700; color: #e55039; white-space: nowrap; }
+        .rm-warn {
+            background: #fff3cd; border: 1.5px solid #ffc107;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 13px; color: #856404;
+            display: flex; gap: 8px; align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .rm-select, .rm-textarea, .rm-file {
+            width: 100%; padding: 9px 12px;
+            border: 1.5px solid #dee2e6; border-radius: 8px;
+            font-size: 14px; color: #343a40;
+            background: #f8f9fa; box-sizing: border-box;
+            font-family: inherit;
+        }
+        .rm-textarea { resize: vertical; min-height: 72px; margin-top: 8px; }
+        .rm-file { background: #fff; padding: 6px 10px; }
+        .rm-label { display: block; font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 6px; }
+        .rm-hint  { font-size: 12px; color: #868e96; margin-top: 4px; }
+        .btn-rm-cancel  { padding: 10px 22px; border: 1.5px solid #dee2e6; background: #fff; color: #495057; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-rm-submit  { padding: 10px 24px; border: none; background: #e55039; color: #fff; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .btn-rm-submit:disabled { opacity: .5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -204,6 +304,17 @@
             default    => 'status-default',
         };
         $statusLabel = $labels[$order['status'] ?? ''] ?? esc($order['status'] ?? '-');
+        ?>
+
+        <?php
+        /* 환불 요청 가능 여부 계산 */
+        $canRefund  = in_array($order['status'] ?? '', ['paid', 'preparing', 'delivered']);
+        $isShipped  = ($order['status'] ?? '') === 'shipped';
+        $isOver7Days = false;
+        if (($order['status'] ?? '') === 'delivered' && !empty($order['delivered_at'])) {
+            $diff = (new \DateTime())->diff(new \DateTime($order['delivered_at']))->days;
+            $isOver7Days = ($diff >= 7);
+        }
         ?>
 
         <!-- 주문 기본 정보 -->
@@ -306,11 +417,98 @@
         </div>
         <?php endif; ?>
 
-        <!-- 목록으로 버튼 -->
-        <a href="/mypage/orders" class="btn-back-list">← 목록으로</a>
+        <!-- 하단 버튼 영역 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <a href="/mypage/orders" class="btn-back-list">← 목록으로</a>
+            <?php if ($canRefund): ?>
+            <button type="button" class="btn-refund-request" id="btnOpenRefundModal">환불 요청</button>
+            <?php elseif ($isShipped): ?>
+            <span class="refund-ship-notice">배송 완료 후 환불 요청이 가능합니다</span>
+            <?php endif; ?>
+        </div>
 
     </div>
 </section>
+
+<?php if ($canRefund): ?>
+<!-- ===== 환불 요청 모달 ===== -->
+<div class="refund-overlay" id="refundOverlay">
+  <div class="refund-modal">
+    <div class="refund-modal-header">
+      <h3>환불 요청</h3>
+      <button type="button" class="refund-modal-close" id="btnCloseRefundModal">✕</button>
+    </div>
+    <div class="refund-modal-body">
+
+      <!-- 상품 선택 -->
+      <div class="rm-section">
+        <h4>환불할 상품 선택 <span style="color:#e55039">*</span></h4>
+        <?php foreach ($items as $item): ?>
+        <div class="rm-item-row">
+          <label>
+            <input type="checkbox" class="refund-item-check"
+                   value="<?= (int)$item['idx'] ?>" checked>
+            <div>
+              <div class="rm-item-name"><?= esc($item['goods_name']) ?></div>
+              <?php if (!empty($item['option_label'])): ?>
+              <div class="rm-item-opt"><?= esc($item['option_label']) ?></div>
+              <?php endif; ?>
+            </div>
+          </label>
+          <span class="rm-item-price"><?= number_format((int)$item['unit_price'] * (int)$item['quantity']) ?>원</span>
+        </div>
+        <?php endforeach; ?>
+      </div>
+
+      <!-- 7일 경과 경고 -->
+      <?php if ($isOver7Days): ?>
+      <div class="rm-warn">
+        <span style="font-size:16px">⚠️</span>
+        <div>
+          배송완료일로부터 <strong>7일 이상</strong> 경과한 상품이 포함되어 있습니다.<br>
+          상품 확인 과정에서 <strong>패널티가 발생할 수 있습니다.</strong>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- 환불 사유 -->
+      <div class="rm-section">
+        <h4>환불 사유 <span style="color:#e55039">*</span></h4>
+        <select class="rm-select" id="refundReason">
+          <option value="">-- 사유를 선택해주세요 --</option>
+          <option value="change_of_mind">단순 변심</option>
+          <option value="defective">상품 불량 / 파손</option>
+          <option value="wrong_item">상품 오배송 (다른 상품 도착)</option>
+          <option value="delay">배송 지연</option>
+          <option value="not_as_described">상품 설명과 다름</option>
+          <option value="duplicate">중복 주문</option>
+          <option value="direct">직접 입력 ✏️</option>
+        </select>
+        <textarea class="rm-textarea" id="refundReasonText"
+                  placeholder="환불 사유를 직접 입력해주세요 (최대 200자)"
+                  maxlength="200"
+                  style="display:none"></textarea>
+        <p class="rm-hint" id="refundDirectHint" style="display:none">
+          "직접 입력" 선택 시 이 입력란을 작성해주세요.
+        </p>
+      </div>
+
+      <!-- 이미지 첨부 -->
+      <div class="rm-section" style="margin-bottom:0">
+        <h4>이미지 첨부 (선택)</h4>
+        <input type="file" class="rm-file" id="refundImages"
+               accept="image/jpeg,image/png,image/gif" multiple>
+        <p class="rm-hint">최대 3장, jpg/png/gif, 파일당 10MB 이하</p>
+      </div>
+
+    </div>
+    <div class="refund-modal-footer">
+      <button type="button" class="btn-rm-cancel" id="btnCancelRefund">취소</button>
+      <button type="button" class="btn-rm-submit" id="btnSubmitRefund">환불 요청 제출</button>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <?= view('service/partials/footer') ?>
 
@@ -321,6 +519,93 @@
 <script src="/js/modules/login.js"></script>
 <script src="/js/modules/signup.js"></script>
 <script src="/js/service-common.js"></script>
+
+<?php if ($canRefund): ?>
+<script>
+(function () {
+  var overlay   = document.getElementById('refundOverlay');
+  var btnOpen   = document.getElementById('btnOpenRefundModal');
+  var btnClose  = document.getElementById('btnCloseRefundModal');
+  var btnCancel = document.getElementById('btnCancelRefund');
+  var btnSubmit = document.getElementById('btnSubmitRefund');
+  var selReason = document.getElementById('refundReason');
+  var txtReason = document.getElementById('refundReasonText');
+  var hintDirect= document.getElementById('refundDirectHint');
+  var fileInput = document.getElementById('refundImages');
+  var orderIdx  = <?= (int)$order['idx'] ?>;
+
+  function openModal()  { overlay.classList.add('active'); }
+  function closeModal() { overlay.classList.remove('active'); }
+
+  if (btnOpen)   btnOpen.addEventListener('click', openModal);
+  if (btnClose)  btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeModal();
+  });
+
+  selReason.addEventListener('change', function () {
+    var isDirect = this.value === 'direct';
+    txtReason.style.display  = isDirect ? 'block' : 'none';
+    hintDirect.style.display = isDirect ? 'block' : 'none';
+  });
+
+  fileInput.addEventListener('change', function () {
+    if (this.files.length > 3) {
+      alert('이미지는 최대 3장까지 첨부 가능합니다.');
+      this.value = '';
+    }
+  });
+
+  btnSubmit.addEventListener('click', function () {
+    var checked = document.querySelectorAll('.refund-item-check:checked');
+    if (checked.length === 0) {
+      alert('환불할 상품을 1개 이상 선택해주세요.');
+      return;
+    }
+    if (!selReason.value) {
+      alert('환불 사유를 선택해주세요.');
+      return;
+    }
+    if (selReason.value === 'direct' && !txtReason.value.trim()) {
+      alert('직접 입력 사유를 작성해주세요.');
+      return;
+    }
+
+    var fd = new FormData();
+    checked.forEach(function (el) { fd.append('item_idxs[]', el.value); });
+    fd.append('reason', selReason.value);
+    if (selReason.value === 'direct') fd.append('reason_text', txtReason.value.trim());
+    Array.from(fileInput.files).forEach(function (f) { fd.append('images[]', f); });
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = '처리 중...';
+
+    fetch('/mypage/orders/' + orderIdx + '/refund', {
+      method: 'POST',
+      body: fd,
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.success) {
+        alert('환불 요청이 접수되었습니다.');
+        closeModal();
+        location.reload();
+      } else {
+        alert(data.message || '오류가 발생했습니다.');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '환불 요청 제출';
+      }
+    })
+    .catch(function () {
+      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = '환불 요청 제출';
+    });
+  });
+})();
+</script>
+<?php endif; ?>
 
 </body>
 </html>

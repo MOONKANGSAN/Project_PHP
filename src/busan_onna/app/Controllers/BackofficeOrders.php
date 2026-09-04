@@ -168,7 +168,10 @@ class BackofficeOrders extends BaseController
         if ($next === 'delivered') {
             $updateData['delivered_at'] = date('Y-m-d H:i:s');
         }
-        $this->model->update($idx, $updateData);
+        if (!$this->model->update($idx, $updateData)) {
+            echo json_encode(['success' => false, 'message' => '상태 변경 중 오류가 발생했습니다.']);
+            return;
+        }
 
         echo json_encode([
             'success'    => true,
@@ -226,7 +229,7 @@ class BackofficeOrders extends BaseController
      */
     public function refundDetail(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        header('Content-Type: application/json; charset=utf-8');
         $refund = (new RefundRequestModel())->getDetail($idx);
         if (!$refund) {
             echo json_encode(['success' => false, 'message' => '환불 요청을 찾을 수 없습니다.']);
@@ -246,11 +249,13 @@ class BackofficeOrders extends BaseController
 
     /**
      * POST /backoffice/refunds/{idx}/approve — 환불 승인 (AJAX)
-     * 1) pending 상태 확인 → 2) PortOne V2 결제 취소 API 호출 → 3) DB 트랜잭션 (환불 승인 + 주문 cancelled)
+     * 1) pending 상태 확인 → 2) DB 트랜잭션 (환불 승인 + 주문 cancelled) → 3) PortOne V2 결제 취소
+     * DB 먼저, PG 취소 마지막 — PG 취소 실패 시 DB 롤백 가능한 순서
      */
     public function approveRefund(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        // echo 직접 출력이므로 PHP header()로 Content-Type 보장
+        header('Content-Type: application/json; charset=utf-8');
         $adminMemo   = trim($this->request->getPost('admin_memo') ?? '');
         $refundModel = new RefundRequestModel();
         $refund      = $refundModel->getDetail($idx);
@@ -268,21 +273,8 @@ class BackofficeOrders extends BaseController
             return;
         }
 
-        // PortOne V2 결제 취소 — paymentId는 order_no (결제 요청 시 merchant paymentId로 사용)
-        $cancelResult = (new PortOnePayment())->cancel(
-            $order['order_no'],
-            $adminMemo !== '' ? $adminMemo : '관리자 환불 승인'
-        );
-
-        if (!$cancelResult['success']) {
-            log_message('error', '[approveRefund] 포트원 취소 실패 refund_idx=' . $idx
-                . ' error=' . $cancelResult['error']);
-            echo json_encode(['success' => false,
-                'message' => '결제 취소 실패: ' . $cancelResult['error']]);
-            return;
-        }
-
-        // DB 트랜잭션: 환불 승인 + 주문 상태 cancelled 처리
+        // DB 업데이트 먼저 → PortOne 취소를 커밋 직전에 실행
+        // (역순이면 PG 취소 완료 후 DB 실패 시 실제 환불됐으나 주문이 paid로 남는 불일치 발생)
         $db = \Config\Database::connect();
         $db->transBegin();
 
@@ -296,6 +288,21 @@ class BackofficeOrders extends BaseController
             return;
         }
 
+        // PortOne V2 결제 취소 — DB 커밋 직전 호출하여 실패 시 롤백 가능
+        $cancelResult = (new PortOnePayment())->cancel(
+            $order['order_no'],
+            $adminMemo !== '' ? $adminMemo : '관리자 환불 승인'
+        );
+
+        if (!$cancelResult['success']) {
+            $db->transRollback();
+            log_message('error', '[approveRefund] 포트원 취소 실패 refund_idx=' . $idx
+                . ' error=' . $cancelResult['error']);
+            echo json_encode(['success' => false,
+                'message' => '결제 취소 실패: ' . $cancelResult['error']]);
+            return;
+        }
+
         $db->transCommit();
         echo json_encode(['success' => true, 'message' => '환불 요청이 승인되었습니다.']);
     }
@@ -306,7 +313,7 @@ class BackofficeOrders extends BaseController
      */
     public function rejectRefund(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        header('Content-Type: application/json; charset=utf-8');
         $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
         if ($adminMemo === '') {
             echo json_encode(['success' => false, 'message' => '반려 사유를 입력해주세요.']);

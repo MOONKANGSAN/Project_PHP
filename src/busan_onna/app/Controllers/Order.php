@@ -500,8 +500,8 @@ class Order extends BaseController
 
     private function _requestRefundInner(int $orderIdx): void
     {
-        // Debug Toolbar가 JSON 응답에 HTML을 삽입하지 않도록 Content-Type 명시
-        $this->response->setContentType('application/json');
+        // echo 직접 출력이므로 PHP header()로 Content-Type 보장 (CI4 Response 객체는 echo를 우회)
+        header('Content-Type: application/json; charset=utf-8');
 
         $userIdx = $this->userIdxForAjax();
         if ($userIdx === false) return;
@@ -601,9 +601,9 @@ class Order extends BaseController
             }
         }
 
-        // 트랜잭션으로 DB 저장
+        // 트랜잭션으로 DB 저장 (수동 모드 — transBegin/transCommit/transRollback 쌍으로 통일)
         $db = \Config\Database::connect();
-        $db->transStart();
+        $db->transBegin();
 
         $refundModel = new RefundRequestModel();
         $refundModel->insert([
@@ -615,7 +615,7 @@ class Order extends BaseController
         ]);
         $refundIdx = (int) $refundModel->getInsertID();
 
-        // INSERT 실패(ID=0) 감지 — 트랜잭션 즉시 롤백 후 파일 정리
+        // INSERT 실패(ID=0) 감지 — 트랜잭션 롤백 후 파일 정리
         if ($refundIdx === 0) {
             $db->transRollback();
             foreach ($uploadedPaths as $p) { $f = FCPATH . ltrim($p, '/'); if (file_exists($f)) unlink($f); }
@@ -632,19 +632,7 @@ class Order extends BaseController
             }
         }
 
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            foreach ($uploadedPaths as $path) {
-                $fullPath = FCPATH . ltrim($path, '/');
-                if (file_exists($fullPath)) {
-                    unlink($fullPath);
-                }
-            }
-            echo json_encode(['success' => false, 'message' => '환불 요청 중 오류가 발생했습니다.']);
-            return;
-        }
-
+        $db->transCommit();
         echo json_encode(['success' => true, 'message' => '환불 요청이 접수되었습니다.']);
     }
 }

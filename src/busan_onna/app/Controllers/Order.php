@@ -2,18 +2,20 @@
 
 namespace App\Controllers;
 
+use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\CartModel;
 use App\Models\OrderModel;
 use App\Models\OrderItemModel;
 use App\Models\PickupLocationModel;
 use App\Models\GoodsModel;
+use App\Models\GoodsOptionModel;
 use App\Models\GoodsOptionValueModel;
 use App\Models\UserInfoModel;
 use App\Libraries\PortOnePayment;
 
 /**
  * 주문·결제·마이페이지 컨트롤러
- * - form()        : GET  /order             주문서 폼
+ * - form()        : GET  /order             주문서 폼 (장바구니 또는 즉시구매)
  * - store()       : POST /order/store       주문 레코드 생성 (pending)
  * - verify()      : POST /order/verify      PortOne 결제 검증 후 주문 확정
  * - complete()    : GET  /order/complete/N  주문 완료 페이지
@@ -23,8 +25,7 @@ use App\Libraries\PortOnePayment;
 class Order extends BaseController
 {
     /**
-     * 로그인 체크 — 미로그인 시 로그인 페이지로 리다이렉트
-     * @return int 로그인한 사용자 idx
+     * 로그인 체크 — 미로그인 시 로그인 페이지로 리다이렉트 (일반 요청용)
      */
     private function userIdx(): int
     {
@@ -37,24 +38,107 @@ class Order extends BaseController
     }
 
     /**
-     * GET /order — 주문서 폼
-     * cart_ids 쿼리스트링이 있으면 해당 항목만, 없으면 전체 장바구니를 표시
+     * 로그인 체크 — AJAX 엔드포인트 전용, 미로그인 시 JSON 401 반환
+     * @return int|false 로그인 idx 또는 false(응답 완료)
      */
-    public function form(): string
+    private function userIdxForAjax(): int|false
     {
-        $userIdx = $this->userIdx();
-        $cart    = new CartModel();
-        $items   = $cart->getCartItems($userIdx);
+        $idx = (int) session()->get('user.idx');
+        if (!$idx) {
+            $this->response->setStatusCode(401);
+            echo json_encode(['success' => false, 'message' => '로그인이 필요합니다.']);
+            return false;
+        }
+        return $idx;
+    }
+
+    /**
+     * GET /order — 주문서 폼
+     * buy_now=1 이면 장바구니 없이 상품 정보로 즉시구매 폼 구성
+     * cart_ids 쿼리스트링이 있으면 해당 항목만, 없으면 전체 장바구니
+     */
+    public function form(): ResponseInterface|string
+    {
+        $userIdx  = $this->userIdx();
+        $userInfo = (new UserInfoModel())->find($userIdx);
+        $pickups  = (new PickupLocationModel())->getActive();
+        $viewBase = [
+            'pickups'          => $pickups,
+            'userName'         => $userInfo['name']  ?? $userInfo['id'] ?? '',
+            'userPhone'        => $userInfo['phone'] ?? '',
+            'v2StoreId'        => env('PORTONE_V2_STORE_ID', ''),
+            'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
+            'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
+            'userEmail'        => $userInfo['email'] ?? '',
+        ];
+
+        /* ── 즉시구매 모드: 장바구니를 전혀 건드리지 않음 ── */
+        if ($this->request->getGet('buy_now') === '1') {
+            $goodsIdx  = (int) ($this->request->getGet('goods_idx') ?? 0);
+            $qty       = max(1, (int) ($this->request->getGet('qty') ?? 1));
+            $optValIdx = $this->request->getGet('option_value_idx')
+                         ? (int) $this->request->getGet('option_value_idx') : null;
+
+            $goods = (new GoodsModel())->getDetail($goodsIdx);
+            if (!$goods) {
+                return redirect()->to('/goods')->with('error', '상품 정보를 찾을 수 없습니다.');
+            }
+
+            /* 옵션 값·이름 조회 */
+            $additionalPrice = 0;
+            $optionValue     = null;
+            $optionName      = null;
+            if ($optValIdx) {
+                $optVal = (new GoodsOptionValueModel())->find($optValIdx);
+                if ($optVal) {
+                    $additionalPrice = (int) ($optVal['additional_price'] ?? 0);
+                    $optionValue     = $optVal['value'] ?? null;
+                    $optGroup        = (new GoodsOptionModel())->find($optVal['option_idx']);
+                    $optionName      = $optGroup['option_name'] ?? null;
+                }
+            }
+
+            /* 장바구니 항목과 동일한 구조의 임시 배열 생성 */
+            $items = [[
+                'idx'              => 0,
+                'goods_idx'        => $goodsIdx,
+                'option_value_idx' => $optValIdx,
+                'quantity'         => $qty,
+                'goods_name'       => $goods['name'],
+                'price'            => (int) $goods['price'],
+                'thumbnail'        => $goods['thumbnail'] ?? '',
+                'stock'            => $goods['stock'],
+                'delivery_type'    => $goods['delivery_type'],
+                'option_value'     => $optionValue,
+                'additional_price' => $additionalPrice,
+                'option_name'      => $optionName,
+            ]];
+
+            $total = ((int)$goods['price'] + $additionalPrice) * $qty;
+
+            return view('service/order/form', array_merge($viewBase, [
+                'cartItems'       => $items,
+                'total'           => $total,
+                'isBuyNow'        => true,
+                'buyNowGoodsIdx'  => $goodsIdx,
+                'buyNowQty'       => $qty,
+                'buyNowOptValIdx' => $optValIdx ?? 0,
+                'cartIds'         => '',
+            ]));
+        }
+
+        /* ── 장바구니 모드 ── */
+        $cart  = new CartModel();
+        $items = $cart->getCartItems($userIdx);
 
         if (empty($items)) {
             return redirect()->to('/cart')->with('error', '장바구니가 비어있습니다.');
         }
 
-        /* cart_ids 쿼리스트링으로 선택 항목 필터링 (ex: ?cart_ids=1,2,3) */
+        /* cart_ids 쿼리스트링으로 선택 항목 필터링 */
         $cartIdsParam = trim($this->request->getGet('cart_ids') ?? '');
         if ($cartIdsParam !== '') {
             $allowedIds = array_map('intval', explode(',', $cartIdsParam));
-            /* 본인 장바구니 항목 중에서만 필터 — 타인 idx 주입 방지 */
             $items = array_values(array_filter(
                 $items,
                 fn($i) => in_array((int)$i['idx'], $allowedIds, true)
@@ -65,45 +149,118 @@ class Order extends BaseController
             return redirect()->to('/cart')->with('error', '선택된 상품이 없습니다.');
         }
 
-        /* 장바구니 항목의 총액 계산 (단가 + 옵션 추가금액) × 수량 */
-        $total   = array_sum(array_map(
+        $total      = array_sum(array_map(
             fn($i) => ($i['price'] + ($i['additional_price'] ?? 0)) * $i['quantity'],
             $items
         ));
-        $pickups = (new PickupLocationModel())->getActive();
-
-        // PortOne V2 customer.email 필수값 — user_info 에서 조회
-        $userInfo  = (new UserInfoModel())->find($userIdx);
-        $userEmail = $userInfo['email'] ?? '';
-
-        /* 실제 렌더링될 항목의 idx를 콤마 구분 문자열로 store()에 전달 */
         $cartIdsStr = implode(',', array_column($items, 'idx'));
 
-        return view('service/order/form', [
-            'cartItems'        => $items,
-            'total'            => $total,
-            'pickups'          => $pickups,
-            'cartIds'          => $cartIdsStr,
-            'userName'         => $userInfo['name']  ?? $userInfo['id'] ?? '',
-            'userPhone'        => $userInfo['phone'] ?? '',
-            'v2StoreId'        => env('PORTONE_V2_STORE_ID', ''),
-            'inicisChannelKey' => env('PORTONE_INICIS_CHANNEL_KEY', ''),
-            'kakaoChannelKey'  => env('PORTONE_KAKAO_CHANNEL_KEY', ''),
-            'userEmail'        => $userEmail,
-        ]);
+        return view('service/order/form', array_merge($viewBase, [
+            'cartItems' => $items,
+            'total'     => $total,
+            'isBuyNow'  => false,
+            'cartIds'   => $cartIdsStr,
+        ]));
     }
 
     /**
      * POST /order/store — 주문 레코드 생성 (결제 전 pending 상태)
-     * 폼 POST 데이터: delivery_type, recipient_name, recipient_phone,
-     *                  delivery_address (택배), pickup_location_idx (픽업)
-     * 응답: JSON { success, order_idx, order_no, total_price }
+     * buy_now=1 이면 장바구니 없이 상품 정보로 직접 주문 생성
      */
     public function store(): void
     {
-        $userIdx = $this->userIdx();
-        $post    = $this->request->getPost();
+        $userIdx = $this->userIdxForAjax();
+        if ($userIdx === false) return;
 
+        $post         = $this->request->getPost();
+        $orderModel   = new OrderModel();
+        $db           = \Config\Database::connect();
+        $deliveryType = (int) ($post['delivery_type'] ?? 1);
+
+        /* 공통 배송 데이터 */
+        $orderData = [
+            'status'        => 'pending',
+            'order_no'      => $orderModel->generateOrderNo(),
+            'user_idx'      => $userIdx,
+            'delivery_type' => $deliveryType,
+        ];
+        if ($deliveryType === 1) {
+            $orderData['recipient_name']    = trim($post['recipient_name']    ?? '');
+            $orderData['recipient_phone']   = trim($post['recipient_phone']   ?? '');
+            $orderData['delivery_address']  = trim($post['delivery_address']  ?? '');
+            $orderData['delivery_address2'] = trim($post['delivery_address2'] ?? '');
+        } else {
+            $orderData['pickup_location_idx'] = (int) ($post['pickup_location_idx'] ?? 0);
+        }
+
+        /* ── 즉시구매 모드: 장바구니 조회·변경 없이 상품 정보로 주문 생성 ── */
+        if (($post['buy_now'] ?? '') === '1') {
+            $goodsIdx  = (int) ($post['goods_idx'] ?? 0);
+            $qty       = max(1, (int) ($post['qty'] ?? 1));
+            $optValIdx = !empty($post['option_value_idx']) ? (int) $post['option_value_idx'] : null;
+
+            $goods = (new GoodsModel())->getDetail($goodsIdx);
+            if (!$goods) {
+                echo json_encode(['success' => false, 'message' => '상품 정보를 찾을 수 없습니다.']);
+                return;
+            }
+
+            /* #2 재고 상한 검증 */
+            if ($qty > (int)$goods['stock']) {
+                echo json_encode(['success' => false, 'message' => '재고가 부족합니다.']);
+                return;
+            }
+
+            $additionalPrice = 0;
+            $optionLabel     = null;
+            if ($optValIdx) {
+                $optVal = (new GoodsOptionValueModel())->find($optValIdx);
+                if (!$optVal) {
+                    echo json_encode(['success' => false, 'message' => '잘못된 옵션입니다.']);
+                    return;
+                }
+                /* #1 option_value_idx가 해당 상품 소속인지 검증 */
+                $optGroup = (new GoodsOptionModel())->find($optVal['option_idx']);
+                if (!$optGroup || (int)$optGroup['goods_idx'] !== $goodsIdx) {
+                    echo json_encode(['success' => false, 'message' => '잘못된 옵션입니다.']);
+                    return;
+                }
+                $additionalPrice = (int) ($optVal['additional_price'] ?? 0);
+                $optionLabel     = $optGroup['option_name'] . ': ' . $optVal['value'];
+            }
+
+            $unitPrice = (int)$goods['price'] + $additionalPrice;
+            $total     = $unitPrice * $qty;
+
+            $orderData['total_price'] = $total;
+
+            $db->transStart();
+            $orderModel->insert($orderData);
+            $orderIdx = (int) $orderModel->getInsertID();
+
+            (new OrderItemModel())->insert([
+                'order_idx'        => $orderIdx,
+                'goods_idx'        => $goodsIdx,
+                'vendor_idx'       => null,
+                'option_value_idx' => $optValIdx,
+                'goods_name'       => $goods['name'],
+                'option_label'     => $optionLabel,
+                'quantity'         => $qty,
+                'unit_price'       => $unitPrice,
+            ]);
+
+            $db->transComplete();
+
+            echo json_encode([
+                'success'     => $db->transStatus(),
+                'order_idx'   => $orderIdx,
+                'order_no'    => $orderData['order_no'],
+                'total_price' => $total,
+            ]);
+            return;
+        }
+
+        /* ── 장바구니 모드 ── */
         $cart  = new CartModel();
         $items = $cart->getCartItems($userIdx);
 
@@ -112,7 +269,6 @@ class Order extends BaseController
             return;
         }
 
-        /* 주문서 폼에서 전달된 cart_ids로 선택 항목만 필터링 */
         $cartIdsParam = trim($post['cart_ids'] ?? '');
         if ($cartIdsParam !== '') {
             $allowedIds = array_map('intval', explode(',', $cartIdsParam));
@@ -127,43 +283,17 @@ class Order extends BaseController
             return;
         }
 
-        /* 총 결제금액 계산 */
-        $total        = array_sum(array_map(
+        $total = array_sum(array_map(
             fn($i) => ($i['price'] + ($i['additional_price'] ?? 0)) * $i['quantity'],
             $items
         ));
-        $deliveryType = (int) ($post['delivery_type'] ?? 1);
+        $orderData['total_price'] = $total;
 
-        $orderModel = new OrderModel();
-        $db         = \Config\Database::connect();
         $db->transStart();
-
-        /* 주문 기본 데이터 */
-        $orderData = [
-            'status'        => 'pending',
-            'order_no'      => $orderModel->generateOrderNo(),
-            'user_idx'      => $userIdx,
-            'total_price'   => $total,
-            'delivery_type' => $deliveryType,
-        ];
-
-        /* 배송 유형에 따라 추가 필드 분기 */
-        if ($deliveryType === 1) {
-            /* 택배: 수령인 정보 + 배송지 + 상세주소 */
-            $orderData['recipient_name']    = trim($post['recipient_name']    ?? '');
-            $orderData['recipient_phone']   = trim($post['recipient_phone']   ?? '');
-            $orderData['delivery_address']  = trim($post['delivery_address']  ?? '');
-            $orderData['delivery_address2'] = trim($post['delivery_address2'] ?? '');
-        } else {
-            /* 픽업: 픽업 장소 idx */
-            $orderData['pickup_location_idx'] = (int) ($post['pickup_location_idx'] ?? 0);
-        }
-
         $orderModel->insert($orderData);
-        $orderIdx = (int) $orderModel->getInsertID();
-
-        /* 주문 항목 레코드 생성 */
+        $orderIdx  = (int) $orderModel->getInsertID();
         $itemModel = new OrderItemModel();
+
         foreach ($items as $item) {
             $unitPrice = $item['price'] + ($item['additional_price'] ?? 0);
             $itemModel->insert([
@@ -192,15 +322,19 @@ class Order extends BaseController
 
     /**
      * POST /order/verify — PortOne V2 결제 검증 후 주문 확정
-     * body JSON: { payment_id, order_idx }
-     * payment_id = 결제 시 전달한 orderNo (PortOne paymentId)
+     * body JSON: { payment_id, order_idx, buy_now? }
+     * #6 세션 만료 시 JSON 401 반환 (AJAX 전용 로그인 체크)
      */
     public function verify(): void
     {
+        /* #6 AJAX 엔드포인트 — 세션 만료 시 HTML 리다이렉트 대신 JSON 401 */
+        $userIdx = $this->userIdxForAjax();
+        if ($userIdx === false) return;
+
         $body      = $this->request->getJSON(true) ?? [];
         $paymentId = trim($body['payment_id'] ?? '');
         $orderIdx  = (int)($body['order_idx'] ?? 0);
-        $userIdx   = $this->userIdx();
+        $isBuyNow  = !empty($body['buy_now']);
 
         if ($paymentId === '' || $orderIdx === 0) {
             echo json_encode(['success' => false, 'message' => '잘못된 요청입니다.']);
@@ -234,27 +368,41 @@ class Order extends BaseController
             default   => strtolower($methodType),
         };
 
-        // 결제 분류: EasyPay+KAKAOPAY → kakao, 그 외(이니시스 카드) → inicis
         $easyPayProvider = strtolower($result['data']['method']['easyPay']['provider'] ?? '');
         $payKind = ($methodType === 'EasyPay' && $easyPayProvider === 'kakaopay') ? 'kakao' : 'inicis';
 
-        // 주문 상태 paid 처리 — pgTxId(PG 트랜잭션 ID) 우선, 없으면 paymentId 저장
         $pgTxId = $result['data']['pgTxId'] ?? $paymentId;
         $orderModel->markPaid($orderIdx, $pgTxId, $payMethod, $payKind);
 
-        // 재고 차감
+        /* #5 재고 차감 — 트랜잭션으로 감싸 실패 시 롤백 */
         $goodsModel       = new GoodsModel();
         $optionValueModel = new GoodsOptionValueModel();
         $itemModel        = new OrderItemModel();
+        $db               = \Config\Database::connect();
 
+        $db->transStart();
         foreach ($itemModel->getByOrder($orderIdx) as $item) {
-            $goodsModel->decreaseStock((int)$item['goods_idx'], (int)$item['quantity']);
+            $ok = $goodsModel->decreaseStock((int)$item['goods_idx'], (int)$item['quantity']);
+            if (!$ok) {
+                $db->transRollback();
+                /* 결제는 완료됐으나 재고 부족 — 관리자 확인 필요 로그 */
+                log_message('error', sprintf(
+                    '[Order::verify] 재고 차감 실패 order_idx=%d goods_idx=%d qty=%d',
+                    $orderIdx, $item['goods_idx'], $item['quantity']
+                ));
+                echo json_encode(['success' => false, 'message' => '재고 처리 중 오류가 발생했습니다. 고객센터로 문의해주세요.']);
+                return;
+            }
             if ($item['option_value_idx']) {
                 $optionValueModel->decreaseStock((int)$item['option_value_idx'], (int)$item['quantity']);
             }
         }
+        $db->transComplete();
 
-        (new CartModel())->clearByUser($userIdx);
+        /* 즉시구매는 장바구니와 무관 — clearByUser 건너뜀 */
+        if (!$isBuyNow) {
+            (new CartModel())->clearByUser($userIdx);
+        }
 
         echo json_encode(['success' => true, 'order_idx' => $orderIdx]);
     }

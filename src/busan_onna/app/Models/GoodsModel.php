@@ -46,6 +46,18 @@ class GoodsModel extends Model
     }
 
     /**
+     * 현재 상품 제외 다른 판매중 상품 최신순 조회 (상세 페이지 추천 영역용)
+     */
+    public function getOtherGoods(int $excludeIdx, int $limit = 6): array
+    {
+        return $this->where('state', 1)
+                    ->where('idx !=', $excludeIdx)
+                    ->orderBy('idx', 'DESC')
+                    ->limit($limit)
+                    ->findAll();
+    }
+
+    /**
      * 재고 차감 — 트랜잭션 내에서 호출, stock 부족 시 false 반환
      */
     public function decreaseStock(int $idx, int $qty): bool

@@ -34,17 +34,22 @@ class CartModel extends Model
     }
 
     /**
-     * 동일 상품+옵션 조합이 있으면 수량 증가, 없으면 신규 삽입
+     * 동일 상품+옵션 조합이 있으면 수량 증가, 없으면 신규 삽입 — cart idx 반환
      */
-    public function addOrIncrement(int $userIdx, int $goodsIdx, ?int $optionValueIdx, int $qty): void
+    public function addOrIncrement(int $userIdx, int $goodsIdx, ?int $optionValueIdx, int $qty): int
     {
-        $existing = $this->where('user_idx', $userIdx)
-                         ->where('goods_idx', $goodsIdx)
-                         ->where('option_value_idx', $optionValueIdx)
-                         ->first();
+        /* option_value_idx = null 일 때 'col = NULL'(항상 false) 방지 — IS NULL 사용 */
+        $query = $this->where('user_idx', $userIdx)->where('goods_idx', $goodsIdx);
+        if ($optionValueIdx === null) {
+            $query = $query->where('option_value_idx IS NULL', null, false);
+        } else {
+            $query = $query->where('option_value_idx', $optionValueIdx);
+        }
+        $existing = $query->first();
 
         if ($existing) {
             $this->update($existing['idx'], ['quantity' => $existing['quantity'] + $qty]);
+            return (int) $existing['idx'];
         } else {
             $this->insert([
                 'user_idx'         => $userIdx,
@@ -52,6 +57,7 @@ class CartModel extends Model
                 'option_value_idx' => $optionValueIdx,
                 'quantity'         => $qty,
             ]);
+            return (int) $this->getInsertID();
         }
     }
 

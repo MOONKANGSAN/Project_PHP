@@ -441,10 +441,17 @@ class Order extends BaseController
         $orderModel = new OrderModel();
         $orders     = $orderModel->getMyOrders($userIdx);
 
+        // 조회된 주문 목록의 환불 상태를 한 번에 조회
+        $orderIdxList    = array_map('intval', array_column($orders, 'idx'));
+        $refundStatusMap = !empty($orderIdxList)
+            ? (new RefundRequestModel())->getRefundStatusMap($orderIdxList)
+            : [];
+
         return view('service/mypage/orders', [
-            'orders' => $orders,
-            'pager'  => $orderModel->pager,
-            'labels' => OrderModel::STATUS_LABELS,
+            'orders'          => $orders,
+            'pager'           => $orderModel->pager,
+            'labels'          => OrderModel::STATUS_LABELS,
+            'refundStatusMap' => $refundStatusMap,
         ]);
     }
 
@@ -463,10 +470,15 @@ class Order extends BaseController
 
         $items = (new OrderItemModel())->getByOrder($idx);
 
+        // 해당 주문의 환불 상태 조회 (pending 우선)
+        $refundStatusMap = (new RefundRequestModel())->getRefundStatusMap([$idx]);
+        $refundStatus    = $refundStatusMap[$idx] ?? null;
+
         return view('service/mypage/order_detail', [
-            'order'  => $order,
-            'items'  => $items,
-            'labels' => OrderModel::STATUS_LABELS,
+            'order'        => $order,
+            'items'        => $items,
+            'labels'       => OrderModel::STATUS_LABELS,
+            'refundStatus' => $refundStatus,
         ]);
     }
 
@@ -477,6 +489,20 @@ class Order extends BaseController
      */
     public function requestRefund(int $orderIdx): void
     {
+        // 예외가 HTML 에러 페이지로 출력되는 것을 막고 JSON으로 반환
+        try {
+            $this->_requestRefundInner($orderIdx);
+        } catch (\Throwable $e) {
+            log_message('error', '[requestRefund] ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            echo json_encode(['success' => false, 'message' => '[서버오류] ' . $e->getMessage()]);
+        }
+    }
+
+    private function _requestRefundInner(int $orderIdx): void
+    {
+        // Debug Toolbar가 JSON 응답에 HTML을 삽입하지 않도록 Content-Type 명시
+        $this->response->setContentType('application/json');
+
         $userIdx = $this->userIdxForAjax();
         if ($userIdx === false) return;
 
@@ -510,7 +536,8 @@ class Order extends BaseController
             return;
         }
 
-        $validIdxs = array_column((new OrderItemModel())->getByOrder($orderIdx), 'idx');
+        // MySQL이 idx를 문자열로 반환하므로 intval()로 변환 후 비교
+        $validIdxs = array_map('intval', array_column((new OrderItemModel())->getByOrder($orderIdx), 'idx'));
         foreach ($itemIdxList as $itemIdx) {
             if (!in_array((int) $itemIdx, $validIdxs, true)) {
                 echo json_encode(['success' => false, 'message' => '잘못된 상품 정보입니다.']);

@@ -144,8 +144,8 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/backoffice/refund-requests"
-                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/refund-requests') ? 'active' : '' ?>">
+                        <a href="/backoffice/refunds"
+                           class="bo-nav-item <?= str_starts_with($current_uri, '/backoffice/refunds') ? 'active' : '' ?>">
                             <span class="bo-nav-icon">📃</span>
                             <span>환불요청 내역</span>
                         </a>

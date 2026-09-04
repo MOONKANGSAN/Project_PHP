@@ -580,6 +580,12 @@ class Order extends BaseController
         $db->transComplete();
 
         if (!$db->transStatus()) {
+            foreach ($uploadedPaths as $path) {
+                $fullPath = FCPATH . ltrim($path, '/');
+                if (file_exists($fullPath)) {
+                    unlink($fullPath);
+                }
+            }
             echo json_encode(['success' => false, 'message' => '환불 요청 중 오류가 발생했습니다.']);
             return;
         }

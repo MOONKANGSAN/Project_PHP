@@ -136,39 +136,53 @@
             color: #e55039;
         }
 
-        /* 페이저 */
+        /* ---- 페이지네이션 ---- */
         .pager-wrap {
             margin-top: 32px;
             display: flex;
             justify-content: center;
         }
-        .pager-wrap nav {
+        /* 리스트 가로 배치 */
+        .service-pager { display: flex; }
+        .sp-list {
             display: flex;
-            gap: 4px;
             align-items: center;
+            gap: 2px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
-        .pager-wrap a,
-        .pager-wrap span {
-            display: inline-block;
-            padding: 8px 14px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+        .sp-item { display: flex; }
+        /* 버튼 공통 — 배경·테두리 기본 none, 원형 */
+        .sp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: none;
+            border: none;
             font-size: 14px;
-            text-decoration: none;
+            font-weight: 500;
             color: #495057;
-            transition: background .15s, color .15s;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .15s;
+            line-height: 1;
+            user-select: none;
         }
-        .pager-wrap a:hover {
+        /* 호버: 연한 회색 원형 */
+        a.sp-btn:hover { background: #e9ecef; color: #212529; }
+        /* 현재 페이지 */
+        .sp-current {
             background: #e55039;
             color: #fff;
-            border-color: #e55039;
-        }
-        .pager-wrap .active {
-            background: #e55039;
-            color: #fff;
-            border-color: #e55039;
             font-weight: 700;
         }
+        .sp-current:hover { background: #e55039; }
+        /* 비활성 */
+        .sp-disabled { color: #ced4da; cursor: default; }
     </style>
 </head>
 <body>
@@ -260,10 +274,10 @@
             </table>
         </div>
 
-        <!-- 페이저 -->
+        <!-- 페이지네이션 -->
         <?php if (!empty($pager)): ?>
         <div class="pager-wrap">
-            <?= $pager->links() ?>
+            <?= $pager->links('default', 'service_pager') ?>
         </div>
         <?php endif; ?>
 

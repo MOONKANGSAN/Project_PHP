@@ -14,14 +14,12 @@
     <link rel="stylesheet" href="/css/modules/signup.css">
 
     <style>
-        /* ---- 마이페이지 전체 레이아웃: 콘텐츠 영역을 브라우저 가운데 50%로 제한 ---- */
+        /* ---- 마이페이지 전체 레이아웃 ---- */
         .mypage-body {
             background: #f4f6f9;
             min-height: calc(100vh - 68px);
             padding: 100px 0 80px;
         }
-
-        /* 콘텐츠 래퍼: 뷰포트의 50% 너비, 가운데 정렬 */
         .mypage-wrap {
             width: 50%;
             min-width: 600px;
@@ -46,8 +44,6 @@
             align-items: center;
             gap: 24px;
         }
-
-        /* 원형 프로필 이미지 */
         .profile-avatar {
             width: 80px;
             height: 80px;
@@ -65,8 +61,6 @@
             height: 44px;
             color: #adb5bd;
         }
-
-        /* 사용자 이름 + 프로필 수정 링크 */
         .profile-info {
             display: flex;
             flex-direction: column;
@@ -77,9 +71,7 @@
             font-weight: 700;
             color: #212529;
         }
-        .profile-greeting span {
-            color: #e55039;
-        }
+        .profile-greeting span { color: #e55039; }
         .btn-profile-edit {
             display: inline-flex;
             align-items: center;
@@ -93,18 +85,31 @@
             width: fit-content;
             transition: border-color .15s, color .15s;
         }
-        .btn-profile-edit:hover {
-            border-color: #e55039;
-            color: #e55039;
-        }
+        .btn-profile-edit:hover { border-color: #e55039; color: #e55039; }
 
         /* ---- 주문 현황 영역 ---- */
+        .order-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
         .order-card-title {
             font-size: 16px;
             font-weight: 700;
             color: #212529;
-            margin-bottom: 20px;
+            margin: 0;
         }
+        .btn-all-orders {
+            font-size: 12px;
+            color: #868e96;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: color .15s;
+        }
+        .btn-all-orders:hover { color: #e55039; }
 
         /* 탭 버튼 */
         .order-tabs {
@@ -125,13 +130,12 @@
             cursor: pointer;
             transition: color .15s, border-color .15s;
         }
-        .order-tab-btn.active {
-            color: #e55039;
-            border-bottom-color: #e55039;
-        }
-        .order-tab-btn:hover:not(.active) {
-            color: #495057;
-        }
+        .order-tab-btn.active { color: #e55039; border-bottom-color: #e55039; }
+        .order-tab-btn:hover:not(.active) { color: #495057; }
+
+        /* 탭 패널 */
+        .order-tab-panel { display: none; }
+        .order-tab-panel.active { display: block; }
 
         /* 주문 진행 단계 (스텝 바) */
         .order-steps {
@@ -140,8 +144,6 @@
             justify-content: space-between;
             position: relative;
         }
-
-        /* 단계 사이 연결선 */
         .order-steps::before {
             content: '';
             position: absolute;
@@ -152,7 +154,6 @@
             background: #dee2e6;
             z-index: 0;
         }
-
         .order-step {
             display: flex;
             flex-direction: column;
@@ -162,8 +163,6 @@
             position: relative;
             z-index: 1;
         }
-
-        /* 단계 원형 아이콘 */
         .step-circle {
             width: 32px;
             height: 32px;
@@ -173,31 +172,98 @@
             align-items: center;
             justify-content: center;
         }
-        .step-circle.has-count {
-            background: #e55039;
-        }
+        .step-circle.has-count { background: #e55039; }
         .step-circle span {
             font-size: 13px;
             font-weight: 700;
             color: #adb5bd;
         }
-        .step-circle.has-count span {
-            color: #fff;
-        }
-
-        /* 단계 라벨 */
+        .step-circle.has-count span { color: #fff; }
         .step-label {
             font-size: 12px;
             color: #868e96;
             text-align: center;
             white-space: nowrap;
         }
-
-        /* 단계 사이 화살표 */
         .step-arrow {
             font-size: 14px;
             color: #dee2e6;
             margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 주문 리스트 (주문내역 탭) */
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .order-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f3f5;
+            text-decoration: none;
+            color: inherit;
+            transition: background .15s;
+            cursor: pointer;
+        }
+        .order-list-item:last-child { border-bottom: none; }
+        .order-list-item:hover { background: #fafafa; border-radius: 8px; padding-left: 8px; padding-right: 8px; margin: 0 -8px; }
+        .order-list-left { flex: 1; min-width: 0; }
+        .order-list-goods {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212529;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .order-list-meta {
+            font-size: 12px;
+            color: #adb5bd;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .order-list-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .order-list-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e55039;
+        }
+        /* 상태 배지 */
+        .order-status-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .badge-paid      { background: #dbeafe; color: #1d4ed8; }
+        .badge-preparing { background: #fef3c7; color: #92400e; }
+        .badge-shipped   { background: #ede9fe; color: #6d28d9; }
+        .badge-delivered { background: #d1fae5; color: #065f46; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+        .badge-pending   { background: #f1f3f5; color: #868e96; }
+
+        .order-list-empty {
+            text-align: center;
+            padding: 36px 0;
+            color: #adb5bd;
+            font-size: 14px;
+        }
+        .order-chevron {
+            color: #ced4da;
             flex-shrink: 0;
         }
 
@@ -208,23 +274,14 @@
             color: #212529;
             margin-bottom: 20px;
         }
-
-        /* 카드 리스트 (가로 스크롤) */
         .likes-card-list {
             display: flex;
             gap: 14px;
             overflow-x: auto;
             padding-bottom: 8px;
         }
-        .likes-card-list::-webkit-scrollbar {
-            height: 4px;
-        }
-        .likes-card-list::-webkit-scrollbar-thumb {
-            background: #dee2e6;
-            border-radius: 4px;
-        }
-
-        /* 개별 장소 카드 */
+        .likes-card-list::-webkit-scrollbar { height: 4px; }
+        .likes-card-list::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
         .place-card {
             flex-shrink: 0;
             width: 140px;
@@ -235,12 +292,7 @@
             color: inherit;
             transition: box-shadow .2s, transform .2s;
         }
-        .place-card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-            transform: translateY(-2px);
-        }
-
-        /* 카드 썸네일 */
+        .place-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.12); transform: translateY(-2px); }
         .place-card-thumb {
             width: 100%;
             height: 110px;
@@ -256,16 +308,8 @@
             align-items: center;
             justify-content: center;
         }
-        .place-card-thumb-placeholder svg {
-            width: 32px;
-            height: 32px;
-            color: #ced4da;
-        }
-
-        /* 카드 본문 */
-        .place-card-body {
-            padding: 10px 12px;
-        }
+        .place-card-thumb-placeholder svg { width: 32px; height: 32px; color: #ced4da; }
+        .place-card-body { padding: 10px 12px; }
         .place-card-name {
             font-size: 13px;
             font-weight: 700;
@@ -275,21 +319,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .place-card-type {
-            font-size: 11px;
-            color: #adb5bd;
-        }
-
-        /* 좋아요한 명소 없을 때 */
-        .likes-empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: #adb5bd;
-        }
-        .likes-empty p {
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
+        .place-card-type { font-size: 11px; color: #adb5bd; }
+        .likes-empty { text-align: center; padding: 40px 20px; color: #adb5bd; }
+        .likes-empty p { font-size: 14px; margin-bottom: 12px; }
         .btn-explore {
             display: inline-block;
             padding: 8px 20px;
@@ -303,13 +335,8 @@
         }
         .btn-explore:hover { background: #c0392b; }
 
-        /* 반응형: 모바일에서는 전체 너비 */
         @media (max-width: 768px) {
-            .mypage-wrap {
-                width: 100%;
-                min-width: 0;
-                padding: 0 16px;
-            }
+            .mypage-wrap { width: 100%; min-width: 0; padding: 0 16px; }
         }
     </style>
 </head>
@@ -324,9 +351,8 @@
         <!-- 프로필 카드 -->
         <div class="mypage-card">
             <div class="profile-section">
-                <!-- 원형 프로필 아바타: 등록된 이미지가 있으면 표시, 없으면 기본 아이콘 -->
                 <div class="profile-avatar">
-                    <?php if (! empty($user['profile_image'])): ?>
+                    <?php if (!empty($user['profile_image'])): ?>
                         <img src="/uploads/profile/<?= esc($user['profile_image']) ?>"
                              alt="프로필 이미지"
                              style="width:100%;height:100%;object-fit:cover;">
@@ -338,11 +364,9 @@
                         </svg>
                     <?php endif; ?>
                 </div>
-
-                <!-- 사용자 정보: name 있으면 name, 없으면 id 표시 -->
                 <div class="profile-info">
                     <p class="profile-greeting">
-                        <span><?= esc(! empty($user['name']) ? $user['name'] : $user['id']) ?></span>님 안녕하세요!
+                        <span><?= esc(!empty($user['name']) ? $user['name'] : $user['id']) ?></span>님 안녕하세요!
                     </p>
                     <a href="/mypage/profile" class="btn-profile-edit">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -358,54 +382,120 @@
 
         <!-- 주문 현황 카드 -->
         <div class="mypage-card">
-            <p class="order-card-title">주문 현황</p>
+            <?php
+            /* 상태 레이블·배지 클래스 매핑 */
+            $statusLabels = [
+                'paid'      => '결제완료',
+                'preparing' => '상품준비중',
+                'shipped'   => '배송중',
+                'delivered' => '배송완료',
+                'cancelled' => '취소됨',
+                'pending'   => '결제대기',
+            ];
+            $statusBadges = [
+                'paid'      => 'badge-paid',
+                'preparing' => 'badge-preparing',
+                'shipped'   => 'badge-shipped',
+                'delivered' => 'badge-delivered',
+                'cancelled' => 'badge-cancelled',
+                'pending'   => 'badge-pending',
+            ];
+            ?>
 
-            <!-- 탭: 진행중인 주문 / 주문 내역 보기 -->
-            <div class="order-tabs">
-                <button class="order-tab-btn active" type="button">진행중인 주문</button>
-                <button class="order-tab-btn" type="button">주문 내역 보기</button>
+            <div class="order-card-header">
+                <p class="order-card-title">주문 현황</p>
             </div>
 
-            <!-- 주문 진행 단계 스텝 바 -->
-            <div class="order-steps">
+            <!-- 탭 버튼 -->
+            <div class="order-tabs">
+                <button class="order-tab-btn active" type="button" data-tab="tab-progress">진행중인 주문</button>
+                <button class="order-tab-btn"        type="button" data-tab="tab-history">주문 내역 보기</button>
+            </div>
 
-                <!-- 1단계: 결제완료 -->
-                <div class="order-step">
-                    <div class="step-circle">
-                        <span>0</span>
-                    </div>
-                    <p class="step-label">결제완료</p>
+            <!-- 탭 1: 진행중인 주문 스텝바 (실제 데이터) -->
+            <div class="order-tab-panel active" id="tab-progress">
+                <div class="order-steps">
+
+                    <?php
+                    $steps = [
+                        'paid'      => '결제완료',
+                        'preparing' => '상품준비중',
+                        'shipped'   => '배송중',
+                        'delivered' => '배송완료',
+                    ];
+                    $stepKeys = array_keys($steps);
+                    ?>
+                    <?php foreach ($steps as $key => $label): ?>
+                        <?php
+                        $cnt      = $orderCounts[$key] ?? 0;
+                        $hasCount = $cnt > 0;
+                        ?>
+                        <div class="order-step">
+                            <div class="step-circle <?= $hasCount ? 'has-count' : '' ?>">
+                                <span><?= $cnt ?></span>
+                            </div>
+                            <p class="step-label"><?= $label ?></p>
+                        </div>
+                        <?php if ($key !== 'delivered'): ?>
+                            <span class="step-arrow">›</span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+
+                </div>
+            </div>
+
+            <!-- 탭 2: 최근 3개월 주문 내역 (최대 5개) -->
+            <div class="order-tab-panel" id="tab-history">
+
+                <!-- 전체 주문내역 보기 링크 -->
+                <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                    <a href="/mypage/orders" class="btn-all-orders">
+                        전체 주문내역 보기
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </a>
                 </div>
 
-                <span class="step-arrow">›</span>
+                <?php if (empty($recentOrders)): ?>
+                    <div class="order-list-empty">최근 3개월간 주문 내역이 없습니다.</div>
+                <?php else: ?>
+                    <div class="order-list">
+                        <?php foreach ($recentOrders as $ord): ?>
+                        <?php
+                            $sKey   = $ord['status'] ?? '';
+                            $sLabel = $statusLabels[$sKey] ?? $sKey;
+                            $sBadge = $statusBadges[$sKey] ?? '';
+                            $paidAt = !empty($ord['paid_at']) ? substr($ord['paid_at'], 0, 10) : '—';
+                            $goodsName = $ord['goods_names'] ?? '상품 정보 없음';
+                        ?>
+                        <a href="/mypage/orders/<?= (int)$ord['idx'] ?>" class="order-list-item">
 
-                <!-- 2단계: 상품준비중 -->
-                <div class="order-step">
-                    <div class="step-circle">
-                        <span>0</span>
+                            <div class="order-list-left">
+                                <p class="order-list-goods"><?= esc($goodsName) ?></p>
+                                <div class="order-list-meta">
+                                    <span><?= esc($ord['order_no']) ?></span>
+                                    <span>·</span>
+                                    <span><?= esc($paidAt) ?></span>
+                                </div>
+                            </div>
+
+                            <div class="order-list-right">
+                                <span class="order-list-price"><?= number_format((int)$ord['total_price']) ?>원</span>
+                                <span class="order-status-badge <?= esc($sBadge) ?>"><?= esc($sLabel) ?></span>
+                            </div>
+
+                            <!-- 우측 화살표 -->
+                            <svg class="order-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+
+                        </a>
+                        <?php endforeach; ?>
                     </div>
-                    <p class="step-label">상품준비중</p>
-                </div>
-
-                <span class="step-arrow">›</span>
-
-                <!-- 3단계: 배송중 (현재 1건 진행중) -->
-                <div class="order-step">
-                    <div class="step-circle has-count">
-                        <span>1</span>
-                    </div>
-                    <p class="step-label">배송중</p>
-                </div>
-
-                <span class="step-arrow">›</span>
-
-                <!-- 4단계: 배송완료 -->
-                <div class="order-step">
-                    <div class="step-circle">
-                        <span>0</span>
-                    </div>
-                    <p class="step-label">배송완료</p>
-                </div>
+                <?php endif; ?>
 
             </div>
         </div>
@@ -415,39 +505,24 @@
             <p class="likes-section-title">좋아요 누른 부산 명소</p>
 
             <?php if (empty($likedPlaces)): ?>
-                <!-- 좋아요한 명소 없을 때 -->
                 <div class="likes-empty">
                     <p>아직 좋아요한 명소가 없습니다.</p>
                     <a href="/spots" class="btn-explore">부산 명소 둘러보기</a>
                 </div>
-
             <?php else: ?>
-                <!-- content_type별 URL·라벨 매핑 헬퍼 -->
                 <?php
-                /* content_type → 상세 페이지 경로 프리픽스 */
-                $urlMap = [
-                    'restaurant' => '/restaurants',
-                    'place'      => '/spots',
-                    'event'      => '/festivals',
-                ];
-                /* content_type → 한글 분류 라벨 */
-                $labelMap = [
-                    'restaurant' => '맛집',
-                    'place'      => '관광지',
-                    'event'      => '축제·행사',
-                ];
+                $urlMap   = ['restaurant' => '/restaurants', 'place' => '/spots', 'event' => '/festivals'];
+                $labelMap = ['restaurant' => '맛집', 'place' => '관광지', 'event' => '축제·행사'];
                 ?>
                 <div class="likes-card-list">
                 <?php foreach ($likedPlaces as $place): ?>
                     <?php
                     $type      = $place['content_type'];
-                    $detailUrl = ($urlMap[$type]  ?? '/spots') . '/' . (int) $place['target_idx'];
+                    $detailUrl = ($urlMap[$type] ?? '/spots') . '/' . (int)$place['target_idx'];
                     $typeLabel = $labelMap[$type] ?? $type;
                     ?>
                     <a href="<?= esc($detailUrl) ?>" class="place-card">
-
-                        <!-- 썸네일: 있으면 img, 없으면 플레이스홀더 -->
-                        <?php if (! empty($place['thumbnail'])): ?>
+                        <?php if (!empty($place['thumbnail'])): ?>
                             <img src="<?= esc($place['thumbnail']) ?>"
                                  alt="<?= esc($place['name']) ?>"
                                  class="place-card-thumb">
@@ -461,7 +536,6 @@
                                 </svg>
                             </div>
                         <?php endif; ?>
-
                         <div class="place-card-body">
                             <p class="place-card-name"><?= esc($place['name']) ?></p>
                             <p class="place-card-type"><?= esc($typeLabel) ?></p>
@@ -470,7 +544,6 @@
                 <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-
         </div>
 
     </div><!-- /.mypage-wrap -->
@@ -487,15 +560,22 @@
 <script src="/js/service-common.js"></script>
 
 <script>
-    /* ---- 주문 탭 전환 ---- */
-    document.querySelectorAll('.order-tab-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.order-tab-btn').forEach(function(b) {
-                b.classList.remove('active');
-            });
-            this.classList.add('active');
+/* ---- 주문 탭 전환 ---- */
+document.querySelectorAll('.order-tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        /* 탭 버튼 active 전환 */
+        document.querySelectorAll('.order-tab-btn').forEach(function (b) {
+            b.classList.remove('active');
+        });
+        btn.classList.add('active');
+
+        /* 탭 패널 전환 */
+        var target = btn.dataset.tab;
+        document.querySelectorAll('.order-tab-panel').forEach(function (panel) {
+            panel.classList.toggle('active', panel.id === target);
         });
     });
+});
 </script>
 
 </body>

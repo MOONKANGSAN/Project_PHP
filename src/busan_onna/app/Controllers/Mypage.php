@@ -63,10 +63,44 @@ class Mypage extends BaseController
             LIMIT  5
         ", [$userIdx])->getResultArray();
 
+        /* ── 상태별 주문 카운트 (진행중인 주문 스텝바용) ── */
+        $countRows   = $db->query("
+            SELECT status, COUNT(*) AS cnt
+            FROM   orders
+            WHERE  user_idx = ?
+              AND  status IN ('paid', 'preparing', 'shipped', 'delivered')
+            GROUP  BY status
+        ", [$userIdx])->getResultArray();
+        $orderCounts = [];
+        foreach ($countRows as $row) {
+            $orderCounts[$row['status']] = (int) $row['cnt'];
+        }
+
+        /* ── 최근 3개월 결제내역 최대 5개 (주문내역 탭용) ── */
+        $recentOrders = $db->query("
+            SELECT
+                o.idx,
+                o.order_no,
+                o.status,
+                o.total_price,
+                o.paid_at,
+                (SELECT GROUP_CONCAT(goods_name ORDER BY idx SEPARATOR ', ')
+                 FROM   order_items
+                 WHERE  order_idx = o.idx) AS goods_names
+            FROM   orders o
+            WHERE  o.user_idx = ?
+              AND  o.status  != 'pending'
+              AND  o.paid_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
+            ORDER  BY o.idx DESC
+            LIMIT  5
+        ", [$userIdx])->getResultArray();
+
         return view('service/mypage/index', [
-            'activeNav'   => 'mypage',
-            'user'        => $user,
-            'likedPlaces' => $likedPlaces,
+            'activeNav'    => 'mypage',
+            'user'         => $user,
+            'likedPlaces'  => $likedPlaces,
+            'orderCounts'  => $orderCounts,
+            'recentOrders' => $recentOrders,
         ]);
     }
 

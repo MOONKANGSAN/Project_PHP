@@ -16,6 +16,7 @@ class OrderModel extends Model
         'delivery_type', 'recipient_name', 'recipient_phone',
         'delivery_address', 'delivery_address2', 'pickup_location_idx',
         'payment_key', 'payment_method', 'pay_kind', 'paid_at',
+        'delivered_at',
     ];
 
     /** 주문 상태 한국어 레이블 */

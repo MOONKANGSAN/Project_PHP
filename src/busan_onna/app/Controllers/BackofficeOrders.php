@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\PortOnePayment;
 use App\Models\OrderModel;
 use App\Models\OrderItemModel;
 use App\Models\DeliveryModel;
@@ -167,7 +168,10 @@ class BackofficeOrders extends BaseController
         if ($next === 'delivered') {
             $updateData['delivered_at'] = date('Y-m-d H:i:s');
         }
-        $this->model->update($idx, $updateData);
+        if (!$this->model->update($idx, $updateData)) {
+            echo json_encode(['success' => false, 'message' => '상태 변경 중 오류가 발생했습니다.']);
+            return;
+        }
 
         echo json_encode([
             'success'    => true,
@@ -225,7 +229,7 @@ class BackofficeOrders extends BaseController
      */
     public function refundDetail(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        header('Content-Type: application/json; charset=utf-8');
         $refund = (new RefundRequestModel())->getDetail($idx);
         if (!$refund) {
             echo json_encode(['success' => false, 'message' => '환불 요청을 찾을 수 없습니다.']);
@@ -245,22 +249,61 @@ class BackofficeOrders extends BaseController
 
     /**
      * POST /backoffice/refunds/{idx}/approve — 환불 승인 (AJAX)
-     * pending 상태가 아닌 요청은 거부, approve() 반환값 확인
+     * 1) pending 상태 확인 → 2) DB 트랜잭션 (환불 승인 + 주문 cancelled) → 3) PortOne V2 결제 취소
+     * DB 먼저, PG 취소 마지막 — PG 취소 실패 시 DB 롤백 가능한 순서
      */
     public function approveRefund(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        // echo 직접 출력이므로 PHP header()로 Content-Type 보장
+        header('Content-Type: application/json; charset=utf-8');
         $adminMemo   = trim($this->request->getPost('admin_memo') ?? '');
         $refundModel = new RefundRequestModel();
         $refund      = $refundModel->getDetail($idx);
+
         if (!$refund || $refund['status'] !== 'pending') {
             echo json_encode(['success' => false, 'message' => '처리할 수 없는 요청입니다.']);
             return;
         }
-        if (!$refundModel->approve($idx, $adminMemo)) {
-            echo json_encode(['success' => false, 'message' => '승인 처리 중 오류가 발생했습니다.']);
+
+        // 주문 정보 조회 — payment_key 없으면 결제 미완료 주문
+        $orderModel = new OrderModel();
+        $order      = $orderModel->find((int)$refund['order_idx']);
+        if (!$order || empty($order['payment_key'])) {
+            echo json_encode(['success' => false, 'message' => '결제 정보를 찾을 수 없습니다.']);
             return;
         }
+
+        // DB 업데이트 먼저 → PortOne 취소를 커밋 직전에 실행
+        // (역순이면 PG 취소 완료 후 DB 실패 시 실제 환불됐으나 주문이 paid로 남는 불일치 발생)
+        $db = \Config\Database::connect();
+        $db->transBegin();
+
+        $approved  = $refundModel->approve($idx, $adminMemo);
+        $cancelled = $orderModel->update((int)$refund['order_idx'], ['status' => 'cancelled']);
+
+        if (!$approved || !$cancelled) {
+            $db->transRollback();
+            log_message('error', '[approveRefund] DB 업데이트 실패 refund_idx=' . $idx);
+            echo json_encode(['success' => false, 'message' => '처리 중 DB 오류가 발생했습니다.']);
+            return;
+        }
+
+        // PortOne V2 결제 취소 — DB 커밋 직전 호출하여 실패 시 롤백 가능
+        $cancelResult = (new PortOnePayment())->cancel(
+            $order['order_no'],
+            $adminMemo !== '' ? $adminMemo : '관리자 환불 승인'
+        );
+
+        if (!$cancelResult['success']) {
+            $db->transRollback();
+            log_message('error', '[approveRefund] 포트원 취소 실패 refund_idx=' . $idx
+                . ' error=' . $cancelResult['error']);
+            echo json_encode(['success' => false,
+                'message' => '결제 취소 실패: ' . $cancelResult['error']]);
+            return;
+        }
+
+        $db->transCommit();
         echo json_encode(['success' => true, 'message' => '환불 요청이 승인되었습니다.']);
     }
 
@@ -270,7 +313,7 @@ class BackofficeOrders extends BaseController
      */
     public function rejectRefund(int $idx): void
     {
-        $this->response->setContentType('application/json');
+        header('Content-Type: application/json; charset=utf-8');
         $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
         if ($adminMemo === '') {
             echo json_encode(['success' => false, 'message' => '반려 사유를 입력해주세요.']);

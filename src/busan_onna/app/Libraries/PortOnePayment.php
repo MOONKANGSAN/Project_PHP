@@ -57,6 +57,50 @@ class PortOnePayment
     }
 
     /**
+     * paymentId(=주문번호)로 전액 결제 취소 요청
+     * POST https://api.portone.io/payments/{paymentId}/cancel
+     *
+     * @param string   $paymentId  orders.order_no (PortOne merchant paymentId)
+     * @param string   $reason     취소 사유
+     * @param int|null $amount     부분 취소 금액 — null이면 전액 취소
+     * @return array{success: bool, data: array|null, error: string}
+     */
+    public function cancel(string $paymentId, string $reason, ?int $amount = null): array
+    {
+        try {
+            $url  = $this->baseUrl . '/payments/' . urlencode($paymentId) . '/cancel';
+            $body = ['reason' => $reason];
+            if ($amount !== null) {
+                $body['amount'] = $amount;
+            }
+            $response = $this->post($url, $body);
+
+            log_message('debug', '[PortOne V2] cancel paymentId=' . $paymentId
+                . ' cancellation_status=' . ($response['cancellation']['status'] ?? 'N/A'));
+
+            // 오류 응답: type 필드 존재 또는 cancellation 키 없음
+            if (isset($response['type']) || !isset($response['cancellation'])) {
+                $msg = $response['message'] ?? ($response['type'] ?? 'API 오류');
+                return ['success' => false, 'data' => null, 'error' => $msg];
+            }
+
+            if (($response['cancellation']['status'] ?? '') !== 'SUCCEEDED') {
+                return [
+                    'success' => false,
+                    'data'    => $response,
+                    'error'   => '취소 상태 이상: ' . ($response['cancellation']['status'] ?? 'UNKNOWN'),
+                ];
+            }
+
+            return ['success' => true, 'data' => $response, 'error' => ''];
+
+        } catch (\Throwable $e) {
+            log_message('error', '[PortOne V2] cancel exception: ' . $e->getMessage());
+            return ['success' => false, 'data' => null, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * V2 REST API GET 요청
      * Authorization: PortOne {apiSecret} — 별도 토큰 발급 없이 Secret 직접 전송
      */
@@ -90,6 +134,46 @@ class PortOnePayment
         $decoded = json_decode($raw, true);
         if ($decoded === null) {
             throw new \RuntimeException('응답 파싱 실패: ' . $raw);
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * V2 REST API POST 요청
+     */
+    private function post(string $url, array $body): array
+    {
+        $sslVerify = (ENVIRONMENT === 'production');
+        $curl      = curl_init($url);
+
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($body, JSON_UNESCAPED_UNICODE),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: PortOne ' . $this->apiSecret,
+            ],
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_SSL_VERIFYPEER => $sslVerify,
+            CURLOPT_SSL_VERIFYHOST => $sslVerify ? 2 : 0,
+        ]);
+
+        $raw      = curl_exec($curl);
+        $error    = curl_error($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        log_message('debug', '[PortOne V2] POST ' . $url . ' → HTTP ' . $httpCode);
+
+        if ($raw === false) {
+            throw new \RuntimeException('cURL 오류: ' . $error);
+        }
+
+        $decoded = json_decode($raw, true);
+        if ($decoded === null) {
+            throw new \RuntimeException('응답 파싱 실패: ' . substr($raw, 0, 200));
         }
 
         return $decoded;

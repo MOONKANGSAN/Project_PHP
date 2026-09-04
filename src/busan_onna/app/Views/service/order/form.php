@@ -527,6 +527,12 @@
     const KAKAO_CHANNEL_KEY  = '<?= esc($kakaoChannelKey) ?>';
     const USER_EMAIL         = '<?= esc($userEmail) ?>';
 
+    /* 즉시구매 모드 여부 및 관련 데이터 */
+    const IS_BUY_NOW        = <?= ($isBuyNow ?? false) ? 'true' : 'false' ?>;
+    const BUY_NOW_GOODS_IDX = <?= (int)($buyNowGoodsIdx  ?? 0) ?>;
+    const BUY_NOW_QTY       = <?= (int)($buyNowQty       ?? 1) ?>;
+    const BUY_NOW_OPT_VAL   = <?= (int)($buyNowOptValIdx ?? 0) ?>;
+
     /* 현재 선택된 결제 수단 */
     let selectedMethod = 'inicis';
 
@@ -569,12 +575,12 @@
         btnPay.textContent = '결제하기 (<?= number_format($total) ?>원)';
     }
 
-    /* 3단계: 서버 결제 검증 — payment_id(=주문번호)를 서버로 전송 */
+    /* 3단계: 서버 결제 검증 — buy_now 플래그 포함해 전송 */
     function callVerify(paymentId, orderIdx) {
         fetch('/order/verify', {
             method  : 'POST',
             headers : { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body    : JSON.stringify({ payment_id: paymentId, order_idx: orderIdx }),
+            body    : JSON.stringify({ payment_id: paymentId, order_idx: orderIdx, buy_now: IS_BUY_NOW }),
         })
         .then(function (res) { return res.json(); })
         .then(function (data) {
@@ -624,8 +630,16 @@
         /* 1단계: pending 주문 레코드 생성 */
         const formData = new URLSearchParams();
         formData.append('delivery_type', deliveryType);
-        /* 장바구니에서 선택된 항목 IDs 전달 */
-        formData.append('cart_ids', '<?= esc($cartIds ?? '') ?>');
+
+        /* 즉시구매 / 장바구니 모드 분기 */
+        if (IS_BUY_NOW) {
+            formData.append('buy_now',   '1');
+            formData.append('goods_idx', BUY_NOW_GOODS_IDX);
+            formData.append('qty',       BUY_NOW_QTY);
+            if (BUY_NOW_OPT_VAL) formData.append('option_value_idx', BUY_NOW_OPT_VAL);
+        } else {
+            formData.append('cart_ids', '<?= esc($cartIds ?? '') ?>');
+        }
 
         if (deliveryType === '1') {
             formData.append('recipient_name',    document.getElementById('recipientName').value.trim());

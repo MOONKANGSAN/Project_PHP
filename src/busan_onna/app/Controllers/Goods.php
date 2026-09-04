@@ -61,9 +61,13 @@ class Goods extends BaseController
             return $opt;
         }, $rawOptions);
 
+        // 상세 페이지 하단 추천용 — 현재 상품 제외 최신 6개
+        $otherGoods = $goodsModel->getOtherGoods($idx);
+
         return view('service/goods/detail', [
-            'goods'   => $goods,
-            'options' => $options,
+            'goods'      => $goods,
+            'options'    => $options,
+            'otherGoods' => $otherGoods,
         ]);
     }
 }

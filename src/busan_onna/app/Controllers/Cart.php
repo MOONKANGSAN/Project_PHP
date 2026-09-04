@@ -66,10 +66,11 @@ class Cart extends BaseController
             return;
         }
 
-        $model = new CartModel();
-        $model->addOrIncrement((int) session()->get('user.idx'), $goodsIdx, $optionValueIdx, $quantity);
+        $model   = new CartModel();
+        $cartIdx = $model->addOrIncrement((int) session()->get('user.idx'), $goodsIdx, $optionValueIdx, $quantity);
 
-        echo json_encode(['success' => true]);
+        /* cart_idx 반환 — 즉시 구매 시 주문 폼 직행에 사용 */
+        echo json_encode(['success' => true, 'cart_idx' => $cartIdx]);
     }
 
     /**

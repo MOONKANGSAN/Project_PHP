@@ -13,6 +13,10 @@
     <div class="bo-alert bo-alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
 <?php endif; ?>
 
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="bo-alert bo-alert-error"><?= esc(session()->getFlashdata('error')) ?></div>
+<?php endif; ?>
+
 <style>
 /* 상태 필터 탭 */
 .refund-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -288,8 +292,8 @@
 
     var imgsHtml = images.length
       ? images.map(function (img) {
-          return '<div class="ro-img-thumb" onclick="openLightbox(\'' + img.file_path + '\')">'
-               + '<img src="' + img.file_path + '" alt="첨부이미지"></div>';
+          return '<div class="ro-img-thumb" data-src="' + esc(img.file_path) + '">'
+               + '<img src="' + esc(img.file_path) + '" alt="첨부이미지"></div>';
         }).join('')
       : '<span class="ro-no-img">첨부 이미지 없음</span>';
 
@@ -342,10 +346,13 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  window.openLightbox = function (src) {
-    lbImg.src = src;
-    lbOverlay.classList.add('active');
-  };
+  document.getElementById('roBody').addEventListener('click', function (e) {
+    var thumb = e.target.closest('.ro-img-thumb');
+    if (thumb) {
+      lbImg.src = thumb.dataset.src;
+      lbOverlay.classList.add('active');
+    }
+  });
 
   function postAction(url, memo, successMsg) {
     var fd = new FormData();

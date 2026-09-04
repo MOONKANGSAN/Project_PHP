@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Models\OrderModel;
 use App\Models\OrderItemModel;
 use App\Models\DeliveryModel;
+use App\Models\RefundRequestModel;
+use App\Models\RefundRequestItemModel;
+use App\Models\RefundRequestImageModel;
 
 /**
  * 백오피스 — 주문 관리 컨트롤러
@@ -160,7 +163,11 @@ class BackofficeOrders extends BaseController
         }
 
         $next = $cycle[$current];
-        $this->model->update($idx, ['status' => $next]);
+        $updateData = ['status' => $next];
+        if ($next === 'delivered') {
+            $updateData['delivered_at'] = date('Y-m-d H:i:s');
+        }
+        $this->model->update($idx, $updateData);
 
         echo json_encode([
             'success'    => true,
@@ -185,5 +192,68 @@ class BackofficeOrders extends BaseController
         $this->model->update($idx, ['status' => 'shipped']);
 
         return redirect()->to("/backoffice/orders/{$idx}")->with('success', '송장번호가 저장되었습니다.');
+    }
+
+    /**
+     * GET /backoffice/refunds — 환불 요청 목록 (status 필터, 페이지네이션)
+     */
+    public function refundList(): string
+    {
+        $status      = trim($this->request->getGet('status') ?? '');
+        $refundModel = new RefundRequestModel();
+        $refunds     = $refundModel->getAdminList($status);
+
+        return view('backoffice/refunds/list', $this->base('환불 요청 관리', [
+            'refunds'      => $refunds,
+            'pager'        => $refundModel->pager,
+            'status'       => $status,
+            'statusLabels' => RefundRequestModel::STATUS_LABELS,
+        ]));
+    }
+
+    /**
+     * GET /backoffice/refunds/{idx}/detail — 모달용 환불 요청 상세 JSON
+     */
+    public function refundDetail(int $idx): void
+    {
+        $refund = (new RefundRequestModel())->getDetail($idx);
+        if (!$refund) {
+            echo json_encode(['success' => false, 'message' => '환불 요청을 찾을 수 없습니다.']);
+            return;
+        }
+
+        $items  = (new RefundRequestItemModel())->getByRefundRequest($idx);
+        $images = (new RefundRequestImageModel())->getByRefundRequest($idx);
+
+        echo json_encode([
+            'success' => true,
+            'refund'  => $refund,
+            'items'   => $items,
+            'images'  => $images,
+        ]);
+    }
+
+    /**
+     * POST /backoffice/refunds/{idx}/approve — 환불 승인 (AJAX)
+     */
+    public function approveRefund(int $idx): void
+    {
+        $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
+        (new RefundRequestModel())->approve($idx, $adminMemo);
+        echo json_encode(['success' => true, 'message' => '환불 요청이 승인되었습니다.']);
+    }
+
+    /**
+     * POST /backoffice/refunds/{idx}/reject — 환불 반려 (AJAX), admin_memo 필수
+     */
+    public function rejectRefund(int $idx): void
+    {
+        $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
+        if ($adminMemo === '') {
+            echo json_encode(['success' => false, 'message' => '반려 사유를 입력해주세요.']);
+            return;
+        }
+        (new RefundRequestModel())->reject($idx, $adminMemo);
+        echo json_encode(['success' => true, 'message' => '환불 요청이 반려되었습니다.']);
     }
 }

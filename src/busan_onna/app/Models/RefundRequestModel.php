@@ -65,7 +65,8 @@ class RefundRequestModel extends Model
     {
         return $this->update($idx, [
             'status'       => 'approved',
-            'admin_memo'   => $adminMemo !== '' ? $adminMemo : null,
+            // 공백 문자 제거 후 빈 값 확인 — 공백만 입력된 경우 null로 저장
+            'admin_memo'   => trim($adminMemo) !== '' ? trim($adminMemo) : null,
             'processed_at' => date('Y-m-d H:i:s'),
         ]);
     }

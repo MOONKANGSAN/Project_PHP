@@ -16,8 +16,12 @@ class RefundRequestItemModel extends Model
     /**
      * 체크박스로 선택된 상품 idx 배열을 일괄 INSERT
      */
-    public function insertItems(int $refundRequestIdx, array $orderItemIdxList): void
+    public function insertItems(int $refundRequestIdx, array $orderItemIdxList): bool
     {
+        // 빈 배열 체크 — 선택된 상품이 없으면 false 반환
+        if (empty($orderItemIdxList)) {
+            return false;
+        }
         $rows = array_map(
             fn($itemIdx) => [
                 'refund_request_idx' => $refundRequestIdx,
@@ -25,7 +29,7 @@ class RefundRequestItemModel extends Model
             ],
             $orderItemIdxList
         );
-        $this->insertBatch($rows);
+        return (bool) $this->insertBatch($rows);
     }
 
     /**

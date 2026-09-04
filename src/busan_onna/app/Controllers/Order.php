@@ -12,6 +12,9 @@ use App\Models\GoodsOptionModel;
 use App\Models\GoodsOptionValueModel;
 use App\Models\UserInfoModel;
 use App\Libraries\PortOnePayment;
+use App\Models\RefundRequestModel;
+use App\Models\RefundRequestItemModel;
+use App\Models\RefundRequestImageModel;
 
 /**
  * 주문·결제·마이페이지 컨트롤러
@@ -465,5 +468,122 @@ class Order extends BaseController
             'items'  => $items,
             'labels' => OrderModel::STATUS_LABELS,
         ]);
+    }
+
+    /**
+     * POST /mypage/orders/{idx}/refund — 환불 요청 접수 (AJAX)
+     * 허용 상태: paid / preparing / delivered
+     * 이미지: 최대 3장, jpg/png/gif, 파일당 10MB 이하
+     */
+    public function requestRefund(int $orderIdx): void
+    {
+        $userIdx = $this->userIdxForAjax();
+        if ($userIdx === false) return;
+
+        $order = (new OrderModel())->getDetail($orderIdx, $userIdx);
+        if (!$order) {
+            echo json_encode(['success' => false, 'message' => '주문을 찾을 수 없습니다.']);
+            return;
+        }
+
+        if (!in_array($order['status'], ['paid', 'preparing', 'delivered'], true)) {
+            echo json_encode(['success' => false, 'message' => '환불 요청이 불가능한 주문 상태입니다.']);
+            return;
+        }
+
+        // 선택 상품 검증
+        $itemIdxList = $this->request->getPost('item_idxs') ?? [];
+        if (empty($itemIdxList) || !is_array($itemIdxList)) {
+            echo json_encode(['success' => false, 'message' => '환불할 상품을 1개 이상 선택해주세요.']);
+            return;
+        }
+
+        $validIdxs = array_column((new OrderItemModel())->getByOrder($orderIdx), 'idx');
+        foreach ($itemIdxList as $itemIdx) {
+            if (!in_array((int) $itemIdx, $validIdxs, true)) {
+                echo json_encode(['success' => false, 'message' => '잘못된 상품 정보입니다.']);
+                return;
+            }
+        }
+
+        // 환불 사유 검증
+        $reason = trim($this->request->getPost('reason') ?? '');
+        $validReasons = ['change_of_mind', 'defective', 'wrong_item', 'delay', 'not_as_described', 'duplicate', 'direct'];
+        if (!in_array($reason, $validReasons, true)) {
+            echo json_encode(['success' => false, 'message' => '환불 사유를 선택해주세요.']);
+            return;
+        }
+
+        $reasonText = null;
+        if ($reason === 'direct') {
+            $reasonText = trim($this->request->getPost('reason_text') ?? '');
+            if ($reasonText === '') {
+                echo json_encode(['success' => false, 'message' => '직접 입력 사유를 작성해주세요.']);
+                return;
+            }
+            if (mb_strlen($reasonText) > 200) {
+                echo json_encode(['success' => false, 'message' => '사유는 200자 이하로 입력해주세요.']);
+                return;
+            }
+        }
+
+        // 이미지 업로드 처리
+        $uploadedPaths = [];
+        $images = $this->request->getFiles()['images'] ?? [];
+        if (!empty($images) && is_array($images)) {
+            $validImages = array_filter($images, fn($f) => $f->isValid() && !$f->hasMoved());
+            if (count($validImages) > 3) {
+                echo json_encode(['success' => false, 'message' => '이미지는 최대 3장까지 첨부 가능합니다.']);
+                return;
+            }
+            $uploadDir = FCPATH . 'uploads/refunds/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            foreach ($validImages as $img) {
+                $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!in_array($img->getMimeType(), $allowedMimes, true)) {
+                    echo json_encode(['success' => false, 'message' => 'jpg, png, gif 형식만 첨부 가능합니다.']);
+                    return;
+                }
+                if ($img->getSizeByUnit('mb') > 10) {
+                    echo json_encode(['success' => false, 'message' => '이미지 1장당 최대 10MB까지 업로드 가능합니다.']);
+                    return;
+                }
+                $newName = $img->getRandomName();
+                $img->move($uploadDir, $newName);
+                $uploadedPaths[] = '/uploads/refunds/' . $newName;
+            }
+        }
+
+        // 트랜잭션으로 DB 저장
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $refundModel = new RefundRequestModel();
+        $refundModel->insert([
+            'order_idx'   => $orderIdx,
+            'user_idx'    => $userIdx,
+            'reason'      => $reason,
+            'reason_text' => $reasonText,
+            'status'      => 'pending',
+        ]);
+        $refundIdx = (int) $refundModel->getInsertID();
+
+        (new RefundRequestItemModel())->insertItems($refundIdx, $itemIdxList);
+
+        if (!empty($uploadedPaths)) {
+            $imageModel = new RefundRequestImageModel();
+            foreach ($uploadedPaths as $path) {
+                $imageModel->insert(['refund_request_idx' => $refundIdx, 'file_path' => $path]);
+            }
+        }
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            echo json_encode(['success' => false, 'message' => '환불 요청 중 오류가 발생했습니다.']);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'message' => '환불 요청이 접수되었습니다.']);
     }
 }

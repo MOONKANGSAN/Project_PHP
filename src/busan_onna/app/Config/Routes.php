@@ -68,6 +68,7 @@ $routes->post('/mypage/password',            'Mypage::passwordChange');
 // 마이페이지 — 주문내역
 $routes->get('/mypage/orders',         'Order::myOrders');
 $routes->get('/mypage/orders/(:num)',  'Order::myOrderDetail/$1');
+$routes->post('/mypage/orders/(:num)/refund', 'Order::requestRefund/$1');
 
 // 고객센터
 $routes->get('/customer',                      'Customer::index');
@@ -239,6 +240,12 @@ $routes->group('backoffice', ['filter' => 'backofficeauth'], static function ($r
     $routes->get('payments',                         'BackofficeOrders::payments');
     $routes->post('payments/(:num)/cancel',          'BackofficeOrders::cancelOrder/$1');
     $routes->post('payments/(:num)/status',          'BackofficeOrders::updatePaymentStatus/$1');
+
+    // 환불 요청 관리
+    $routes->get('refunds',                      'BackofficeOrders::refundList');
+    $routes->get('refunds/(:num)/detail',        'BackofficeOrders::refundDetail/$1');
+    $routes->post('refunds/(:num)/approve',      'BackofficeOrders::approveRefund/$1');
+    $routes->post('refunds/(:num)/reject',       'BackofficeOrders::rejectRefund/$1');
 
     // 판매자 관리
     $routes->get('vendors',                   'BackofficeVendors::list');

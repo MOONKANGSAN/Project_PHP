@@ -1,0 +1,81 @@
+<h2>Q1. 환불요청 버튼, 어떤 상태에서 보여야 하나요?</h2>
+<p class="subtitle">현재 주문 상태 흐름입니다. 환불요청 버튼이 표시되어야 할 상태를 모두 선택해주세요.</p>
+
+<style>
+.flow-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 28px 0 36px;
+}
+.flow-node {
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  min-width: 90px;
+}
+.arrow { font-size: 20px; color: #adb5bd; }
+.node-pending  { background: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+.node-paid     { background: #d1ecf1; color: #0c5460; border: 2px solid #17a2b8; }
+.node-prep     { background: #dce8fd; color: #1a4fb5; border: 2px solid #4a7ef0; }
+.node-shipped  { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+.node-delivered{ background: #e2e3e5; color: #383d41; border: 2px solid #6c757d; }
+.node-cancel   { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+</style>
+
+<div class="flow-wrap">
+  <div class="flow-node node-pending">결제대기<br><small>pending</small></div>
+  <div class="arrow">→</div>
+  <div class="flow-node node-paid">결제완료<br><small>paid</small></div>
+  <div class="arrow">→</div>
+  <div class="flow-node node-prep">상품준비중<br><small>preparing</small></div>
+  <div class="arrow">→</div>
+  <div class="flow-node node-shipped">배송중<br><small>shipped</small></div>
+  <div class="arrow">→</div>
+  <div class="flow-node node-delivered">배송완료<br><small>delivered</small></div>
+  <div class="arrow">→</div>
+  <div class="flow-node node-cancel">취소됨<br><small>cancelled</small></div>
+</div>
+
+<p style="text-align:center; font-size:13px; color:#868e96; margin-bottom:28px;">
+  ※ <strong>결제대기(pending)</strong>와 <strong>취소됨(cancelled)</strong>은 환불 버튼 불필요 — 아래 나머지 상태 중 선택
+</p>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="paid" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>결제완료 (paid)</h3>
+      <p>결제 직후 — 상품 준비 전 단계. 취소 개념에 가까움.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="preparing" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>상품준비중 (preparing)</h3>
+      <p>판매자가 상품을 준비 중인 단계.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="shipped" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>배송중 (shipped)</h3>
+      <p>이미 발송된 상태 — 반송이 필요한 환불.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="delivered" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>배송완료 (delivered)</h3>
+      <p>수령 후 환불 요청. 7일 경과 시 경고 메시지 표시 대상.</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:24px; font-size:13px; color:#868e96; text-align:center;">
+  복수 선택 가능 — 원하는 상태를 모두 클릭 후 터미널에 알려주세요.
+</p>

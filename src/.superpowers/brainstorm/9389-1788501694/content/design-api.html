@@ -1,0 +1,158 @@
+<h2>설계 섹션 2 / 3 — 백엔드 API 구조</h2>
+<p class="subtitle">추가·변경될 라우트, 컨트롤러 메서드, 모델을 확인해주세요.</p>
+
+<style>
+.api-section { margin-bottom: 28px; }
+.api-section h3 {
+  font-size: 14px; font-weight: 700; color: #fff;
+  background: #343a40; border-radius: 8px;
+  padding: 8px 14px; margin: 0 0 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.api-section h3 .file {
+  font-size: 11px; font-weight: 400; color: #adb5bd;
+  font-family: monospace;
+}
+table.api-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+table.api-table th {
+  background: #f8f9fa; padding: 8px 12px;
+  text-align: left; font-weight: 600; color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+table.api-table td {
+  padding: 9px 12px; border-bottom: 1px solid #f1f3f5;
+  vertical-align: top;
+}
+table.api-table tr:last-child td { border-bottom: none; }
+.method {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; font-family: monospace;
+}
+.m-post { background: #d4edda; color: #155724; }
+.m-get  { background: #d1ecf1; color: #0c5460; }
+.m-new  { background: #fff3cd; color: #856404; }
+.tag-new { display: inline-block; background: #e55039; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+.tag-mod { display: inline-block; background: #4a7ef0; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+code { background: #f1f3f5; padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+</style>
+
+<!-- Routes -->
+<div class="api-section">
+  <h3>라우트 추가 <span class="file">app/Config/Routes.php</span></h3>
+  <table class="api-table">
+    <thead><tr><th>메서드</th><th>URL</th><th>처리 메서드</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="method m-post">POST</span></td>
+        <td><code>/mypage/orders/{idx}/refund</code></td>
+        <td>Order::requestRefund</td>
+        <td>환불 요청 접수 <span class="tag-new">NEW</span></td>
+      </tr>
+      <tr>
+        <td><span class="method m-get">GET</span></td>
+        <td><code>/backoffice/refunds</code></td>
+        <td>BackofficeOrders::refundList</td>
+        <td>환불 요청 목록 <span class="tag-new">NEW</span></td>
+      </tr>
+      <tr>
+        <td><span class="method m-post">POST</span></td>
+        <td><code>/backoffice/refunds/{idx}/approve</code></td>
+        <td>BackofficeOrders::approveRefund</td>
+        <td>환불 요청 승인 <span class="tag-new">NEW</span></td>
+      </tr>
+      <tr>
+        <td><span class="method m-post">POST</span></td>
+        <td><code>/backoffice/refunds/{idx}/reject</code></td>
+        <td>BackofficeOrders::rejectRefund</td>
+        <td>환불 요청 반려 <span class="tag-new">NEW</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Order Controller -->
+<div class="api-section">
+  <h3>Order 컨트롤러 <span class="file">app/Controllers/Order.php</span></h3>
+  <table class="api-table">
+    <thead><tr><th>메서드</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>requestRefund(int $idx)</code> <span class="tag-new">NEW</span></td>
+        <td>
+          AJAX POST — 환불 요청 접수<br>
+          · 본인 주문·상태 검증 (paid/preparing/delivered만 허용)<br>
+          · 선택 상품 idx 배열 + 사유 수신<br>
+          · refund_requests + refund_request_items INSERT<br>
+          · JSON 응답 반환
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- BackofficeOrders Controller -->
+<div class="api-section">
+  <h3>BackofficeOrders 컨트롤러 <span class="file">app/Controllers/BackofficeOrders.php</span></h3>
+  <table class="api-table">
+    <thead><tr><th>메서드</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>refundList()</code> <span class="tag-new">NEW</span></td>
+        <td>환불 요청 목록 — status 필터, 페이지네이션</td>
+      </tr>
+      <tr>
+        <td><code>approveRefund(int $idx)</code> <span class="tag-new">NEW</span></td>
+        <td>승인 처리 — refund_requests.status = approved, processed_at 기록</td>
+      </tr>
+      <tr>
+        <td><code>rejectRefund(int $idx)</code> <span class="tag-new">NEW</span></td>
+        <td>반려 처리 — refund_requests.status = rejected, admin_memo 저장</td>
+      </tr>
+      <tr>
+        <td><code>updatePaymentStatus()</code> <span class="tag-mod">수정</span></td>
+        <td>status가 delivered로 변경될 때 orders.delivered_at 자동 기록</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Models -->
+<div class="api-section">
+  <h3>모델 <span class="file">app/Models/</span></h3>
+  <table class="api-table">
+    <thead><tr><th>파일</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>RefundRequestModel.php</code> <span class="tag-new">NEW</span></td>
+        <td>refund_requests CRUD — 목록 조회(JOIN order/user), 상태 변경</td>
+      </tr>
+      <tr>
+        <td><code>RefundRequestItemModel.php</code> <span class="tag-new">NEW</span></td>
+        <td>refund_request_items INSERT / 요청별 아이템 조회</td>
+      </tr>
+      <tr>
+        <td><code>OrderModel.php</code> <span class="tag-mod">수정</span></td>
+        <td>allowedFields에 <code>delivered_at</code> 추가</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="options" style="margin-top:8px;">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>API 구조 확정</h3>
+      <p>이 구조로 진행합니다.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="modify" onclick="toggleSelect(this)">
+    <div class="letter">✏</div>
+    <div class="content">
+      <h3>수정 필요</h3>
+      <p>변경할 부분이 있습니다. 터미널에 알려주세요.</p>
+    </div>
+  </div>
+</div>

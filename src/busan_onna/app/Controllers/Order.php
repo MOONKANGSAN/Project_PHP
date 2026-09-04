@@ -491,10 +491,22 @@ class Order extends BaseController
             return;
         }
 
+        // 동일 주문의 pending 환불 요청이 이미 존재하면 중복 접수 차단
+        $existingRefund = (new RefundRequestModel())->where('order_idx', $orderIdx)->where('status', 'pending')->first();
+        if ($existingRefund) {
+            echo json_encode(['success' => false, 'message' => '이미 대기 중인 환불 요청이 있습니다.']);
+            return;
+        }
+
         // 선택 상품 검증
         $itemIdxList = $this->request->getPost('item_idxs') ?? [];
         if (empty($itemIdxList) || !is_array($itemIdxList)) {
             echo json_encode(['success' => false, 'message' => '환불할 상품을 1개 이상 선택해주세요.']);
+            return;
+        }
+        // 과도한 배열 크기로 인한 DoS 방지
+        if (count($itemIdxList) > 50) {
+            echo json_encode(['success' => false, 'message' => '잘못된 요청입니다.']);
             return;
         }
 
@@ -541,15 +553,23 @@ class Order extends BaseController
             foreach ($validImages as $img) {
                 $allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
                 if (!in_array($img->getMimeType(), $allowedMimes, true)) {
+                    // 이미 저장된 파일 정리 후 응답
+                    foreach ($uploadedPaths as $p) { $f = FCPATH . ltrim($p, '/'); if (file_exists($f)) unlink($f); }
                     echo json_encode(['success' => false, 'message' => 'jpg, png, gif 형식만 첨부 가능합니다.']);
                     return;
                 }
                 if ($img->getSizeByUnit('mb') > 10) {
+                    foreach ($uploadedPaths as $p) { $f = FCPATH . ltrim($p, '/'); if (file_exists($f)) unlink($f); }
                     echo json_encode(['success' => false, 'message' => '이미지 1장당 최대 10MB까지 업로드 가능합니다.']);
                     return;
                 }
                 $newName = $img->getRandomName();
-                $img->move($uploadDir, $newName);
+                // move() 실패 시 이미 저장된 파일 정리
+                if (!$img->move($uploadDir, $newName)) {
+                    foreach ($uploadedPaths as $p) { $f = FCPATH . ltrim($p, '/'); if (file_exists($f)) unlink($f); }
+                    echo json_encode(['success' => false, 'message' => '이미지 업로드에 실패했습니다.']);
+                    return;
+                }
                 $uploadedPaths[] = '/uploads/refunds/' . $newName;
             }
         }
@@ -567,6 +587,14 @@ class Order extends BaseController
             'status'      => 'pending',
         ]);
         $refundIdx = (int) $refundModel->getInsertID();
+
+        // INSERT 실패(ID=0) 감지 — 트랜잭션 즉시 롤백 후 파일 정리
+        if ($refundIdx === 0) {
+            $db->transRollback();
+            foreach ($uploadedPaths as $p) { $f = FCPATH . ltrim($p, '/'); if (file_exists($f)) unlink($f); }
+            echo json_encode(['success' => false, 'message' => '환불 요청 중 오류가 발생했습니다.']);
+            return;
+        }
 
         (new RefundRequestItemModel())->insertItems($refundIdx, $itemIdxList);
 

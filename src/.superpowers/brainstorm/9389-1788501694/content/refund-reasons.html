@@ -1,0 +1,101 @@
+<h2>Q3. 환불 사유 항목을 확인해주세요</h2>
+<p class="subtitle">아래는 모달 안의 드롭다운 예시입니다. 추가/제거할 항목이 있으면 터미널에 알려주세요.</p>
+
+<style>
+.mockup-form {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 14px;
+  padding: 28px 32px;
+  max-width: 480px;
+  margin: 24px auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.mockup-form h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: #212529;
+}
+.form-group { margin-bottom: 18px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 6px;
+}
+.form-select, .form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #343a40;
+  background: #f8f9fa;
+  box-sizing: border-box;
+}
+.form-input { background: #fffbf0; border-color: #ffc107; }
+.form-hint {
+  font-size: 12px;
+  color: #868e96;
+  margin-top: 5px;
+}
+.badge-new {
+  display: inline-block;
+  background: #e55039;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+</style>
+
+<div class="mockup-form">
+  <h3>환불 사유 선택 <span style="font-size:13px;color:#868e96;font-weight:400">(예시 UI)</span></h3>
+
+  <div class="form-group">
+    <label class="form-label">환불 사유 <span style="color:#e55039">*</span></label>
+    <select class="form-select">
+      <option value="">-- 사유를 선택해주세요 --</option>
+      <option>단순 변심</option>
+      <option>상품 불량 / 파손</option>
+      <option>상품 오배송 (다른 상품 도착)</option>
+      <option>배송 지연</option>
+      <option>상품 설명과 다름</option>
+      <option>중복 주문</option>
+      <option>직접 입력 ✏️</option>
+    </select>
+    <p class="form-hint">※ "직접 입력" 선택 시 아래 입력란이 활성화됩니다</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">직접 입력 <span class="badge-new">직접입력 선택 시</span></label>
+    <input class="form-input" type="text" placeholder="환불 사유를 직접 입력해주세요 (최대 200자)">
+    <p class="form-hint">위 드롭다운에서 "직접 입력"을 선택하면 이 필드가 나타납니다</p>
+  </div>
+</div>
+
+<div class="options" data-multiselect style="margin-top:28px;">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>이 목록으로 진행</h3>
+      <p>위 7개 항목 + 직접입력 구성으로 확정합니다.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="modify" onclick="toggleSelect(this)">
+    <div class="letter">✏</div>
+    <div class="content">
+      <h3>수정 필요</h3>
+      <p>추가하거나 제거할 항목이 있습니다. 터미널에 알려주세요.</p>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px; font-size:13px; color:#868e96; text-align:center;">
+  선택 후 터미널에 피드백 주세요.
+</p>

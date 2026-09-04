@@ -308,7 +308,8 @@
 
         <?php
         /* 환불 요청 가능 여부 계산 */
-        $canRefund  = in_array($order['status'] ?? '', ['paid', 'preparing', 'delivered']);
+        // 상품 목록이 없으면 환불 버튼·모달 표시 불필요
+        $canRefund  = !empty($items) && in_array($order['status'] ?? '', ['paid', 'preparing', 'delivered']);
         $isShipped  = ($order['status'] ?? '') === 'shipped';
         $isOver7Days = false;
         if (($order['status'] ?? '') === 'delivered' && !empty($order['delivered_at'])) {

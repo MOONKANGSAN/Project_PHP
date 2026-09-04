@@ -235,16 +235,27 @@ class BackofficeOrders extends BaseController
 
     /**
      * POST /backoffice/refunds/{idx}/approve — 환불 승인 (AJAX)
+     * pending 상태가 아닌 요청은 거부, approve() 반환값 확인
      */
     public function approveRefund(int $idx): void
     {
-        $adminMemo = trim($this->request->getPost('admin_memo') ?? '');
-        (new RefundRequestModel())->approve($idx, $adminMemo);
+        $adminMemo   = trim($this->request->getPost('admin_memo') ?? '');
+        $refundModel = new RefundRequestModel();
+        $refund      = $refundModel->getDetail($idx);
+        if (!$refund || $refund['status'] !== 'pending') {
+            echo json_encode(['success' => false, 'message' => '처리할 수 없는 요청입니다.']);
+            return;
+        }
+        if (!$refundModel->approve($idx, $adminMemo)) {
+            echo json_encode(['success' => false, 'message' => '승인 처리 중 오류가 발생했습니다.']);
+            return;
+        }
         echo json_encode(['success' => true, 'message' => '환불 요청이 승인되었습니다.']);
     }
 
     /**
-     * POST /backoffice/refunds/{idx}/reject — 환불 반려 (AJAX), admin_memo 필수
+     * POST /backoffice/refunds/{idx}/reject — 환불 반려 (AJAX)
+     * pending 상태가 아닌 요청은 거부, admin_memo 필수, reject() 반환값 확인
      */
     public function rejectRefund(int $idx): void
     {
@@ -253,7 +264,16 @@ class BackofficeOrders extends BaseController
             echo json_encode(['success' => false, 'message' => '반려 사유를 입력해주세요.']);
             return;
         }
-        (new RefundRequestModel())->reject($idx, $adminMemo);
+        $refundModel = new RefundRequestModel();
+        $refund      = $refundModel->getDetail($idx);
+        if (!$refund || $refund['status'] !== 'pending') {
+            echo json_encode(['success' => false, 'message' => '처리할 수 없는 요청입니다.']);
+            return;
+        }
+        if (!$refundModel->reject($idx, $adminMemo)) {
+            echo json_encode(['success' => false, 'message' => '반려 처리 중 오류가 발생했습니다.']);
+            return;
+        }
         echo json_encode(['success' => true, 'message' => '환불 요청이 반려되었습니다.']);
     }
 }

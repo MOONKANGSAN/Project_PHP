@@ -1,0 +1,65 @@
+<h2>에러 페이지 레이아웃 방향 선택</h2>
+<p class="subtitle">부산온나 404/400 에러 페이지 디자인 — 3가지 방향 중 하나를 골라주세요</p>
+
+<div class="cards">
+
+  <!-- 옵션 A: 다크 오션 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#080f1e; padding:24px; border-radius:8px; min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; position:relative; overflow:hidden;">
+      <!-- 물결 배경 효과 -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,rgba(116,185,255,0.12));border-radius:0 0 8px 8px;"></div>
+      <div style="font-size:72px; font-weight:900; color:#f39c12; line-height:1; letter-spacing:-4px;">404</div>
+      <div style="color:#74b9ff; font-size:13px; letter-spacing:3px; font-weight:600;">PAGE NOT FOUND</div>
+      <div style="color:#aab8c8; font-size:11px; text-align:center; max-width:180px; line-height:1.6;">요청하신 페이지를 찾을 수 없습니다</div>
+      <div style="margin-top:8px; background:#f39c12; color:#080f1e; padding:8px 20px; border-radius:20px; font-size:11px; font-weight:700;">홈으로 돌아가기</div>
+    </div>
+    <div class="card-body">
+      <h3>A — 다크 오션</h3>
+      <p>사이트 헤더와 동일한 짙은 네이비 배경. 골든 에러 코드, 하늘색 서브타이틀. 강렬하고 몰입감 있는 느낌.</p>
+    </div>
+  </div>
+
+  <!-- 옵션 B: 라이트 클린 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f4f7fb; padding:24px; border-radius:8px; min-height:240px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;">
+      <div style="width:64px;height:64px;background:#0a1f3c;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <span style="color:#f39c12;font-size:28px;">⚓</span>
+      </div>
+      <div style="font-size:60px; font-weight:900; color:#0a1f3c; line-height:1; letter-spacing:-3px;">404</div>
+      <div style="color:#1a6b9a; font-size:12px; letter-spacing:2px; font-weight:600;">PAGE NOT FOUND</div>
+      <div style="color:#6c7a89; font-size:11px; text-align:center; max-width:180px; line-height:1.6;">요청하신 페이지를 찾을 수 없습니다</div>
+      <div style="margin-top:8px; background:#0a1f3c; color:#fff; padding:8px 20px; border-radius:20px; font-size:11px; font-weight:700;">홈으로 돌아가기</div>
+    </div>
+    <div class="card-body">
+      <h3>B — 라이트 클린</h3>
+      <p>밝은 배경(#f4f7fb)에 네이비 텍스트. 앵커 아이콘 + 깔끔한 구성. 가볍고 친근한 느낌.</p>
+    </div>
+  </div>
+
+  <!-- 옵션 C: 스플릿 그라디언트 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="border-radius:8px; min-height:240px; overflow:hidden; display:flex; flex-direction:column;">
+      <!-- 상단 다크 영역 -->
+      <div style="background:linear-gradient(135deg,#0a1f3c 0%,#1a6b9a 100%); flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 24px 16px; gap:6px;">
+        <div style="font-size:72px; font-weight:900; color:rgba(255,255,255,0.12); line-height:1; position:relative;">
+          <span style="position:relative; z-index:1; color:#fff; letter-spacing:-4px;">404</span>
+        </div>
+        <div style="color:#74b9ff; font-size:11px; letter-spacing:3px;">PAGE NOT FOUND</div>
+      </div>
+      <!-- 하단 라이트 영역 -->
+      <div style="background:#fff; padding:16px 24px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div style="color:#1a2a3a; font-size:11px; text-align:center;">요청하신 페이지를 찾을 수 없습니다</div>
+        <div style="background:#f39c12; color:#fff; padding:7px 18px; border-radius:20px; font-size:11px; font-weight:700;">홈으로 돌아가기</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — 스플릿 그라디언트</h3>
+      <p>상단 다크 그라디언트(에러 코드) + 하단 화이트(메시지+버튼). 시각적 계층이 명확하고 세련된 느낌.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top:8px;">
+  <p class="subtitle" style="font-size:12px;">💡 현재 사이트는 짙은 네이비(#0a1f3c) + 골드(#f39c12) 테마입니다. 선택 후 터미널에서 알려주세요.</p>
+</div>

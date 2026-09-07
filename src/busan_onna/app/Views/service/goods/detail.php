@@ -547,9 +547,11 @@
 <script>
 /* ===== 굿즈 상세 페이지 스크립트 ===== */
 (function () {
-    const BASE_PRICE = parseInt(document.getElementById('btnBuyNow').dataset.basePrice, 10) || 0;
-    const GOODS_IDX  = parseInt(document.getElementById('btnBuyNow').dataset.goodsIdx, 10);
-    const MAX_STOCK  = <?= $soldOut ? 0 : $stock ?>;
+    const BASE_PRICE   = parseInt(document.getElementById('btnBuyNow').dataset.basePrice, 10) || 0;
+    const GOODS_IDX    = parseInt(document.getElementById('btnBuyNow').dataset.goodsIdx, 10);
+    const MAX_STOCK    = <?= $soldOut ? 0 : $stock ?>;
+    /* PHP 세션에서 로그인 여부를 JS로 전달 */
+    const IS_LOGGED_IN = <?= session()->get('user.idx') ? 'true' : 'false' ?>;
 
     const qtyInput    = document.getElementById('qtyInput');
     const btnQtyMinus = document.getElementById('btnQtyMinus');
@@ -641,6 +643,12 @@
     btnBuyNow.addEventListener('click', function () {
         if (btnBuyNow.disabled) return;
 
+        /* 미로그인 시 로그인 모달 표시 후 중단 */
+        if (!IS_LOGGED_IN) {
+            document.getElementById('btnOpenLogin').click();
+            return;
+        }
+
         var params = new URLSearchParams({
             buy_now  : '1',
             goods_idx: GOODS_IDX,
@@ -657,6 +665,12 @@
      */
     btnAddCart.addEventListener('click', function () {
         if (btnAddCart.disabled) return;
+
+        /* 미로그인 시 로그인 모달 표시 후 중단 */
+        if (!IS_LOGGED_IN) {
+            document.getElementById('btnOpenLogin').click();
+            return;
+        }
 
         btnAddCart.disabled = true;
 

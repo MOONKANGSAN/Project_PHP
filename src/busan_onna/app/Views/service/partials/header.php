@@ -17,6 +17,7 @@
                 </ul>
             </nav>
             <div class="header-auth">
+                <?php if (session()->get('user.idx')): ?>
                 <a href="/cart" class="btn-cart-icon" aria-label="장바구니">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -25,6 +26,7 @@
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                     </svg>
                 </a>
+                <?php endif; ?>
                 <?php if (session()->get('user.idx')): ?>
                     <!-- 프로필 아이콘: 이미지가 있으면 사진, 없으면 기본 SVG 아이콘 -->
                     <a href="/mypage"

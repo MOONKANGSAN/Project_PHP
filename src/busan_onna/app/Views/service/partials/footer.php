@@ -13,6 +13,8 @@
                     <li><a href="/restaurants">맛집</a></li>
                     <li><a href="/festivals">축제·행사</a></li>
                     <li><a href="/travel-courses">여행코스</a></li>
+                    <li><a href="/events">이벤트</a></li>
+                    <li><a href="/goods">부산굿즈</a></li>
                 </ul>
             </div>
             <div class="footer-nav">

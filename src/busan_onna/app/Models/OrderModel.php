@@ -59,6 +59,7 @@ class OrderModel extends Model
     public function getMyOrders(int $userIdx): array
     {
         return $this->where('user_idx', $userIdx)
+                    ->where('status !=', 'pending')
                     ->orderBy('idx', 'DESC')
                     ->paginate(10) ?? [];
     }

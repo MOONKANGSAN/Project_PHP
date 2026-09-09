@@ -1064,6 +1064,15 @@ ul { list-style: none; }
     align-items: center;
     gap: 4px;
 }
+/* ul 자체를 가로 flex로 만들어 li 아이템이 수평 배치되도록 */
+.sp-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
 .sp-btn {
     min-width: 40px;
     height: 40px;

@@ -173,7 +173,9 @@
             text-decoration: none;
         }
         .filter-section { background: #f8f9fa; padding: 20px 0; border-bottom: 1px solid #e9ecef; }
-        .pager-wrap     { margin-top: 40px; text-align: center; }
+        .pager-wrap     { margin-top: 40px; display: flex; justify-content: center; }
+        /* ul 자체를 가로 flex로 만들어 li 아이템이 수평 배치되도록 */
+        .sp-list        { display: flex; align-items: center; gap: 4px; list-style: none; padding: 0; margin: 0; }
         .empty-result   { text-align: center; padding: 80px 20px; color: #adb5bd; }
         .empty-result h3 { font-size: 20px; margin: 16px 0 8px; color: #868e96; }
         .result-count   { font-size: 14px; color: #666; margin-bottom: 8px; }

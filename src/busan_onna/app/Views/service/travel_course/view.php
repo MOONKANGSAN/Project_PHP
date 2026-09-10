@@ -10,6 +10,22 @@
     <link rel="stylesheet" href="/css/modules/auth-common.css">
     <link rel="stylesheet" href="/css/modules/login.css">
     <link rel="stylesheet" href="/css/modules/signup.css">
+    <style>
+        /* 여행코스 항목 — 연결된 콘텐츠 이름 링크 */
+        .timeline-card-name-link {
+            color: inherit;
+            text-decoration: none;
+        }
+        .timeline-card-name-link:hover .timeline-card-name {
+            text-decoration: underline;
+            text-decoration-color: currentColor;
+        }
+        .timeline-card-name-link .timeline-card-name::after {
+            content: ' →';
+            font-size: 0.85em;
+            opacity: 0.6;
+        }
+    </style>
 </head>
 <body>
 

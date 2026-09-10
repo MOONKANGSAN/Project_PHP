@@ -266,15 +266,15 @@ class BackofficeTravelCourse extends BaseController
     {
         $type = $this->request->getGet('type');
         $q    = trim((string) ($this->request->getGet('q') ?? ''));
-
-        if ($q === '' || !in_array($type, ['restaurant', 'place', 'event'], true)) {
+        $type_arr = ['restaurant', 'place', 'event'];
+        if ($q === '' || !in_array($type, $type_arr, true)) {
             return $this->response->setJSON([]);
         }
 
         $results = match ($type) {
-            'restaurant' => (new RestaurantModel())->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
-            'place'      => (new PlaceModel())->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
-            'event'      => (new EventModel())->like('name', $q)->select('idx, name, address1')->limit(10)->findAll(),
+            'restaurant' => (new RestaurantModel())->like('name', $q)->select('idx, name, address1,latitude,longitude')->limit(10)->findAll(),
+            'place'      => (new PlaceModel())->like('name', $q)->select('idx, name, address1,latitude,longitude')->limit(10)->findAll(),
+            'event'      => (new EventModel())->like('name', $q)->select('idx, name, address1,latitude,longitude')->limit(10)->findAll(),
         };
 
         return $this->response->setJSON($results);

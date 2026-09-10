@@ -434,11 +434,13 @@ $initItems = $course_items ?? [];
         });
 
         // 콘텐츠 검색 Ajax
-        const searchInput = row.querySelector('.item-search-input');
-        const contentIdx  = row.querySelector('.item-content-idx');
-        const nameInput   = row.querySelector('.item-name');
-        const addrInput   = row.querySelector('.item-address');
-        const resultsBox  = row.querySelector('.item-search-results');
+        const searchInput    = row.querySelector('.item-search-input');
+        const contentIdx     = row.querySelector('.item-content-idx');
+        const nameInput      = row.querySelector('.item-name');
+        const addrInput      = row.querySelector('.item-address');
+        const resultsBox     = row.querySelector('.item-search-results');
+        const latitudeInput  = row.querySelector('.item-lat');
+        const longitudeInput = row.querySelector('.item-lng');
 
         if (!searchInput) return;
 
@@ -463,17 +465,19 @@ $initItems = $course_items ?? [];
                             el.textContent = item.name + (item.address1 ? ' — ' + item.address1 : '');
                             el.addEventListener('mousedown', function (e) {
                                 e.preventDefault();
-                                contentIdx.value   = item.idx;
-                                nameInput.value    = item.name;
-                                addrInput.value    = item.address1 || '';
-                                searchInput.value  = item.name;
+                                contentIdx.value     = item.idx;
+                                nameInput.value      = item.name;
+                                addrInput.value      = item.address1 || '';
+                                searchInput.value    = item.name;
+                                latitudeInput.value  = item.latitude  != null ? item.latitude  : '';
+                                longitudeInput.value = item.longitude != null ? item.longitude : '';
                                 resultsBox.style.display = 'none';
                             });
                             resultsBox.appendChild(el);
                         });
                         resultsBox.style.display = 'block';
                     });
-            }, 300);
+            }, 150);
         });
 
         searchInput.addEventListener('blur', function () {

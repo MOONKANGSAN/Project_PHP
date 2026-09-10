@@ -73,12 +73,29 @@
                         'custom'     => ['label' => '장소',     'class' => 'type-custom'],
                     ];
                     $typeInfo = $typeMap[$item['content_type']] ?? $typeMap['custom'];
+
+                    // content_type별 상세 페이지 URL 매핑
+                    $contentUrlMap = [
+                        'restaurant' => '/restaurants/',
+                        'place'      => '/spots/',
+                        'event'      => '/festivals/',
+                    ];
+                    $itemLink = '';
+                    if ($item['content_type'] !== 'custom' && !empty($item['content_idx'])) {
+                        $itemLink = ($contentUrlMap[$item['content_type']] ?? '') . (int)$item['content_idx'];
+                    }
                 ?>
                 <li class="timeline-item">
                     <div class="timeline-num"><?= (int)$item['item_order'] ?></div>
                     <div class="timeline-card">
                         <div class="timeline-card-header">
+                            <?php if ($itemLink): ?>
+                            <a href="<?= esc($itemLink) ?>" class="timeline-card-name-link">
+                                <span class="timeline-card-name"><?= esc($item['name']) ?></span>
+                            </a>
+                            <?php else: ?>
                             <span class="timeline-card-name"><?= esc($item['name']) ?></span>
+                            <?php endif; ?>
                             <span class="timeline-card-type <?= $typeInfo['class'] ?>">
                                 <?= $typeInfo['label'] ?>
                             </span>
